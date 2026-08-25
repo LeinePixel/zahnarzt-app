@@ -1,0 +1,78 @@
+# docs/handoff/manifest.yaml
+# Index jedes Handoff-Artefakts mit ehrlichem Status.
+#
+# status: complete — vollstaendig durch Specs/Architektur/Design/Code gedeckt
+#         partial  — vorhanden, aber mit Luecken (siehe "gaps")
+#         open     — nicht geschrieben oder ungeklaert, in open-questions.md verfolgt
+
+generated: "2026-08-24"
+scope: all
+
+# Gesamtbild: Das Projekt ist gut DURCHDACHT, aber kaum GEBAUT.
+# PRD, Design-System und PROJ-1 sind belastbar.
+# 30 von 31 Features haben keine Spezifikation — das ist der bewusste
+# Arbeitsstand, kein Versaeumnis dieses Handoffs.
+
+artifacts:
+  - path: HANDOFF.md
+    status: complete
+    gaps: ""
+
+  - path: docs/product/vision.md
+    status: complete
+    gaps: ""
+  - path: docs/product/scope.md
+    status: complete
+    gaps: "Priorisierung und Abhaengigkeiten aller 31 Features vollstaendig; nur PROJ-1 hat dahinter eine Spec."
+  - path: docs/product/user-flows.md
+    status: partial
+    gaps: "Nur der Anmelde-Flow (PROJ-1) ist spezifiziert. Der End-to-End-Zielablauf ist als Orientierung dokumentiert, seine Features sind unspezifiziert."
+
+  - path: docs/architecture/overview.md
+    status: complete
+    gaps: "Fehler-, Retry- und Rate-Limit-Verhalten der externen Dienste fehlt, da nur PROJ-1 einen technischen Entwurf hat."
+  - path: docs/architecture/decisions.md
+    status: complete
+    gaps: ""
+  - path: docs/architecture/data-model.md
+    status: partial
+    gaps: "Nur practice und user_profile sind spezifiziert. 14 weitere Entitaeten sind benannt, ohne Feldstruktur — bewusst so entschieden."
+  - path: docs/architecture/api-contracts.md
+    status: open
+    gaps: "Kein einziger API-Vertrag definiert. PROJ-1 braucht bewusst keine API-Routen; alle uebrigen Features haben keine Spec."
+
+  - path: docs/design/design-system.md
+    status: complete
+    gaps: "Kein Dark Mode (bewusst), keine Barrierefreiheits- und Responsive-Vorgaben."
+  - path: docs/design/screen-specs.md
+    status: partial
+    gaps: "Die zwei zu bauenden Screens (PROJ-1) sind im Verhalten spezifiziert, aber nicht visuell entworfen. Die drei gestalteten Screens haben umgekehrt keine Spec."
+  - path: docs/design/assets/dentpilot-ux1-prototype.html
+    status: complete
+    gaps: "Eigenstaendige HTML-Datei, im Browser lauffaehig. Enthaelt ausschliesslich erfundene Beispieldaten."
+
+  - path: docs/delivery/implementation-plan.md
+    status: complete
+    gaps: ""
+  - path: docs/delivery/acceptance-tests.md
+    status: partial
+    gaps: "Manuelle Abnahmeschritte fuer PROJ-1 vollstaendig. Es existiert kein automatisierter Test im Repository; keine Teststrategie festgelegt."
+  - path: docs/delivery/known-issues.md
+    status: complete
+    gaps: ""
+  - path: docs/delivery/open-questions.md
+    status: complete
+    gaps: ""
+
+  - path: .env.example
+    status: open
+    gaps: "KONNTE NICHT ANGELEGT WERDEN — .env-Dateien sind durch die Berechtigungseinstellungen gesperrt. Die drei Variablennamen sind stattdessen in docs/architecture/overview.md dokumentiert. Die vorhandene .env.local.example konnte aus demselben Grund nicht gelesen werden."
+
+# Quellen, die dieser Handoff nur liest und nie aendert:
+sources:
+  - features/INDEX.md
+  - features/PROJ-1-supabase-infrastructure-setup.md
+  - docs/PRD.md
+  - CLAUDE.md
+  - .claude/rules/backend.md
+  - .claude/rules/general.md
