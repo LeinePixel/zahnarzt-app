@@ -20,23 +20,34 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 - [ ] **Wer darf das Anrufer-Popup sehen?** (PROJ-29, Rollenrechte)
 - [ ] **Rolle zusätzlich im Anmelde-Token hinterlegen?** Spart bei PROJ-19 Datenbankabfragen, erfordert aber zusätzliche Supabase-Konfiguration.
 
+## Datenschutz, Sicherheit und KI — vor echten Daten zu klären
+
+- [ ] Wer ist je Datenfluss Verantwortlicher, Auftragsverarbeiter oder gemeinsam Verantwortlicher?
+- [ ] Welche konkrete Rechtsgrundlage und Art.-9-Ausnahme gilt für Termin-, Transkript-, Kommunikations-, Analyse- und KI-Verarbeitung?
+- [ ] Welche Aufbewahrungs- und Löschfristen gelten je Datenkategorie und gesetzlicher Dokumentationspflicht?
+- [ ] Welche Regionen, Subprozessoren und Drittlandzugriffe haben Supabase, Vercel, Soniox, IONOS, Resend und Fehlertracking?
+- [ ] Wer führt und genehmigt die Datenschutz-Folgenabschätzung und das Real-Data-Gate?
+- [ ] Welche MFA-, Inaktivitäts-, Maximalsitzungs- und Re-Authentisierungswerte gelten für Praxisarbeitsplätze?
+- [ ] Welche KI-Funktionen fallen unter welche AI-Act-Klasse, und kann PROJ-15/16 aufgrund des beabsichtigten Zwecks Medizinprodukterecht berühren?
+- [ ] Welche Inhalte dürfen externe KI-Anbieter verarbeiten, wie werden sie pseudonymisiert, und ist Training/Retention vertraglich ausgeschlossen?
+
 ## Nicht spezifiziert — betrifft alle UI-Features
 
 - [ ] **Barrierefreiheit:** kein Zielstandard festgelegt, keine Anforderungen an Tastaturbedienung, Kontraste oder Screenreader.
 - [ ] **Responsive-Verhalten:** Der Referenz-Prototyp ist auf 1520 px ausgelegt. Ob die Anwendung auf Tablet oder Telefon nutzbar sein soll, ist offen.
-- [ ] **Teststrategie:** keine Abdeckungsziele, keine Festlegung was Unit- vs. E2E-Test sein soll, kein Vorgehen für Supabase in Tests.
+- [ ] **Langfristige Abdeckungsziele:** PROJ-1 legt Unit-, pgTAP-/RLS- und E2E-Schichten fest; projektweite Coverage-Schwellen bleiben offen.
 - [ ] **Kein visueller Entwurf für Anmelde- und Statusseite** (PROJ-1). Das Design-System liefert Tokens und Komponentenmuster; da beide Screens schlicht sind, dürfte das unkritisch sein.
 
 ## Risiken (keine Frage, aber bekannte Gefahr)
 
 - [ ] **Nur 1 von 31 Features ist spezifiziert.** Für alle übrigen fehlen User Stories und Akzeptanzkriterien. Wer ohne Spec baut, baut auf Vermutungen.
-- [ ] **Kein Test im Repository.** `npm test` läuft grün, weil nichts existiert — das ist kein Sicherheitsnetz.
+- [ ] **Kein Test im Repository.** `npm test` endet aktuell mangels Testdateien mit Exit 1 und zeitverzögertem Vitest-Abschluss — das ist kein Sicherheitsnetz.
 - [ ] **Ein einzelner Entwickler** ohne Ausfallschutz.
 - [ ] **Vercel-Konto muss vor dem Deploy manuell angelegt werden** (aus der Git-Historie: Commit 21a97bb).
 
 ## Annahmen dieses Handoff-Laufs
 _Von Claude gefüllte Lücken, nicht vom Nutzer bestätigt. Bitte prüfen und korrigieren._
 
-- [ ] **`.env.example` konnte nicht angelegt werden** — `.env`-Dateien sind durch die Berechtigungseinstellungen gesperrt. Die Variablennamen sind stattdessen in `docs/architecture/overview.md` dokumentiert. Die vorhandene `.env.local.example` konnte aus demselben Grund nicht gelesen werden; ob sie bereits alle drei Variablen enthält, ist ungeprüft.
+- [x] **Env-Beispieldatei geklärt:** `.env.local.example` ist die verbindliche, versionierbare Datei und wird mit PROJ-1 angelegt. `.env.local` bleibt ignoriert und enthält die echten lokalen Werte.
 - [ ] **Die Zuordnung geplanter Entitäten zu Features** in `docs/architecture/data-model.md` (z. B. `Task` → PROJ-9) ist aus den Feature-Namen abgeleitet, nicht aus einer Spec. Sie ist plausibel, aber nicht bestätigt.
 - [ ] **Die absehbaren Schnittstellen** in `docs/architecture/api-contracts.md` sind aus Feature-Beschreibungen abgeleitet. Kein Format wurde abgestimmt.

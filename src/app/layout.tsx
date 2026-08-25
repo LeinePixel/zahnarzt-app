@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next'
+
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "AI Coding Starter Kit",
-  description: "Built with AI Agent Team System",
-};
+  title: {
+    default: 'DentPilot',
+    template: '%s | DentPilot',
+  },
+  description: 'Der sichere digitale Arbeitsplatz für Ihre Zahnarztpraxis.',
+}
 
 export default function RootLayout({
   children,
@@ -12,10 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        {children}
-      </body>
+    <html lang="de">
+      <body className="antialiased">{children}</body>
     </html>
-  );
+  )
 }

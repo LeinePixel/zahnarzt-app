@@ -3,7 +3,7 @@
 Prevent abuse, DDoS attacks, and excessive API usage.
 
 ## When to Add Rate Limiting
-- **MVP:** Optional (focus on features first)
+- **MVP:** Für Login/Auth verbindlich; für rein interne, noch nicht vorhandene APIs risikobasiert
 - **Production with users:** Recommended on auth endpoints and public APIs
 - **Public-facing APIs:** Required
 
@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
 
 ### 6. Use in Middleware (Global)
 ```typescript
-// middleware.ts
+// proxy.ts (Next.js 16)
 import { ratelimit } from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Only rate limit API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'

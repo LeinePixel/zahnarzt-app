@@ -15,7 +15,7 @@
 
 | ID | Feature | Priority | Status | Dependencies | Spec | Created |
 |----|---------|----------|--------|---------------|------|---------|
-| PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | P0 | Architected | None | [Spec](PROJ-1-supabase-infrastructure-setup.md) | 2026-08-24 |
+| PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | P0 | In Progress | None | [Spec](PROJ-1-supabase-infrastructure-setup.md) | 2026-08-24 |
 | PROJ-2 | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem) | P0 | Roadmap | None | - | 2026-08-24 |
 | PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | Roadmap | PROJ-1, PROJ-2 | - | 2026-08-24 |
 | PROJ-4 | Patienten-Synchronisierung | P0 | Roadmap | PROJ-3 | - | 2026-08-24 |
@@ -101,5 +101,13 @@ Hinzugefügt am 24.08.2026. Ziel: Bei eingehendem Anruf öffnet sich in der App 
 Danach P1 (PROJ-20 bis PROJ-23, PROJ-29, PROJ-31), dann P2 nach Bedarf.
 
 **PROJ-31 (Sitzungssperre) ist zeitkritisch:** muss umgesetzt sein, *bevor* echte Patientendaten ins System kommen (Phase 6, Pilotbetrieb) — unabhängig davon, wie weit die übrigen P1-Features sind.
+
+## Verbindliche Compliance-Gates (25.08.2026)
+
+- Für alle Features gilt `docs/architecture/privacy-security-ai-compliance.md`.
+- Echte oder re-identifizierbare Patienten-/Gesundheitsdaten sind bis zur dokumentierten Freigabe des Real-Data-Gates untersagt.
+- PROJ-19 und PROJ-31 müssen vor echten Daten abgeschlossen sein; PROJ-31 umfasst dabei auch MFA-/Re-Auth-Entscheidungen.
+- Vor PROJ-12, PROJ-14 und PROJ-15 ist je externer Anbieter eine Datenschutz-, Subprozessor- und Transferprüfung erforderlich.
+- Vor PROJ-15 und PROJ-16 ist ein AI-Impact-Check einschließlich AI-Act- und Medizinprodukte-Einstufung erforderlich.
 
 ## Next Available ID: PROJ-32

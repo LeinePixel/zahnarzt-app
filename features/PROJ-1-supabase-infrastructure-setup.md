@@ -1,8 +1,8 @@
 # PROJ-1: Supabase Infrastructure Setup
 
-## Status: Architected
+## Status: In Progress — reviewed 25.08.2026
 **Created:** 2026-08-24
-**Last Updated:** 2026-08-24
+**Last Updated:** 2026-08-25
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -46,7 +46,7 @@ Die Rolle wird in PROJ-1 nur gespeichert und angezeigt — sie schränkt noch ni
 - Sitzung bleibt über das Schließen des Browsers hinaus bestehen und wird im Hintergrund erneuert
 
 ### Einrichtung
-- Dokumentierte Umgebungsvariablen (`.env.local.example` aktualisiert)
+- Dokumentierte Umgebungsvariablen (`.env.local.example` aktualisiert und versioniert)
 - Seed-Skript legt eine Testpraxis und je ein Demo-Konto pro Rolle an
 
 ## Out of Scope
@@ -89,7 +89,7 @@ Bewusst **nicht** Teil dieses Features:
 - [ ] Angenommen das Schema ist eingespielt, wenn ich die Tabellen `practice` und `user_profile` prüfe, dann ist auf beiden Row Level Security aktiviert
 - [ ] Angenommen ein Nutzerkonto existiert, wenn ich das zugehörige Profil abrufe, dann ist es genau einer Praxis und genau einer der Rollen `rezeption`, `behandler` oder `praxisadmin` zugeordnet
 - [ ] Angenommen ich habe das Projekt frisch geklont und die Umgebungsvariablen gesetzt, wenn ich das Seed-Skript ausführe, dann existieren eine Testpraxis und je ein Demo-Konto pro Rolle, mit denen ich mich sofort anmelden kann
-- [ ] Angenommen die Umgebungsvariablen fehlen oder sind unvollständig, wenn die Anwendung startet, dann erscheint eine verständliche Fehlermeldung, die benennt welche Variable fehlt
+- [ ] Angenommen eine für den jeweiligen Prozess erforderliche Umgebungsvariable fehlt, wenn Anwendung oder Seed-Skript starten, dann erscheint eine verständliche Fehlermeldung mit dem Variablennamen; die Anwendung verlangt niemals den ausschließlich für das Seed-Skript bestimmten Service-Role-Key
 
 **Fehlerfälle**
 - [ ] Angenommen Supabase ist nicht erreichbar, wenn ich mich anzumelden versuche, dann sehe ich eine Fehlermeldung, die zwischen „Zugangsdaten falsch" und „Dienst nicht erreichbar" unterscheidet, und meine Eingabe bleibt erhalten
@@ -137,12 +137,12 @@ Bewusst **nicht** Teil dieses Features:
 | Decision | Rationale | Date |
 |----------|-----------|------|
 | Zusätzliches Paket `@supabase/ssr`, Sitzung in Cookies statt Browser-Speicher | Das vorhandene Paket allein legt die Sitzung im Browser-Speicher ab. Server-Komponenten und die Zugriffsschutz-Schicht von Next.js sehen den Browser-Speicher nicht — Seiten ließen sich damit nicht serverseitig schützen. Cookies gehen bei jeder Anfrage automatisch mit. | 2026-08-24 |
-| Zugriffsschutz zentral in einer Middleware statt pro Seite | Neue Features sind automatisch geschützt; der Schutz kann nicht vergessen werden. Zudem keine sichtbaren Inhalte vor der Weiterleitung. | 2026-08-24 |
+| Zugriffsschutz zentral im Next.js-16-Proxy statt pro Seite | Neue Features sind automatisch geschützt; der Schutz kann nicht vergessen werden. Zudem keine sichtbaren Inhalte vor der Weiterleitung. In Next.js 16 heißt die frühere Middleware-Konvention `proxy.ts`. | 2026-08-24; aktualisiert 2026-08-25 |
 | Keine eigenen API-Routen; Anmelden/Abmelden über Server Actions | Eine zusätzliche API-Schicht würde nur durchreichen und nichts beitragen. | 2026-08-24 |
 | Drei getrennte Supabase-Zugangsdateien (Browser, Server, Middleware) | Die drei Umgebungen haben unterschiedlichen Cookie-Zugriff. Eine gemeinsame Datei funktionierte in allen drei Fällen nur halb. | 2026-08-24 |
 | Profil in eigener Tabelle statt im Supabase-Anmeldebereich | Der Anmeldebereich von Supabase lässt sich nicht um eigene Felder wie Rolle oder Praxiszugehörigkeit erweitern. | 2026-08-24 |
-| Gehostetes Supabase-Projekt statt lokalem Docker-Setup | Ein einzelner Entwickler, synthetische Daten: kein Docker nötig, sofort arbeitsfähig, und der Produktivbetrieb läuft später denselben Weg. Der sonst übliche Nachteil einer geteilten Datenbank entfällt, da niemand parallel am Schema arbeitet. | 2026-08-24 |
-| Schreibrechte auf `practice` und `user_profile` in PROJ-1 vollständig gesperrt | Konten entstehen ausschließlich per Seed-Skript und Dashboard. Was die Anwendung nicht darf, kann sie auch nicht versehentlich kaputtmachen. | 2026-08-24 |
+| Gehostetes Supabase-Projekt als Cloud-Ziel; lokales Docker-Supabase für Migrationen und Sicherheitstests | Die EU-Cloud-Architektur bleibt bestehen. Lokal lassen sich Reset, RLS und Seed reproduzierbar ohne Cloud-Geheimnisse prüfen. | 2026-08-24; aktualisiert 2026-08-25 |
+| Schreibrechte auf `practice` und `user_profile` für Browserrollen vollständig gesperrt | Nur die geheime `service_role` darf im CLI-Seed verwalten. Was die Anwendung nicht darf, kann sie auch nicht versehentlich verändern. | 2026-08-24; präzisiert 2026-08-25 |
 | Seed-Skript läuft nur auf der Kommandozeile | Es benötigt den Verwaltungsschlüssel, der alle Zugriffsregeln umgeht. Dieser darf niemals in den Browser gelangen. | 2026-08-24 |
 | Anwendung bricht bei fehlenden Umgebungsvariablen sofort mit Klartextmeldung ab | Sonst scheitert die Anmeldung später an unklarer Stelle mit irreführender Fehlermeldung. | 2026-08-24 |
 | Ersetzt die bisherige Platzhalter-Datei `src/lib/supabase.ts` | Sie exportiert aktuell `null` und würde bei Verwendung zu Laufzeitfehlern führen. | 2026-08-24 |
@@ -167,9 +167,9 @@ Das bereits installierte Supabase-Paket legt die Anmeldesitzung im Browser-Speic
 
 Deshalb kommt ein zweites Supabase-Paket dazu, das die Sitzung in **Cookies** speichert. Cookies gehen bei jeder Anfrage automatisch an den Server mit. Damit kann der Server *vor* dem Ausliefern einer Seite entscheiden, ob jemand sie sehen darf — und das Kriterium „nach Browser-Neustart noch angemeldet" erfüllt sich als Nebeneffekt.
 
-### Zugriffsschutz: eine zentrale Türsteher-Schicht
+### Zugriffsschutz: eine zentrale Proxy-Schicht
 
-Statt in jeder geschützten Seite einzeln zu prüfen, ob jemand angemeldet ist, übernimmt das eine vorgelagerte Schicht (in Next.js „Middleware"), die **jede** Anfrage abfängt:
+Statt in jeder geschützten Seite einzeln zu prüfen, ob jemand angemeldet ist, übernimmt das eine vorgelagerte Schicht (in Next.js 16 „Proxy"), die passende Anfragen abfängt. Sie aktualisiert Cookies und trifft nur die optimistische Routing-Entscheidung. Jede geschützte Server-Komponente prüft die Identität zusätzlich mit verifizierten Claims; ungeprüfte Daten aus `getSession()` sind keine Autorisierungsgrundlage.
 
 ```
 Anfrage
@@ -190,7 +190,7 @@ Der Vorteil: Ein neu gebautes Feature ist automatisch geschützt — man kann es
 
 ```
 src/
-├── middleware.ts                    Türsteher-Schicht (siehe oben)
+├── proxy.ts                         Next.js-16-Zugriffsschutz (siehe oben)
 │
 ├── app/
 │   ├── login/
@@ -208,7 +208,7 @@ src/
     └── supabase/
         ├── client.ts                Zugang aus dem Browser
         ├── server.ts                Zugang aus Server-Komponenten
-        └── middleware.ts            Sitzungsverlängerung für den Türsteher
+        └── proxy.ts                 Sitzungsverlängerung für den Proxy
                                      (ersetzt die bisherige Platzhalter-Datei
                                       src/lib/supabase.ts)
 
@@ -261,8 +261,11 @@ Ein Skript legt beim ersten Einrichten an: eine Testpraxis und drei Konten (eine
 | `NEXT_PUBLIC_SUPABASE_URL` | Adresse des Projekts | öffentlich, unkritisch |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Zugriffsschlüssel für die Anwendung | öffentlich, wirkt nur zusammen mit den Zugriffsregeln |
 | `SUPABASE_SERVICE_ROLE_KEY` | Verwaltungsschlüssel für das Seed-Skript | **geheim** — umgeht alle Zugriffsregeln, darf nie in den Browser gelangen und nie ins Repository |
+| `SEED_REZEPTION_PASSWORD` | lokales Passwort des synthetischen Rezeptionskontos | **geheim** — nur im CLI-Seed-Prozess |
+| `SEED_BEHANDLER_PASSWORD` | lokales Passwort des synthetischen Behandlerkontos | **geheim** — nur im CLI-Seed-Prozess |
+| `SEED_PRAXISADMIN_PASSWORD` | lokales Passwort des synthetischen Administrationskontos | **geheim** — nur im CLI-Seed-Prozess |
 
-Fehlt eine Variable beim Start, bricht die Anwendung mit einer Meldung ab, die den fehlenden Namen benennt — statt später an unklarer Stelle zu scheitern.
+Fehlt eine für den jeweiligen Prozess erforderliche Variable, bricht dieser mit einer Meldung ab, die den fehlenden Namen benennt. Browser und normaler App-Server benötigen nur URL und öffentlichen Key; ausschließlich das CLI-Seed-Skript verlangt zusätzlich den Service-Role-Key.
 
 ### Neue Abhängigkeiten
 
@@ -280,13 +283,79 @@ Bereits vorhanden und ausreichend: `@supabase/supabase-js`, `zod` und `react-hoo
 | Leeres Formular, ungültiges E-Mail-Format | Validierung im Formular, noch vor dem Absenden |
 | Doppelklick erzeugt keine zweite Anfrage | Schaltfläche wird während des Absendens gesperrt |
 | Gleiche Meldung bei falschem Passwort und unbekannter Adresse | Fehlerbehandlung reicht die Supabase-Antwort nicht durch, sondern setzt einen einheitlichen Text |
-| „Dienst nicht erreichbar" unterscheidbar von „Zugangsdaten falsch" | Netzwerkfehler wird getrennt vom Anmeldefehler behandelt |
+| „Dienst nicht erreichbar" unterscheidbar von „Zugangsdaten falsch" | Netzwerk-/Dienstfehler wird intern getrennt klassifiziert; technische Details und Kontenexistenz werden nicht offengelegt |
 | Direkter URL-Aufruf, abgelaufene Sitzung, Zurück-Knopf | Türsteher-Schicht, mit Anweisung an den Browser, geschützte Seiten nicht zwischenzuspeichern |
 | Konto ohne Profil | Die geschützte Seite prüft, ob ein Profil existiert, und zeigt sonst einen erklärenden Hinweis statt eines Absturzes |
 | Abmelden in einem Tab wirkt im zweiten | Cookie-basierte Sitzung — der zweite Tab verliert beim nächsten Seitenaufruf den Zugriff |
 
 ## QA Test Results
 _To be added by /qa_
+
+## Implementation Notes
+
+### Task 1 — abgeschlossen 25.08.2026
+- ESLint Flat Config, Typecheck sowie Vitest-/Playwright-Baseline eingerichtet.
+- Chromium-, Firefox- und WebKit-Smoke-Tests bestehen.
+
+### Task 2 — abgeschlossen 25.08.2026
+- `@supabase/ssr` 0.12.5, Supabase CLI 2.115.0 und `tsx` installiert.
+- Öffentliche App-Konfiguration (`src/lib/env.ts`) und geheime Seed-Konfiguration (`supabase/seed-env.ts`) physisch getrennt.
+- `.env.local.example` enthält ausschließlich Dummywerte; Service-Key ist im App-Quellbaum nicht referenziert.
+- Next.js auf die sicherheitsgepatchte Version 16.3.2 aktualisiert; `npm audit` meldet null bekannte Schwachstellen.
+
+### Task 3 — abgeschlossen 25.08.2026
+- Lokale Supabase-Konfiguration und reproduzierbare Migration für `practice`, `user_profile` und `user_role` angelegt.
+- Tabellenrechte explizit minimiert: `authenticated` erhält nur `SELECT`; `anon` und beide Browserrollen erhalten keine Schreibrechte.
+- RLS begrenzt Lesezugriff auf das eigene Profil und die zugehörige Praxis; fremde Mandanten bleiben unsichtbar.
+- 36 pgTAP-Prüfungen belegen Constraints, RLS, anonymen Zugriff, Cross-Tenant-Isolation, blockierte Browser-Schreiboperationen und die explizit begrenzten Verwaltungsrechte der `service_role`.
+- Offene Registrierung ist auch lokal deaktiviert; lokale Passwörter erfordern mindestens zwölf Zeichen und alle Zeichenklassen.
+
+### Task 4 — abgeschlossen 25.08.2026
+- `npm run seed` legt ausschließlich die synthetische `DentPilot Testpraxis` und je ein Konto pro freigegebener Rolle an.
+- Bestehende Auth-Nutzer werden aktualisiert und Profile über `user_id` upserted; der Zweifachlauf bleibt bei `1` Praxis, `3` Nutzern und `3` Profilen.
+- Die drei Passwörter werden stark validiert und ausschließlich zur Laufzeit aus lokalen Variablen gelesen.
+- CLI-Ausgaben enthalten nur die reservierten `.example`-E-Mail-Adressen und den Status `erstellt` oder `aktualisiert`.
+- Der Cloud-Zweifachlauf folgt mit dem EU-Entwicklungsprojekt in der Task-9-Abnahme.
+
+### Task 5 — abgeschlossen 25.08.2026
+- Getrennte `@supabase/ssr`-Clients für Browser, Server-Komponenten und den Next.js-16-Proxy angelegt; der alte `null`-Platzhalter wurde entfernt.
+- Der Proxy verwendet ausschließlich kryptografisch verifizierte `getClaims()`-Ergebnisse als Routing-Signal und behandelt Fehler oder fehlendes `sub` als anonym.
+- `/status` ist geschützt, angemeldete Nutzer werden von `/login` nach `/status` geleitet; Query-Parameter werden bei Auth-Redirects verworfen.
+- Refresh-Cookies werden mit ihren Sicherheitsattributen an Request und Response weitergereicht; Auth-Antworten erhalten `Cache-Control: private, no-store`.
+- Neun Unit-Tests decken Redirects, ungültige Claims, Cookie-Weitergabe und statische Matcher-Ausschlüsse ab.
+- Ein lokaler HTTP-Smoke-Test bestätigt für einen anonymen `/status`-Aufruf den query-freien `307`-Redirect auf `/login` und `Cache-Control: private, no-store`.
+
+### Task 6 — abgeschlossen 25.08.2026
+- Die Login-Domainlogik validiert E-Mail und Passwort ausschließlich serverseitig mit Zod; die E-Mail wird normalisiert, das Passwort weder verändert noch zurückgegeben.
+- Unbekannte E-Mail-Adressen und falsche Passwörter sind nach außen nicht unterscheidbar und verhindern damit Account Enumeration.
+- Supabase-Rate-Limits sowie Netzwerk-, Timeout- und 5xx-Fehler werden in neutrale Anwendungscodes übersetzt; technische Anbietertexte und personenbezogene Inhalte werden weder zurückgegeben noch protokolliert.
+- Erfolgreiche Anmeldungen leiten ohne sensible URL-Parameter nach `/status` weiter.
+- 13 fokussierte Tests belegen Validierung, unterbliebene Auth-Aufrufe bei Eingabefehlern, neutrale Fehlerklassifikation, Passwortschutz, E-Mail-Erhalt und den Erfolgs-Redirect.
+
+### Task 7 — abgeschlossen 25.08.2026
+- Die deutsche Login-Oberfläche übernimmt Logo, Farben, Radien und die klinisch-helle Gestaltung des freigegebenen Standalone-Prototyps; externe Schrift- oder Bilddienste werden nicht geladen.
+- Zugängliche Labels, ARIA-verknüpfte Feldfehler und korrekte Autofill-Werte unterstützen Tastatur, Screenreader und Passwortmanager.
+- Die E-Mail bleibt nach Fehlern erhalten, während das Passwort geleert wird; der Pending-Zustand sperrt die Schaltfläche und verhindert Doppelübermittlungen.
+- Neutrale Credential-, Rate-Limit- und Dienstfehler werden verständlich auf Deutsch angekündigt, ohne technische Details oder personenbezogene Inhalte offenzulegen.
+- Sechs fokussierte Komponententests sowie reale Desktop- und 390-px-Mobile-Browserprüfungen belegen Verhalten, Responsivität und einen fehlerfreien Next.js-Lauf.
+
+### Task 8 — abgeschlossen 25.08.2026
+- Die geschützte Statusseite verifiziert die Identität erneut über Claims und lädt das eigene Profil samt Praxis ausschließlich über den Cookie-basierten SSR-Client und bestehende RLS-Regeln.
+- Der datenminimierte Kontokontext enthält nur Anzeigename, interne Rolle, deutsche Rollenbezeichnung und Praxisname; Benutzer-ID sowie Patienten- oder Gesundheitsdaten werden nicht an die Oberfläche gegeben.
+- Fehlende Profile werden als verständlicher Einrichtungszustand dargestellt, während Abfrage- oder Datenformfehler bewusst nicht als „Profil fehlt“ verschluckt werden.
+- Logout beendet zuerst die Supabase-Sitzung, invalidiert anschließend den App-Layout-Cache und leitet erst danach ohne Query-Parameter nach `/login`.
+- 13 fokussierte Tests belegen Claim-Schutz, profilgebundene Abfrage, alle Rollenbezeichnungen, datenminimierte Zustände, neutrale Fehler und die Logout-Reihenfolge.
+
+## Review-Ergänzungen vom 25.08.2026
+
+- Die Spec enthält **20** Akzeptanzkriterien (nicht 22, wie im früheren Handoff angegeben).
+- Next.js 16 verwendet `proxy.ts` und `proxy()`; `middleware.ts` ist veraltet.
+- Der Proxy verwendet `supabase.auth.getClaims()` für die verifizierte Identitätsprüfung und niemals `getSession()` als Vertrauensanker.
+- Geschützte Server-Seiten prüfen die Identität erneut. Der Proxy allein ist keine vollständige Autorisierung.
+- Geschützte Antworten erhalten `Cache-Control: private, no-store`; sensible Daten dürfen nicht in Browser-Storage, URL, Telemetrie oder allgemeine Logs gelangen.
+- Login-Schutz umfasst Supabase-Rate-Limits und eine dokumentierte Behandlung von `429`-Antworten. Ein zusätzlicher anwendungsseitiger Limiter wird vor echten Daten bewertet.
+- RLS wird automatisiert mit SQL-Tests für anonymen, eigenen und fremden Zugriff sowie blockierte Schreiboperationen geprüft.
+- Verbindliche Querschnittsanforderungen: `docs/architecture/privacy-security-ai-compliance.md`.
 
 ## Deployment
 _To be added by /deploy_

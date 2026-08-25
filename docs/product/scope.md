@@ -45,7 +45,7 @@ Reihenfolge = empfohlene Baureihenfolge aus `features/INDEX.md`.
 | PROJ-22 | Rohtranskript-Verarbeitung | |
 | PROJ-23 | Echte Dampsoft-Adapter-Anbindung | **Blockiert** — kein API-Zugang, siehe open-questions.md |
 | PROJ-29 | Anrufer-Erkennung (CTI-Popup) | **Blockiert** — Telefonanlage unbekannt |
-| PROJ-31 | Automatische Sitzungssperre nach Inaktivität | **Zeitkritisch** — muss vor Pilotbetrieb mit echten Patientendaten stehen |
+| PROJ-31 | Automatische Sitzungssperre nach Inaktivität | **Security-Gate** — muss einschließlich MFA-/Re-Auth-Entscheidung vor echten Patientendaten stehen |
 
 ## Could-have (P2)
 
@@ -82,3 +82,5 @@ Aus `docs/PRD.md`, Non-Goals:
 - **Timeline:** orientiert an den Phasen 0–6 des Ursprungskonzepts, kein hartes Enddatum.
 - **Budget:** nicht final definiert.
 - **Daten:** MVP arbeitet ausschließlich mit **synthetischen Testdaten** in einer fiktiven Testpraxis. Echte Patientendaten kommen erst im Pilotbetrieb (Phase 6) hinzu.
+- **Real-Data-Gate:** Vor echten Daten müssen die Anforderungen aus `docs/architecture/privacy-security-ai-compliance.md` nachweislich erfüllt und fachkundig freigegeben sein.
+- **KI-Gate:** Vor PROJ-15/16 sind AI-Act- und Medizinprodukte-Einstufung, Anbieterprüfung, Human Oversight und Qualitätsgrenzen zu spezifizieren.

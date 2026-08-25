@@ -63,15 +63,18 @@ Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts 
 | Entscheidung | Begründung | Datum |
 |---|---|---|
 | Zusätzliches Paket `@supabase/ssr`, Sitzung in Cookies statt Browser-Speicher | Das vorhandene Paket legt die Sitzung im Browser-Speicher ab. Server-Komponenten und die Middleware von Next.js sehen den Browser-Speicher nicht — Seiten ließen sich damit nicht serverseitig schützen. Cookies gehen bei jeder Anfrage automatisch mit. | 2026-08-24 |
-| Zugriffsschutz zentral in einer Middleware statt pro Seite | Neue Features sind automatisch geschützt; der Schutz kann nicht vergessen werden. Zudem kein sichtbares Aufblitzen von Inhalten vor der Weiterleitung. | 2026-08-24 |
+| Zugriffsschutz zentral im Next.js-16-Proxy plus erneute Prüfung in geschützten Server-Komponenten | Der Proxy aktualisiert Cookies und verhindert frühe Inhaltsauslieferung; serverseitige Claims-Prüfung und RLS bleiben zusätzliche Vertrauensgrenzen. | 2026-08-24; aktualisiert 2026-08-25 |
 | Keine eigenen API-Routen; Anmelden/Abmelden über Server Actions | Eine zusätzliche API-Schicht würde nur durchreichen und nichts beitragen. | 2026-08-24 |
 | Drei getrennte Supabase-Zugangsdateien (Browser, Server, Middleware) | Die drei Umgebungen haben unterschiedlichen Cookie-Zugriff. Eine gemeinsame Datei funktionierte in allen drei Fällen nur halb. | 2026-08-24 |
 | Profil in eigener Tabelle statt im Supabase-Anmeldebereich | Der Anmeldebereich von Supabase lässt sich nicht um eigene Felder wie Rolle oder Praxiszugehörigkeit erweitern. | 2026-08-24 |
-| Gehostetes Supabase-Projekt statt lokalem Docker-Setup | Ein einzelner Entwickler, synthetische Daten: kein Docker nötig, sofort arbeitsfähig, Produktivbetrieb läuft später denselben Weg. Der sonst übliche Nachteil einer geteilten Datenbank entfällt. | 2026-08-24 |
+| Gehostetes Supabase-Projekt als Cloud-Ziel; lokales Docker-Supabase für Migrationen und RLS-Tests | Cloud-Architektur und EU-Region bleiben bestehen. Der lokale, reproduzierbare Stack ermöglicht Reset- und Negativtests ohne Cloud-Geheimnisse oder echte Daten. | 2026-08-24; aktualisiert 2026-08-25 |
 | Schreibrechte auf `practice` und `user_profile` vollständig gesperrt | Konten entstehen ausschließlich per Seed-Skript und Dashboard. Was die Anwendung nicht darf, kann sie nicht versehentlich kaputtmachen. | 2026-08-24 |
 | Seed-Skript läuft nur auf der Kommandozeile | Es benötigt den Verwaltungsschlüssel, der alle Zugriffsregeln umgeht. Dieser darf nie in den Browser gelangen. | 2026-08-24 |
 | Anwendung bricht bei fehlenden Umgebungsvariablen sofort mit Klartextmeldung ab | Sonst scheitert die Anmeldung später an unklarer Stelle mit irreführender Fehlermeldung. | 2026-08-24 |
 | Ersetzt die Platzhalter-Datei `src/lib/supabase.ts` | Sie exportiert aktuell `null` und würde bei Verwendung zu Laufzeitfehlern führen. | 2026-08-24 |
+| Kein Einsatz echter Patientendaten vor dokumentiertem Real-Data-Gate | Gesundheitsdaten besitzen hohen Schutzbedarf. Synthetische Entwicklung darf nicht zu einem unsicheren späteren Architekturwechsel führen. | 2026-08-25 |
+| KI bereitet ausschließlich vor; Human Oversight bleibt verbindlich | Verhindert autonome medizinische oder wesentlich wirkende Entscheidungen und schafft eine klare Grundlage für DSGVO-/AI-Act-Prüfung. | 2026-08-25 |
+| `getClaims()` statt `getSession()` als serverseitiger Vertrauensanker | Cookie-Inhalte können manipuliert sein; Claims müssen kryptografisch verifiziert werden. | 2026-08-25 |
 
 ### PROJ-2 bis PROJ-31
 Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Siehe `docs/product/scope.md`.
@@ -84,5 +87,5 @@ _Tendenzen, die noch nicht festgezurrt sind. Codex kann mit dem genannten Standa
 | Thema | Aktuelle Tendenz | Warum noch offen |
 |---|---|---|
 | Rolle zusätzlich im Anmelde-Token hinterlegen | vorerst nein — Rolle wird aus der Datenbank gelesen | Würde bei PROJ-19 Abfragen sparen, erfordert aber zusätzliche Supabase-Konfiguration und ist erst dann relevant |
-| Passwortregeln über den Supabase-Standard hinaus | vorerst Standard | Bei synthetischen Testdaten unkritisch; vor Pilotbetrieb zu klären |
+| Passwortregeln über den Supabase-Standard hinaus | lokal festgelegt: mindestens 12 Zeichen sowie Groß-/Kleinbuchstaben, Ziffern und Sonderzeichen | Cloud-Konfiguration und MFA werden vor Pilotbetrieb im Auth-Hardening-Gate nochmals verbindlich abgeglichen |
 | Person gehört mehreren Praxen an | vorerst nein — Praxiszugehörigkeit hängt am Profil | Bei einer Praxis irrelevant; bestimmt aber, ob später eine Zuordnungstabelle nötig wird (PROJ-24) |

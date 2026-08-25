@@ -56,8 +56,8 @@ export default nextConfig
 4. Check Response Headers section
 5. Verify all 4 headers are present
 
-## Advanced (Optional)
-**Content-Security-Policy (CSP)** - The most powerful header, but can break your app if misconfigured. Only add after thorough testing:
+## Content Security Policy (vor echten Daten verbindlich)
+**Content-Security-Policy (CSP)** wird zunächst im Report-Only-Modus getestet und vor Öffnung des Real-Data-Gates erzwungen:
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
 ```

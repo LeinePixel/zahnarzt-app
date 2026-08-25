@@ -6,7 +6,7 @@
 
 | Werkzeug | Zweck | Konfiguration |
 |---|---|---|
-| Vitest ^4.1.2 | Unit- und Integrationstests | `vitest.config.ts`, `src/test/setup.ts` |
+| Vitest ^4.1.2 | Unit- und Integrationstests | `vitest.config.mts`, `src/test/setup.ts` |
 | Playwright ^1.58.2 | End-to-End-Tests | `playwright.config.ts` |
 | Testing Library | React-Komponententests | installiert |
 
@@ -19,13 +19,13 @@ npm run test:e2e   # Playwright
 npm run test:all   # beides nacheinander
 ```
 
-`npm test` läuft aktuell durch, weil es nichts zu testen gibt — das ist kein grünes Sicherheitsnetz.
+`npm test` endet aktuell mangels Testdateien mit Exit 1 und meldet einen verzögerten Vitest-Abschluss — das ist kein Sicherheitsnetz. PROJ-1 Task 1 repariert diese Baseline.
 
 ## Teststrategie
 
 Aus `CLAUDE.md`: **Unit-Tests liegen neben der Quelldatei** (`useHook.test.ts` neben `useHook.ts`), **E2E-Tests in `tests/`**.
 
-Eine darüber hinausgehende Strategie (Abdeckungsziele, was Unit- vs. E2E-Test sein soll, Umgang mit Supabase in Tests) ist **nicht festgelegt** — siehe `open-questions.md`.
+PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für Schema und RLS, Playwright für Browserflüsse. Projektweite Coverage-Schwellen bleiben offen.
 
 ---
 
@@ -58,12 +58,21 @@ Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrast
 ### Fehlerfälle
 15. Netzwerk trennen, Anmeldung versuchen → Meldung unterscheidet sich erkennbar von „Zugangsdaten falsch", Eingabe bleibt erhalten, Formular bleibt bedienbar
 16. Im Supabase-Dashboard ein Konto **ohne** Profil anlegen, damit anmelden → erklärender Hinweis „Konto unvollständig eingerichtet", **kein** Absturz
-17. Eine Umgebungsvariable entfernen und starten → Klartextmeldung, die die fehlende Variable benennt
+17. Öffentliche Variable entfernen und App starten beziehungsweise Service-Key entfernen und Seed starten → Klartextmeldung mit Variablennamen; die App selbst verlangt den Service-Key nicht
 
 ### Datenbank
 18. Im Supabase-Dashboard prüfen: RLS ist auf `practice` und `user_profile` aktiviert
 19. Prüfen: Jedes Profil ist genau einer Praxis und genau einer der Rollen `rezeption`, `behandler`, `praxisadmin` zugeordnet
 20. Seed-Skript ein zweites Mal ausführen → keine doppelten Datensätze
+
+### Sicherheits- und Datenschutzabnahme PROJ-1
+
+- Proxy und geschützte Serverseite vertrauen nur verifizierten Claims, nicht `getSession()`.
+- Geschützte Antworten sind `private, no-store`; Sitzung liegt nicht in Local Storage.
+- RLS-Negativtests beweisen: anon, fremder Nutzer und Schreibversuche erhalten keinen Zugriff.
+- Service-Role-Key ist nicht im Client-Bundle und erscheint nicht in Logs/Testausgaben.
+- Login behandelt Rate-Limits neutral und protokolliert keine E-Mail, Passwörter oder Tokens.
+- Alle Testdaten sind eindeutig synthetisch; das Real-Data-Gate bleibt geschlossen.
 
 ---
 
@@ -71,6 +80,6 @@ Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrast
 
 Das Seed-Skript legt an: eine Testpraxis und drei Demo-Konten (eines je Rolle).
 
-**Die konkreten Zugangsdaten sind nicht festgelegt** und gehören auch nicht in dieses Dokument. Sie werden beim Bauen des Seed-Skripts definiert und dort dokumentiert. Da es sich um synthetische Testdaten handelt, ist das unkritisch — **sobald echte Patientendaten hinzukommen, dürfen diese Konten nicht mehr existieren.**
+**Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die drei `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
 
 Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/assets/dentpilot-ux1-prototype.html`) enthält ebenfalls ausschließlich erfundene Beispieldaten.
