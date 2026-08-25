@@ -269,6 +269,10 @@ async function main() {
     loadEnvFile('.env.local')
   }
 
+  if (existsSync('.env.seed.local')) {
+    loadEnvFile('.env.seed.local')
+  }
+
   const env = getSeedEnv()
   const client = createClient<SeedDatabase>(
     env.supabaseUrl,

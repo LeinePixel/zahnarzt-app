@@ -1,25 +1,26 @@
 # Acceptance Tests
 
-## Teststand — Fakten
+## Teststand — Fakten (26.08.2026)
 
-**Es existiert kein einziger Test.** `git ls-files "*.test.ts" "*.test.tsx" "tests/"` liefert nichts. Vorhanden ist nur die Testinfrastruktur:
+PROJ-1 besitzt ein dreischichtiges, ausführbares Sicherheitsnetz:
 
 | Werkzeug | Zweck | Konfiguration |
 |---|---|---|
-| Vitest ^4.1.2 | Unit- und Integrationstests | `vitest.config.mts`, `src/test/setup.ts` |
-| Playwright ^1.58.2 | End-to-End-Tests | `playwright.config.ts` |
-| Testing Library | React-Komponententests | installiert |
+| Vitest 4.1.2 | Domain-, Proxy-, Server-Umgebungs- und UI-Tests | 58 Tests bestanden |
+| Supabase CLI / pgTAP | Schema-, RLS- und Negativtests | 36 Tests bestanden |
+| Playwright 1.58.2 | Auth-, Datenschutz- und Browserflüsse | 15 Tests bestanden |
 
 **Befehle** (aus `package.json`, unverändert übernommen):
 
 ```bash
 npm test           # Vitest einmalig
 npm run test:watch # Vitest im Beobachtungsmodus
-npm run test:e2e   # Playwright
+npm run test:e2e   # Produktions-Build + Listenreport; keine Auth-Traces/Medien
+npm run test:e2e:edge-required # wie oben, aber echter Edge ist zwingend
 npm run test:all   # beides nacheinander
 ```
 
-`npm test` endet aktuell mangels Testdateien mit Exit 1 und meldet einen verzögerten Vitest-Abschluss — das ist kein Sicherheitsnetz. PROJ-1 Task 1 repariert diese Baseline.
+Der belegte E2E-Lauf verwendet `npm run test:e2e:edge-required`: Chromium für die vollständigen Auth-Flüsse sowie echte Smoke-Starts in Firefox, WebKit und installiertem Microsoft Edge. WebKit ist eine Safari-Engine-Näherung und ersetzt keinen manuellen Test in echtem Safari. Der Next-Server wird neu gestartet und erhält über einen getesteten Sanitizer keine Seed-Passwörter und keinen Service-Role-Key.
 
 ## Teststrategie
 
@@ -29,11 +30,22 @@ PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für 
 
 ---
 
-## Abnahme PROJ-1 — manuelle Schritte
+## Abnahme PROJ-1 — belegter Stand
 
-Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrastructure-setup.md` (22 Stück im Format Angenommen/Wenn/Dann). Diese Liste ist die Kurzfassung zum Durchklicken.
+Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrastructure-setup.md` (20 Stück im Format Angenommen/Wenn/Dann).
 
-**Vorbereitung:** Supabase-Projekt angelegt, `.env.local` gefüllt, Migration eingespielt, Seed-Skript gelaufen.
+**Cloud-Abnahme:** EU-Projekt verknüpft, Migration `20260825170000_proj_1_identity.sql` eingespielt und der synthetische Seed zweimal ausgeführt. Lauf 1 erstellte genau drei Konten, Lauf 2 aktualisierte dieselben drei Konten.
+
+**Automatisiert belegt:** Validierung (einschließlich Unit-Beleg, dass ungültige Eingaben keine Supabase-Auth-Anfrage auslösen), neutrale Credential-Fehler, Doppelübermittlung, drei Rollen, Statusdaten, direkter Schutz, query-freie Redirects, Logout, Zurück-Navigation, zweiter Tab, `private/no-store` auch auf dem anonymen Redirect, kein Supabase-Token in Local Storage und ein temporäres Konto ohne Profil. Das temporäre Konto wird über exakte E-Mail und Nutzer-ID reconciled und gezielt gelöscht; Passwörter, Tokens, HTML-Reports, Screenshots, Videos und Traces werden nicht persistiert.
+
+### Verbleibende manuelle Restabnahme
+
+- [ ] Browser vollständig schließen und neu öffnen; persistente Cookie-Sitzung bestätigen.
+- [ ] Supabase-Erreichbarkeit kontrolliert unterbrechen; unterscheidbare, neutrale Dienstmeldung im Browser bestätigen.
+- [ ] Echter Safari-Smoke auf macOS/iOS. WebKit unter Windows ist bereits automatisiert grün.
+- [ ] Vor Deploy zusätzlich CSP-/Security-Header und Hosting-Umgebung prüfen.
+
+Die nachfolgende Liste bleibt als detailliertes Runbook erhalten; automatisierte Punkte müssen nicht manuell wiederholt werden.
 
 ### Anmeldung
 1. Anwendung ohne Anmeldung öffnen → landet auf der Anmeldeseite

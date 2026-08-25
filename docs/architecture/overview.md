@@ -60,7 +60,7 @@ Seitlich angebunden:
 
 | Dienst | Zweck | Status | Konfiguration |
 |---|---|---|---|
-| **Supabase** | Datenbank, Auth, Storage | **Projekt muss noch angelegt werden** (supabase.com) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
+| **Supabase** | Datenbank, Auth, Storage | EU-Entwicklungsprojekt verknüpft | Öffentliche App-Werte in `.env.local`; Service-Key ausschließlich in `.env.seed.local` |
 | **Mock-PVS** | simuliertes Praxisverwaltungssystem | nicht gebaut (PROJ-2) | offen |
 | **Soniox** | Gesprächstranskription | nicht angebunden (PROJ-14) | offen |
 | **IONOS AI Model Hub** | KI-Extraktion | nicht angebunden (PROJ-15) | offen |

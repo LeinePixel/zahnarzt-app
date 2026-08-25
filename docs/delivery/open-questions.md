@@ -6,7 +6,6 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 
 | Frage | Blockiert | Aufgeworfen | Anmerkung |
 |---|---|---|---|
-| Supabase-Projekt muss auf supabase.com angelegt werden | **PROJ-1 kann nicht fertiggestellt werden** | 2026-08-24 | Erfordert Kontoerstellung, nicht automatisierbar. Danach werden drei Werte gebraucht (siehe `docs/architecture/overview.md`). |
 | Bekommen wir API-Zugang zu Dampsoft, und zu welchen Konditionen? | PROJ-23 | 2026-08-24 | Direktkontakt (support@dampsoft.de) nötig, NDA/Partnervertrag wahrscheinlich. Hinweise auf ein kostenpflichtiges „API/SBI"-Modul, Umfang unbestätigt. Ausweichoptionen: Evident (wirbt mit REST-API), Middleware-Anbieter (Dr. Flex, Dentero, iie Systems, Nelly), RPA als Notlösung. |
 | Welche Telefonanlage nutzt die Pilotpraxis? | PROJ-29 | 2026-08-24 | Entschieden: Entwicklung gegen einen generischen Anruf-Webhook, echte Anbindung später als Adapter. Cloud-PBX (Placetel, sipgate, 3CX) böte Webhooks; lokale Anlage mit TAPI bräuchte einen Windows-Client. |
 | Wie geht das Mock-PVS mit Telefonnummern um? | PROJ-2, PROJ-4 | 2026-08-24 | **Muss schon im MVP berücksichtigt werden**, sonst ist das Datenmodell für PROJ-29 nachträglich zu erweitern. Normalisierung auf E.164 erforderlich. |
@@ -36,18 +35,16 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 - [ ] **Barrierefreiheit:** kein Zielstandard festgelegt, keine Anforderungen an Tastaturbedienung, Kontraste oder Screenreader.
 - [ ] **Responsive-Verhalten:** Der Referenz-Prototyp ist auf 1520 px ausgelegt. Ob die Anwendung auf Tablet oder Telefon nutzbar sein soll, ist offen.
 - [ ] **Langfristige Abdeckungsziele:** PROJ-1 legt Unit-, pgTAP-/RLS- und E2E-Schichten fest; projektweite Coverage-Schwellen bleiben offen.
-- [ ] **Kein visueller Entwurf für Anmelde- und Statusseite** (PROJ-1). Das Design-System liefert Tokens und Komponentenmuster; da beide Screens schlicht sind, dürfte das unkritisch sein.
 
 ## Risiken (keine Frage, aber bekannte Gefahr)
 
 - [ ] **Nur 1 von 31 Features ist spezifiziert.** Für alle übrigen fehlen User Stories und Akzeptanzkriterien. Wer ohne Spec baut, baut auf Vermutungen.
-- [ ] **Kein Test im Repository.** `npm test` endet aktuell mangels Testdateien mit Exit 1 und zeitverzögertem Vitest-Abschluss — das ist kein Sicherheitsnetz.
 - [ ] **Ein einzelner Entwickler** ohne Ausfallschutz.
 - [ ] **Vercel-Konto muss vor dem Deploy manuell angelegt werden** (aus der Git-Historie: Commit 21a97bb).
 
 ## Annahmen dieses Handoff-Laufs
 _Von Claude gefüllte Lücken, nicht vom Nutzer bestätigt. Bitte prüfen und korrigieren._
 
-- [x] **Env-Beispieldatei geklärt:** `.env.local.example` ist die verbindliche, versionierbare Datei und wird mit PROJ-1 angelegt. `.env.local` bleibt ignoriert und enthält die echten lokalen Werte.
+- [x] **Env-Dateien geklärt:** `.env.local` enthält ausschließlich öffentliche App-Werte; `.env.seed.local` enthält Service-Key und synthetische Passwörter. Beide bleiben ignoriert, die jeweiligen `.example`-Dateien enthalten nur Dummywerte.
 - [ ] **Die Zuordnung geplanter Entitäten zu Features** in `docs/architecture/data-model.md` (z. B. `Task` → PROJ-9) ist aus den Feature-Namen abgeleitet, nicht aus einer Spec. Sie ist plausibel, aber nicht bestätigt.
 - [ ] **Die absehbaren Schnittstellen** in `docs/architecture/api-contracts.md` sind aus Feature-Beschreibungen abgeleitet. Kein Format wurde abgestimmt.

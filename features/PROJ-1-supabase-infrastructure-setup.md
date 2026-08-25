@@ -1,8 +1,8 @@
 # PROJ-1: Supabase Infrastructure Setup
 
-## Status: In Progress — reviewed 25.08.2026
+## Status: In Review — automated QA 26.08.2026
 **Created:** 2026-08-24
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-08-26
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -46,7 +46,7 @@ Die Rolle wird in PROJ-1 nur gespeichert und angezeigt — sie schränkt noch ni
 - Sitzung bleibt über das Schließen des Browsers hinaus bestehen und wird im Hintergrund erneuert
 
 ### Einrichtung
-- Dokumentierte Umgebungsvariablen (`.env.local.example` aktualisiert und versioniert)
+- Dokumentierte, getrennte Umgebungsvariablen (`.env.local.example` öffentlich, `.env.seed.local.example` geheim/CLI)
 - Seed-Skript legt eine Testpraxis und je ein Demo-Konto pro Rolle an
 
 ## Out of Scope
@@ -66,34 +66,34 @@ Bewusst **nicht** Teil dieses Features:
 ## Acceptance Criteria
 
 **Anmeldung**
-- [ ] Angenommen ich bin nicht angemeldet, wenn ich die Anmeldeseite öffne, dann sehe ich Eingabefelder für E-Mail und Passwort sowie eine Schaltfläche zum Anmelden
-- [ ] Angenommen ich habe ein gültiges Konto, wenn ich korrekte E-Mail und korrektes Passwort eingebe und absende, dann werde ich angemeldet und auf die geschützte Seite weitergeleitet
-- [ ] Angenommen ich habe ein gültiges Konto, wenn ich ein falsches Passwort eingebe, dann sehe ich eine Fehlermeldung, meine eingegebene E-Mail bleibt erhalten und ich bleibe abgemeldet
-- [ ] Angenommen ich gebe eine E-Mail-Adresse ein, zu der kein Konto existiert, wenn ich das Formular absende, dann sehe ich dieselbe allgemeine Fehlermeldung wie bei falschem Passwort — es wird nicht offengelegt, ob die Adresse existiert
-- [ ] Angenommen ich befinde mich auf der Anmeldeseite, wenn ich das Formular mit leeren Feldern absende, dann wird für jedes Pflichtfeld eine Validierungsmeldung angezeigt und es wird keine Anfrage gesendet
-- [ ] Angenommen ich habe eine E-Mail ohne gültiges Format eingegeben, wenn ich das Formular absende, dann sehe ich eine Formatfehlermeldung am E-Mail-Feld
-- [ ] Angenommen ich habe das Formular abgesendet und die Antwort steht noch aus, wenn ich erneut auf Anmelden klicke, dann wird keine zweite Anmeldeanfrage ausgelöst
+- [x] Angenommen ich bin nicht angemeldet, wenn ich die Anmeldeseite öffne, dann sehe ich Eingabefelder für E-Mail und Passwort sowie eine Schaltfläche zum Anmelden
+- [x] Angenommen ich habe ein gültiges Konto, wenn ich korrekte E-Mail und korrektes Passwort eingebe und absende, dann werde ich angemeldet und auf die geschützte Seite weitergeleitet
+- [x] Angenommen ich habe ein gültiges Konto, wenn ich ein falsches Passwort eingebe, dann sehe ich eine Fehlermeldung, meine eingegebene E-Mail bleibt erhalten und ich bleibe abgemeldet
+- [x] Angenommen ich gebe eine E-Mail-Adresse ein, zu der kein Konto existiert, wenn ich das Formular absende, dann sehe ich dieselbe allgemeine Fehlermeldung wie bei falschem Passwort — es wird nicht offengelegt, ob die Adresse existiert
+- [x] Angenommen ich befinde mich auf der Anmeldeseite, wenn ich das Formular mit leeren Feldern absende, dann wird für jedes Pflichtfeld eine Validierungsmeldung angezeigt und es wird keine Anfrage gesendet
+- [x] Angenommen ich habe eine E-Mail ohne gültiges Format eingegeben, wenn ich das Formular absende, dann sehe ich eine Formatfehlermeldung am E-Mail-Feld
+- [x] Angenommen ich habe das Formular abgesendet und die Antwort steht noch aus, wenn ich erneut auf Anmelden klicke, dann wird keine zweite Anmeldeanfrage ausgelöst
 
 **Zugriffsschutz**
-- [ ] Angenommen ich bin nicht angemeldet, wenn ich eine geschützte Seite direkt über die URL aufrufe, dann werde ich zur Anmeldeseite weitergeleitet
-- [ ] Angenommen ich bin bereits angemeldet, wenn ich die Anmeldeseite aufrufe, dann werde ich direkt auf die geschützte Seite weitergeleitet
-- [ ] Angenommen meine Sitzung ist abgelaufen oder ungültig, wenn ich eine geschützte Seite aufrufe, dann werde ich zur Anmeldeseite weitergeleitet
+- [x] Angenommen ich bin nicht angemeldet, wenn ich eine geschützte Seite direkt über die URL aufrufe, dann werde ich zur Anmeldeseite weitergeleitet
+- [x] Angenommen ich bin bereits angemeldet, wenn ich die Anmeldeseite aufrufe, dann werde ich direkt auf die geschützte Seite weitergeleitet
+- [x] Angenommen meine Sitzung ist abgelaufen oder ungültig, wenn ich eine geschützte Seite aufrufe, dann werde ich zur Anmeldeseite weitergeleitet
 
 **Angemeldeter Zustand**
-- [ ] Angenommen ich bin angemeldet, wenn ich die geschützte Seite betrachte, dann sehe ich meinen Anzeigenamen, meine Rolle und den Namen meiner Praxis
+- [x] Angenommen ich bin angemeldet, wenn ich die geschützte Seite betrachte, dann sehe ich meinen Anzeigenamen, meine Rolle und den Namen meiner Praxis
 - [ ] Angenommen ich bin angemeldet, wenn ich den Browser schließe und die Anwendung erneut öffne, dann bin ich weiterhin angemeldet
-- [ ] Angenommen ich bin angemeldet, wenn ich auf Abmelden klicke, dann wird meine Sitzung beendet und ich lande auf der Anmeldeseite
-- [ ] Angenommen ich habe mich abgemeldet, wenn ich anschließend den Zurück-Knopf des Browsers benutze, dann sehe ich keine geschützten Inhalte, sondern die Anmeldeseite
+- [x] Angenommen ich bin angemeldet, wenn ich auf Abmelden klicke, dann wird meine Sitzung beendet und ich lande auf der Anmeldeseite
+- [x] Angenommen ich habe mich abgemeldet, wenn ich anschließend den Zurück-Knopf des Browsers benutze, dann sehe ich keine geschützten Inhalte, sondern die Anmeldeseite
 
 **Datenbank und Einrichtung**
-- [ ] Angenommen das Schema ist eingespielt, wenn ich die Tabellen `practice` und `user_profile` prüfe, dann ist auf beiden Row Level Security aktiviert
-- [ ] Angenommen ein Nutzerkonto existiert, wenn ich das zugehörige Profil abrufe, dann ist es genau einer Praxis und genau einer der Rollen `rezeption`, `behandler` oder `praxisadmin` zugeordnet
-- [ ] Angenommen ich habe das Projekt frisch geklont und die Umgebungsvariablen gesetzt, wenn ich das Seed-Skript ausführe, dann existieren eine Testpraxis und je ein Demo-Konto pro Rolle, mit denen ich mich sofort anmelden kann
-- [ ] Angenommen eine für den jeweiligen Prozess erforderliche Umgebungsvariable fehlt, wenn Anwendung oder Seed-Skript starten, dann erscheint eine verständliche Fehlermeldung mit dem Variablennamen; die Anwendung verlangt niemals den ausschließlich für das Seed-Skript bestimmten Service-Role-Key
+- [x] Angenommen das Schema ist eingespielt, wenn ich die Tabellen `practice` und `user_profile` prüfe, dann ist auf beiden Row Level Security aktiviert
+- [x] Angenommen ein Nutzerkonto existiert, wenn ich das zugehörige Profil abrufe, dann ist es genau einer Praxis und genau einer der Rollen `rezeption`, `behandler` oder `praxisadmin` zugeordnet
+- [x] Angenommen ich habe das Projekt frisch geklont und die Umgebungsvariablen gesetzt, wenn ich das Seed-Skript ausführe, dann existieren eine Testpraxis und je ein Demo-Konto pro Rolle, mit denen ich mich sofort anmelden kann
+- [x] Angenommen eine für den jeweiligen Prozess erforderliche Umgebungsvariable fehlt, wenn Anwendung oder Seed-Skript starten, dann erscheint eine verständliche Fehlermeldung mit dem Variablennamen; die Anwendung verlangt niemals den ausschließlich für das Seed-Skript bestimmten Service-Role-Key
 
 **Fehlerfälle**
 - [ ] Angenommen Supabase ist nicht erreichbar, wenn ich mich anzumelden versuche, dann sehe ich eine Fehlermeldung, die zwischen „Zugangsdaten falsch" und „Dienst nicht erreichbar" unterscheidet, und meine Eingabe bleibt erhalten
-- [ ] Angenommen mein Auth-Konto existiert, aber es ist kein Profil hinterlegt, wenn ich mich anmelde, dann werde ich nicht in einen kaputten Zustand geführt, sondern sehe einen verständlichen Hinweis, dass mein Konto unvollständig eingerichtet ist
+- [x] Angenommen mein Auth-Konto existiert, aber es ist kein Profil hinterlegt, wenn ich mich anmelde, dann werde ich nicht in einen kaputten Zustand geführt, sondern sehe einen verständlichen Hinweis, dass mein Konto unvollständig eingerichtet ist
 
 ## Edge Cases
 - **Konto ohne Profil:** Ein über das Supabase-Dashboard angelegtes Auth-Konto ohne zugehörigen `user_profile`-Eintrag. Muss abgefangen werden, sonst läuft die Anwendung in einen undefinierten Zustand.
@@ -289,7 +289,18 @@ Bereits vorhanden und ausreichend: `@supabase/supabase-js`, `zod` und `react-hoo
 | Abmelden in einem Tab wirkt im zweiten | Cookie-basierte Sitzung — der zweite Tab verliert beim nächsten Seitenaufruf den Zugriff |
 
 ## QA Test Results
-_To be added by /qa_
+
+**Automatisierte Abnahme 26.08.2026:** 58 Vitest-Tests, 36 pgTAP-/RLS-Tests und 15 Playwright-Tests bestanden. `npm run test:e2e:edge-required` prüft die vollständigen Auth-/Security-Flüsse in Chromium und Browser-Smokes in Firefox, WebKit sowie verpflichtend echtem Microsoft Edge gegen einen frisch gestarteten Next.js-Produktions-Build. Ein getesteter Launcher entfernt Seed-Geheimnisse vor dem Start des Next-Child-Prozesses.
+
+**Cloud-Abnahme:** EU-Projekt verknüpft, PROJ-1-Migration angewendet, synthetischer Seed zweimal erfolgreich (zuerst drei Konten erstellt, anschließend dieselben drei aktualisiert). Ein eindeutig synthetisches Auth-Konto ohne Profil wurde im E2E-Lauf erzeugt, über ID und E-Mail verifiziert und danach gezielt gelöscht.
+
+**Offene manuelle Gates:** echter Safari-Smoke, vollständiger Browser-Neustart und kontrollierte Dienstunterbrechung. Daher Status `In Review`, nicht `Approved`; das Real-Data-Gate bleibt geschlossen.
+
+### Task 9 — umgesetzt 26.08.2026
+- Playwright-Tests decken Validierung, neutrale Fehler, Doppelübermittlung, drei Rollen, Statusdaten, Zugriffsschutz, Logout, Zurück-Navigation und Konto ohne Profil ab.
+- Sicherheitsprüfungen belegen query-freie Redirects, `private/no-store`, Cookie statt Local Storage und Zugriffsentzug im zweiten Tab.
+- Persistente Auth-Testmedien (Trace, Screenshot, Video) und HTML-Reports sind deaktiviert; Zugangsdaten und Tokens werden weder ausgegeben noch persistiert.
+- Cloud-Migration und zweifacher Seed-Lauf sind dokumentiert; echte Patienten- oder Gesundheitsdaten wurden nicht verwendet.
 
 ## Implementation Notes
 
@@ -300,7 +311,7 @@ _To be added by /qa_
 ### Task 2 — abgeschlossen 25.08.2026
 - `@supabase/ssr` 0.12.5, Supabase CLI 2.115.0 und `tsx` installiert.
 - Öffentliche App-Konfiguration (`src/lib/env.ts`) und geheime Seed-Konfiguration (`supabase/seed-env.ts`) physisch getrennt.
-- `.env.local.example` enthält ausschließlich Dummywerte; Service-Key ist im App-Quellbaum nicht referenziert.
+- `.env.local.example` und `.env.seed.local.example` enthalten ausschließlich Dummywerte; echte Seed-Geheimnisse sind physisch von der App-Server-Umgebung getrennt.
 - Next.js auf die sicherheitsgepatchte Version 16.3.2 aktualisiert; `npm audit` meldet null bekannte Schwachstellen.
 
 ### Task 3 — abgeschlossen 25.08.2026

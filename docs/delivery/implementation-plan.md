@@ -25,7 +25,7 @@
 
 ## Vorbedingung: Cloud-Projekt
 
-Der Nutzer legt ein Entwicklungsprojekt auf Supabase an und wählt eine EU-Region. Benötigt werden Projekt-URL, Publishable-/Anon-Key und Service-Role-Key. Die Werte werden ausschließlich in `.env.local` hinterlegt. Entwicklung der lokalen Dateien kann vorher beginnen; Migration, Seed und echte E2E-Anmeldung bleiben bis dahin blockiert.
+Der Nutzer legt ein Entwicklungsprojekt auf Supabase an und wählt eine EU-Region. Projekt-URL und Publishable-/Anon-Key liegen in `.env.local`; Service-Role-Key und Seed-Passwörter liegen getrennt in `.env.seed.local`. Beide Dateien sind ignoriert. Dadurch erbt der normale Next.js-Server niemals den RLS-umgehenden Verwaltungsschlüssel.
 
 ### Task 1: Tooling- und Test-Baseline
 
@@ -120,11 +120,11 @@ Der Nutzer legt ein Entwicklungsprojekt auf Supabase an und wählt eine EU-Regio
 
 **Files:** Create `tests/auth.spec.ts`, `tests/auth-security.spec.ts`; modify `docs/delivery/acceptance-tests.md`, Feature-Spec und `features/INDEX.md`.
 
-- [ ] Playwright-Tests für automatisierbare Kriterien schreiben: Validierung, identische Credential-Fehler, Doppelklick, Anmeldung, direkter Schutz, Login-Redirect, Statusdaten, Logout und Back-Navigation.
-- [ ] Sicherheitsfälle ergänzen: keine sensiblen URL-Parameter, `Cache-Control`, keine Session in Local Storage, zweiter Tab verliert beim nächsten Request Zugriff.
-- [ ] Cloud-/Browser-Prüfungen dokumentieren: Browser-Neustart, Dienstunterbrechung, Konto ohne Profil, RLS, Seed zweimal sowie Chrome/Firefox/Edge/Safari-Smoke.
-- [ ] Vollständig ausführen: `npm run lint`, `npm test`, `npm run typecheck`, `supabase test db`, `npm run test:e2e`, `npm run build`.
-- [ ] Status erst nach belegter Abnahme auf `In Review` setzen; manuelle oder blockierte Punkte ehrlich markieren.
+- [x] Playwright-Tests für automatisierbare Kriterien schreiben: Validierung, identische Credential-Fehler, Doppelklick, Anmeldung, direkter Schutz, Login-Redirect, Statusdaten, Logout und Back-Navigation.
+- [x] Sicherheitsfälle ergänzen: keine sensiblen URL-Parameter, `Cache-Control`, keine Session in Local Storage, zweiter Tab verliert beim nächsten Request Zugriff.
+- [x] Cloud-/Browser-Prüfungen dokumentieren: Browser-Neustart, Dienstunterbrechung, Konto ohne Profil, RLS, Seed zweimal sowie Chrome/Firefox/Edge/Safari-Smoke.
+- [x] Vollständig ausführen: `npm run lint`, `npm test`, `npm run typecheck`, `supabase test db`, `npm run test:e2e`, `npm run build`.
+- [x] Status erst nach belegter Abnahme auf `In Review` setzen; manuelle oder blockierte Punkte ehrlich markieren.
 
 ## Danach: MVP-Reihenfolge und Compliance-Gates
 

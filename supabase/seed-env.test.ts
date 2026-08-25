@@ -60,26 +60,32 @@ describe('getSeedEnv', () => {
   })
 })
 
-describe('.env.local.example', () => {
-  it('documents each required variable without a real credential', () => {
-    const example = readFileSync(
+describe('environment examples', () => {
+  it('keeps app configuration separate from seed secrets', () => {
+    const appExample = readFileSync(
       resolve(process.cwd(), '.env.local.example'),
       'utf8',
     )
+    const seedExample = readFileSync(
+      resolve(process.cwd(), '.env.seed.local.example'),
+      'utf8',
+    )
 
-    expect(example).toContain('NEXT_PUBLIC_SUPABASE_URL=https://')
-    expect(example).toContain('NEXT_PUBLIC_SUPABASE_ANON_KEY=')
-    expect(example).toContain('SUPABASE_SERVICE_ROLE_KEY=')
-    expect(example).toContain(
+    expect(appExample).toContain('NEXT_PUBLIC_SUPABASE_URL=https://')
+    expect(appExample).toContain('NEXT_PUBLIC_SUPABASE_ANON_KEY=')
+    expect(appExample).not.toContain('SUPABASE_SERVICE_ROLE_KEY=')
+    expect(appExample).not.toContain('SEED_REZEPTION_PASSWORD=')
+    expect(seedExample).toContain('SUPABASE_SERVICE_ROLE_KEY=')
+    expect(seedExample).toContain(
       'SEED_REZEPTION_PASSWORD=replace-with-a-local-password',
     )
-    expect(example).toContain(
+    expect(seedExample).toContain(
       'SEED_BEHANDLER_PASSWORD=replace-with-a-local-password',
     )
-    expect(example).toContain(
+    expect(seedExample).toContain(
       'SEED_PRAXISADMIN_PASSWORD=replace-with-a-local-password',
     )
-    expect(example).not.toMatch(/eyJ[A-Za-z0-9_-]{20,}/)
-    expect(example).not.toMatch(/sb_secret_[A-Za-z0-9_-]+/)
+    expect(`${appExample}\n${seedExample}`).not.toMatch(/eyJ[A-Za-z0-9_-]{20,}/)
+    expect(`${appExample}\n${seedExample}`).not.toMatch(/sb_secret_[A-Za-z0-9_-]+/)
   })
 })

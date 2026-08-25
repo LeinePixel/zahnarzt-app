@@ -1,18 +1,13 @@
 # Known Issues & Tech Debt
 
-Stand 24.08.2026. Es gibt noch keinen Produktcode, daher keine Bugs — aber mehrere Altlasten aus dem Template und bewusst aufgeschobene Punkte.
+Stand 26.08.2026. PROJ-1 ist implementiert und automatisiert abgenommen; verbleibend sind Altlasten und bewusst aufgeschobene Punkte.
 
 ## Altlasten aus dem Starter-Kit-Template
 
 | Punkt | Auswirkung | Zu erledigen mit |
 |---|---|---|
-| `src/lib/supabase.ts` exportiert `null` | Auskommentierter Platzhalter. Wird er importiert und verwendet, gibt es einen Laufzeitfehler. | PROJ-1 ersetzt ihn durch `src/lib/supabase/` |
-| `src/app/page.tsx` ist die Template-Startseite | Zeigt Next.js-Standardinhalt, nicht das Produkt | PROJ-1 (Weiterleitung) bzw. PROJ-18 |
 | `public/file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Ungenutzte Template-Assets | kann jederzeit aufgeräumt werden |
 | `package.json` heißt `rl-coding-startup-kit` | Name und Beschreibung stammen vom Template, nicht vom Produkt | kann jederzeit angepasst werden |
-| Keine Tests vorhanden | `npm test` endet aktuell ohne Testdateien mit Exit 1; Vitest meldet zusätzlich einen verzögerten Abschluss | PROJ-1 Task 1 repariert Baseline und Prozessabschluss |
-| `npm run lint` defekt | Next.js 16 hat `next lint` entfernt; der Befehl interpretiert `lint` als Projektpfad | PROJ-1 Task 1: ESLint Flat Config und CLI |
-| Planung verwendete `middleware.ts` | In Next.js 16 heißt die Konvention `proxy.ts` | PROJ-1 aktualisiert am 25.08.2026 |
 
 ## Bewusst aufgeschoben
 
