@@ -1,0 +1,63 @@
+# docs/handoff/manifest.yaml
+# Index of every handoff artifact and its honest status.
+# status: complete   — fully backed by specs/architecture/design/code, nothing missing
+#         partial     — exists but has gaps; see the "gaps" note
+#         open        — not written yet / genuinely unresolved, tracked in open-questions.md
+#
+# Regenerate the "generated" timestamp and re-check every status on each /codex-handoff run.
+# Never mark something "complete" without having actually re-read the file in this run.
+
+generated: "YYYY-MM-DDTHH:MM:SSZ"
+scope: all # or "PROJ-X" if this run was scoped to one feature
+
+artifacts:
+  - path: HANDOFF.md
+    status: open
+    gaps: ""
+
+  - path: docs/product/vision.md
+    status: open
+    gaps: ""
+  - path: docs/product/scope.md
+    status: open
+    gaps: ""
+  - path: docs/product/user-flows.md
+    status: open
+    gaps: ""
+
+  - path: docs/architecture/overview.md
+    status: open
+    gaps: ""
+  - path: docs/architecture/decisions.md
+    status: open
+    gaps: ""
+  - path: docs/architecture/data-model.md
+    status: open
+    gaps: ""
+  - path: docs/architecture/api-contracts.md
+    status: open
+    gaps: ""
+
+  - path: docs/design/design-system.md
+    status: open
+    gaps: ""
+  - path: docs/design/screen-specs.md
+    status: open
+    gaps: ""
+
+  - path: docs/delivery/implementation-plan.md
+    status: open
+    gaps: ""
+  - path: docs/delivery/acceptance-tests.md
+    status: open
+    gaps: ""
+  - path: docs/delivery/known-issues.md
+    status: open
+    gaps: ""
+  - path: docs/delivery/open-questions.md
+    status: open
+    gaps: ""
+
+  - path: .env.example
+    status: open
+    gaps: ""

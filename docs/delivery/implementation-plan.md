@@ -128,7 +128,7 @@ Der Nutzer legt ein Entwicklungsprojekt auf Supabase an und wählt eine EU-Regio
 
 ## Danach: MVP-Reihenfolge und Compliance-Gates
 
-Nach PROJ-1 benötigt jedes Roadmap-Feature zuerst Spec und Architekturprüfung. Reihenfolge: PROJ-19, PROJ-2, PROJ-3, PROJ-4, PROJ-5, PROJ-6, PROJ-7, PROJ-9, PROJ-11, PROJ-12, PROJ-10, PROJ-13, PROJ-14, PROJ-15, PROJ-16, PROJ-17, PROJ-8, PROJ-18.
+Nach PROJ-1 benötigt jedes Roadmap-Feature zuerst Spec und Architekturprüfung. Empfohlene Reihenfolge: PROJ-19, PROJ-31, PROJ-2, PROJ-3, PROJ-4, PROJ-5, PROJ-6, PROJ-7, PROJ-9, PROJ-11, PROJ-10, PROJ-18, danach externe Kommunikation und erst nach den jeweiligen Compliance-Gates Transkript-/KI-Funktionen. Die vollständige begründete Reihenfolge steht in `docs/superpowers/plans/2026-08-26-mvp-continuation-roadmap.md`.
 
 - PROJ-19 und PROJ-31 sind Bestandteile des Real-Data-Gates.
 - Vor PROJ-12/14/15 wird je Anbieter eine Datenschutz-/Transferakte benötigt.

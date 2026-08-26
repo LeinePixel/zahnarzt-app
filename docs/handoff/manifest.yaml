@@ -1,78 +1,58 @@
-# docs/handoff/manifest.yaml
-# Index jedes Handoff-Artefakts mit ehrlichem Status.
-#
-# status: complete — vollstaendig durch Specs/Architektur/Design/Code gedeckt
-#         partial  — vorhanden, aber mit Luecken (siehe "gaps")
-#         open     — nicht geschrieben oder ungeklaert, in open-questions.md verfolgt
-
-generated: "2026-08-24"
+generated: "2026-08-26"
 scope: all
-
-# Gesamtbild: Das Projekt ist gut DURCHDACHT, aber kaum GEBAUT.
-# PRD, Design-System und PROJ-1 sind belastbar.
-# 30 von 31 Features haben keine Spezifikation — das ist der bewusste
-# Arbeitsstand, kein Versaeumnis dieses Handoffs.
 
 artifacts:
   - path: HANDOFF.md
     status: complete
-    gaps: ""
-
-  - path: docs/product/vision.md
+    gaps: "Short entry point; detail intentionally lives in referenced artifacts."
+  - path: docs/PRD.md
     status: complete
     gaps: ""
-  - path: docs/product/scope.md
+  - path: features/INDEX.md
     status: complete
-    gaps: "Priorisierung und Abhaengigkeiten aller 31 Features vollstaendig; nur PROJ-1 hat dahinter eine Spec."
-  - path: docs/product/user-flows.md
+    gaps: "Only PROJ-1 currently has a binding feature spec; later features remain Roadmap."
+  - path: features/PROJ-1-supabase-infrastructure-setup.md
     status: partial
-    gaps: "Nur der Anmelde-Flow (PROJ-1) ist spezifiziert. Der End-to-End-Zielablauf ist als Orientierung dokumentiert, seine Features sind unspezifiziert."
-
+    gaps: "Automated QA complete; real Safari, full browser restart and controlled service outage remain manual."
   - path: docs/architecture/overview.md
     status: complete
-    gaps: "Fehler-, Retry- und Rate-Limit-Verhalten der externen Dienste fehlt, da nur PROJ-1 einen technischen Entwurf hat."
+    gaps: ""
   - path: docs/architecture/decisions.md
     status: complete
-    gaps: ""
+    gaps: "Future feature decisions must be appended after their specs."
+  - path: docs/architecture/privacy-security-ai-compliance.md
+    status: partial
+    gaps: "Binding engineering gates exist; legal bases, DSFA, contracts, retention and provider reviews require qualified approval before real data."
   - path: docs/architecture/data-model.md
     status: partial
-    gaps: "Nur practice und user_profile sind spezifiziert. 14 weitere Entitaeten sind benannt, ohne Feldstruktur — bewusst so entschieden."
+    gaps: "PROJ-1 identity model is implemented; later entities are provisional until their feature specs."
   - path: docs/architecture/api-contracts.md
-    status: open
-    gaps: "Kein einziger API-Vertrag definiert. PROJ-1 braucht bewusst keine API-Routen; alle uebrigen Features haben keine Spec."
-
+    status: partial
+    gaps: "Future PVS, communication and AI contracts are not binding until their feature specs and architecture reviews."
   - path: docs/design/design-system.md
     status: complete
-    gaps: "Kein Dark Mode (bewusst), keine Barrierefreiheits- und Responsive-Vorgaben."
+    gaps: ""
   - path: docs/design/screen-specs.md
     status: partial
-    gaps: "Die zwei zu bauenden Screens (PROJ-1) sind im Verhalten spezifiziert, aber nicht visuell entworfen. Die drei gestalteten Screens haben umgekehrt keine Spec."
-  - path: docs/design/assets/dentpilot-ux1-prototype.html
-    status: complete
-    gaps: "Eigenstaendige HTML-Datei, im Browser lauffaehig. Enthaelt ausschliesslich erfundene Beispieldaten."
-
+    gaps: "Login/status are implemented; later feature screens remain to be specified."
   - path: docs/delivery/implementation-plan.md
     status: complete
-    gaps: ""
+    gaps: "PROJ-1 tasks complete; manual review gates remain listed."
   - path: docs/delivery/acceptance-tests.md
     status: partial
-    gaps: "Manuelle Abnahmeschritte fuer PROJ-1 vollstaendig. Es existiert kein automatisierter Test im Repository; keine Teststrategie festgelegt."
+    gaps: "58 Vitest, 36 pgTAP and 15 Playwright checks recorded; three manual PROJ-1 checks remain."
   - path: docs/delivery/known-issues.md
     status: complete
     gaps: ""
   - path: docs/delivery/open-questions.md
     status: complete
-    gaps: ""
-
-  - path: .env.example
-    status: open
-    gaps: "KONNTE NICHT ANGELEGT WERDEN — .env-Dateien sind durch die Berechtigungseinstellungen gesperrt. Die drei Variablennamen sind stattdessen in docs/architecture/overview.md dokumentiert. Die vorhandene .env.local.example konnte aus demselben Grund nicht gelesen werden."
-
-# Quellen, die dieser Handoff nur liest und nie aendert:
-sources:
-  - features/INDEX.md
-  - features/PROJ-1-supabase-infrastructure-setup.md
-  - docs/PRD.md
-  - CLAUDE.md
-  - .claude/rules/backend.md
-  - .claude/rules/general.md
+    gaps: "Open items are intentionally unresolved and routed by affected feature."
+  - path: docs/superpowers/plans/2026-08-26-mvp-continuation-roadmap.md
+    status: complete
+    gaps: "Roadmap only; each future feature still requires its own approved spec, architecture and detailed implementation plan."
+  - path: .env.local.example
+    status: complete
+    gaps: "Public app variables only; real file ignored."
+  - path: .env.seed.local.example
+    status: complete
+    gaps: "CLI/E2E secret variable names with dummy values only; real file ignored."
