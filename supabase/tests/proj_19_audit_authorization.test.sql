@@ -1,6 +1,6 @@
 begin;
 
-select plan(33);
+select plan(36);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -19,12 +19,30 @@ select ok(
   'authenticated users have no direct audit-event SELECT grant'
 );
 select ok(
+  not has_table_privilege('authenticated', 'public.audit_event', 'INSERT'),
+  'authenticated users have no direct audit-event INSERT grant'
+);
+select ok(
   not has_table_privilege('authenticated', 'public.audit_event', 'UPDATE'),
   'authenticated users have no direct audit-event UPDATE grant'
 );
 select ok(
   not has_table_privilege('authenticated', 'public.audit_event', 'DELETE'),
   'authenticated users have no direct audit-event DELETE grant'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.portal_admin', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.portal_admin', 'INSERT')
+    and not has_table_privilege('authenticated', 'public.portal_admin', 'UPDATE')
+    and not has_table_privilege('authenticated', 'public.portal_admin', 'DELETE'),
+  'authenticated users have no direct portal-admin API table grants'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.support_access_grant', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.support_access_grant', 'INSERT')
+    and not has_table_privilege('authenticated', 'public.support_access_grant', 'UPDATE')
+    and not has_table_privilege('authenticated', 'public.support_access_grant', 'DELETE'),
+  'authenticated users have no direct support-access-grant API table grants'
 );
 
 insert into auth.users (id, email)
@@ -68,9 +86,14 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select lives_ok(
-  $$ select public.request_support_access(interval '8 hours') $$,
-  'the owning praxisadmin can request support access for its own practice'
+select set_config(
+  'proj_19.first_grant_id',
+  public.request_support_access(interval '8 hours')::text,
+  true
+);
+select ok(
+  current_setting('proj_19.first_grant_id')::uuid is not null,
+  'the owning praxisadmin receives a transaction-local support-grant UUID for its own practice'
 );
 select throws_ok(
   $$ select public.request_support_access(interval '25 hours') $$,
@@ -112,13 +135,7 @@ select throws_ok(
 select lives_ok(
   $$
     select public.activate_support_access(
-      (
-        select id
-        from public.support_access_grant
-        where practice_id = '21000000-0000-0000-0000-000000000001'
-        order by requested_at desc
-        limit 1
-      ),
+      current_setting('proj_19.first_grant_id')::uuid,
       'technical_investigation'
     )
   $$,
@@ -211,13 +228,7 @@ set local role authenticated;
 select throws_ok(
   $$
     select public.activate_support_access(
-      (
-        select id
-        from public.support_access_grant
-        where practice_id = '21000000-0000-0000-0000-000000000001'
-        order by requested_at desc
-        limit 1
-      ),
+      current_setting('proj_19.first_grant_id')::uuid,
       'technical_investigation'
     )
   $$,
@@ -300,13 +311,7 @@ set local role authenticated;
 select lives_ok(
   $$
     select public.revoke_support_access(
-      (
-        select id
-        from public.support_access_grant
-        where practice_id = '21000000-0000-0000-0000-000000000001'
-        order by requested_at desc
-        limit 1
-      )
+      current_setting('proj_19.first_grant_id')::uuid
     )
   $$,
   'the owning praxisadmin can revoke its support grant'
@@ -336,9 +341,14 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select lives_ok(
-  $$ select public.request_support_access(interval '8 hours') $$,
-  'the owning praxisadmin can request a replacement support grant'
+select set_config(
+  'proj_19.replacement_grant_id',
+  public.request_support_access(interval '8 hours')::text,
+  true
+);
+select ok(
+  current_setting('proj_19.replacement_grant_id')::uuid is not null,
+  'the owning praxisadmin receives a transaction-local replacement-grant UUID'
 );
 
 reset role;
@@ -349,14 +359,7 @@ set local role authenticated;
 select lives_ok(
   $$
     select public.activate_support_access(
-      (
-        select id
-        from public.support_access_grant
-        where practice_id = '21000000-0000-0000-0000-000000000001'
-          and revoked_at is null
-        order by requested_at desc
-        limit 1
-      ),
+      current_setting('proj_19.replacement_grant_id')::uuid,
       'account_support'
     )
   $$,
@@ -371,8 +374,7 @@ select lives_ok(
     update public.support_access_grant
     set requested_at = now() - interval '2 hours',
         expires_at = now() - interval '1 hour'
-    where practice_id = '21000000-0000-0000-0000-000000000001'
-      and revoked_at is null
+    where id = current_setting('proj_19.replacement_grant_id')::uuid
   $$,
   'the synthetic fixture can model an expired active grant'
 );
