@@ -161,22 +161,34 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select lives_ok(
-  $$
-    select *
+select is(
+  (
+    select count(*)
     from public.read_audit_events(
       '21000000-0000-0000-0000-000000000001',
       now(),
       50
     )
-  $$,
-  'an activated portal admin can read only the granted practice audit events'
+    where resource_id = '91000000-0000-0000-0000-000000000001'
+  ),
+  1::bigint,
+  'an activated portal admin receives the seeded audit event for the granted practice'
 );
+
+reset role;
+set local role service_role;
+
 select is(
   (select count(*) from public.audit_event where action = 'audit_read'),
   1::bigint,
   'an allowed audit read records itself exactly once'
 );
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
 select throws_ok(
   $$
     select *
