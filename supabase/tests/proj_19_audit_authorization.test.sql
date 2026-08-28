@@ -1,6 +1,6 @@
 begin;
 
-select plan(37);
+select plan(50);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -97,6 +97,29 @@ select is(
   0::bigint,
   'portal-admin identities have no practice user-profile rows'
 );
+select throws_ok(
+  $$
+    insert into public.user_profile (user_id, practice_id, display_name, role)
+    values (
+      '11000000-0000-0000-0000-000000000003',
+      '21000000-0000-0000-0000-000000000001',
+      'PROJ-19 Forbidden Portal Profile',
+      'rezeption'
+    )
+  $$,
+  '23514',
+  null,
+  'a portal-admin identity cannot become a practice member'
+);
+select throws_ok(
+  $$
+    insert into public.portal_admin (user_id)
+    values ('11000000-0000-0000-0000-000000000001')
+  $$,
+  '23514',
+  null,
+  'a practice member cannot become a portal-admin identity'
+);
 
 reset role;
 
@@ -113,11 +136,30 @@ select ok(
   current_setting('proj_19.first_grant_id')::uuid is not null,
   'the owning praxisadmin receives a transaction-local support-grant UUID for its own practice'
 );
-select throws_ok(
-  $$ select public.request_support_access(interval '25 hours') $$,
-  null,
-  null,
-  'a requested support-access duration over 24 hours is rejected'
+
+reset role;
+set local role service_role;
+
+select ok(
+  (
+    select requested_duration = interval '8 hours'
+      and activation_deadline = requested_at + interval '24 hours'
+      and expires_at is null
+    from public.support_access_grant
+    where id = current_setting('proj_19.first_grant_id')::uuid
+  ),
+  'a requested grant records its duration and activation deadline without starting access'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(interval '25 hours'),
+  null::uuid,
+  'a requested support-access duration over 24 hours is neutrally denied'
 );
 
 reset role;
@@ -125,11 +167,10 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select throws_ok(
-  $$ select public.request_support_access(interval '8 hours') $$,
-  '42501',
-  null,
-  'a non-praxisadmin cannot request support access'
+select is(
+  public.request_support_access(interval '8 hours'),
+  null::uuid,
+  'a non-praxisadmin support request is neutrally denied'
 );
 
 reset role;
@@ -137,18 +178,17 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select throws_ok(
-  $$
-    select *
+select is(
+  (
+    select count(*)
     from public.read_audit_events(
       '21000000-0000-0000-0000-000000000001',
       now(),
       50
     )
-  $$,
-  '42501',
-  null,
-  'a portal admin cannot read audit events before activation'
+  ),
+  0::bigint,
+  'a portal admin receives no audit events before activation'
 );
 select lives_ok(
   $$
@@ -163,12 +203,50 @@ select lives_ok(
 reset role;
 set local role service_role;
 
+select ok(
+  (
+    select requested_duration = interval '8 hours'
+      and activation_deadline = requested_at + interval '24 hours'
+    from public.support_access_grant
+    where id = current_setting('proj_19.first_grant_id')::uuid
+  ),
+  'an active grant retains its requested duration and 24-hour activation deadline'
+);
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'support_access_requested' and outcome = 'denied'
+  ),
+  2::bigint,
+  'denied support requests are retained without disclosing a practice or grant'
+);
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'audit_read' and outcome = 'denied'
+  ),
+  1::bigint,
+  'a denied pre-activation audit read is retained'
+);
+select ok(
+  (
+    select expires_at = activated_at + requested_duration
+      and expires_at > activated_at
+    from public.support_access_grant
+    where id = current_setting('proj_19.first_grant_id')::uuid
+  ),
+  'active support duration begins on activation'
+);
+
 select lives_ok(
   $$
     insert into public.audit_event (
       id,
       practice_id,
       actor_id,
+      actor_type,
       action,
       outcome,
       resource_type,
@@ -180,6 +258,7 @@ select lives_ok(
       '91000000-0000-0000-0000-000000000001',
       '21000000-0000-0000-0000-000000000001',
       '11000000-0000-0000-0000-000000000001',
+      'practice_member',
       'support_access_requested',
       'allowed',
       'support_access_grant',
@@ -209,14 +288,31 @@ select is(
   1::bigint,
   'an activated portal admin receives the seeded audit event for the granted practice'
 );
+select is(
+  (
+    select actor_type::text
+    from public.read_audit_events(
+      '21000000-0000-0000-0000-000000000001',
+      now(),
+      50
+    )
+    where resource_id = '91000000-0000-0000-0000-000000000001'
+  ),
+  'practice_member',
+  'an allowed audit read includes the controlled actor type'
+);
 
 reset role;
 set local role service_role;
 
 select is(
-  (select count(*) from public.audit_event where action = 'audit_read'),
-  1::bigint,
-  'an allowed audit read records itself exactly once'
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'audit_read' and outcome = 'allowed'
+  ),
+  2::bigint,
+  'each allowed audit read records itself exactly once'
 );
 
 reset role;
@@ -224,18 +320,17 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select throws_ok(
-  $$
-    select *
+select is(
+  (
+    select count(*)
     from public.read_audit_events(
       '21000000-0000-0000-0000-000000000002',
       now(),
       50
     )
-  $$,
-  '42501',
-  null,
-  'an active grant for one practice does not reveal a foreign practice'
+  ),
+  0::bigint,
+  'an active grant for one practice reveals no foreign audit events'
 );
 
 reset role;
@@ -243,29 +338,47 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000004
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select throws_ok(
-  $$
-    select public.activate_support_access(
-      current_setting('proj_19.first_grant_id')::uuid,
-      'technical_investigation'
-    )
-  $$,
-  '42501',
-  null,
+select is(
+  public.activate_support_access(
+    current_setting('proj_19.first_grant_id')::uuid,
+    'technical_investigation'
+  ),
+  null::timestamptz,
   'a second portal admin cannot reuse another portal admin grant'
 );
-select throws_ok(
-  $$
-    select *
+select is(
+  (
+    select count(*)
     from public.read_audit_events(
       '21000000-0000-0000-0000-000000000001',
       now(),
       50
     )
-  $$,
-  '42501',
-  null,
+  ),
+  0::bigint,
   'an ungranted portal admin cannot read through another portal admin grant'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'support_access_activated' and outcome = 'denied'
+  ),
+  1::bigint,
+  'a denied activation is retained'
+);
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'audit_read' and outcome = 'denied'
+  ),
+  3::bigint,
+  'foreign and ungranted audit reads are retained'
 );
 
 reset role;
@@ -320,19 +433,38 @@ select throws_ok(
   null,
   'authenticated users cannot directly delete audit events'
 );
+select is(
+  public.revoke_support_access(
+    current_setting('proj_19.first_grant_id')::uuid
+  ),
+  false,
+  'a non-praxisadmin support revocation is neutrally denied'
+);
 
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select lives_ok(
-  $$
-    select public.revoke_support_access(
-      current_setting('proj_19.first_grant_id')::uuid
-    )
-  $$,
+select is(
+  public.revoke_support_access(
+    current_setting('proj_19.first_grant_id')::uuid
+  ),
+  true,
   'the owning praxisadmin can revoke its support grant'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'support_access_revoked' and outcome = 'denied'
+  ),
+  1::bigint,
+  'a denied support revocation is retained'
 );
 
 reset role;
@@ -340,18 +472,17 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select throws_ok(
-  $$
-    select *
+select is(
+  (
+    select count(*)
     from public.read_audit_events(
       '21000000-0000-0000-0000-000000000001',
       now(),
       50
     )
-  $$,
-  '42501',
-  null,
-  'a revoked grant immediately denies audit reads'
+  ),
+  0::bigint,
+  'a revoked grant immediately returns no audit events'
 );
 
 reset role;
@@ -390,7 +521,9 @@ set local role service_role;
 select lives_ok(
   $$
     update public.support_access_grant
-    set requested_at = now() - interval '2 hours',
+    set requested_at = now() - interval '10 hours',
+        activation_deadline = now() + interval '14 hours',
+        activated_at = now() - interval '9 hours',
         expires_at = now() - interval '1 hour'
     where id = current_setting('proj_19.replacement_grant_id')::uuid
   $$,
@@ -402,22 +535,31 @@ select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
-select throws_ok(
-  $$
-    select *
+select is(
+  (
+    select count(*)
     from public.read_audit_events(
       '21000000-0000-0000-0000-000000000001',
       now(),
       50
     )
-  $$,
-  '42501',
-  null,
-  'an expired grant immediately denies audit reads'
+  ),
+  0::bigint,
+  'an expired grant immediately returns no audit events'
 );
 
 reset role;
 set local role service_role;
+
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where action = 'audit_read' and outcome = 'denied'
+  ),
+  5::bigint,
+  'revoked and expired audit reads are retained'
+);
 
 select lives_ok(
   $$
@@ -425,6 +567,7 @@ select lives_ok(
       id,
       practice_id,
       actor_id,
+      actor_type,
       action,
       outcome,
       resource_type,
@@ -437,6 +580,7 @@ select lives_ok(
         '91000000-0000-0000-0000-000000000003',
         '21000000-0000-0000-0000-000000000001',
         '11000000-0000-0000-0000-000000000001',
+        'practice_member',
         'support_access_requested',
         'allowed',
         'support_access_grant',
@@ -448,6 +592,7 @@ select lives_ok(
         '91000000-0000-0000-0000-000000000004',
         '21000000-0000-0000-0000-000000000001',
         '11000000-0000-0000-0000-000000000001',
+        'practice_member',
         'support_access_requested',
         'allowed',
         'support_access_grant',
@@ -459,6 +604,7 @@ select lives_ok(
         '91000000-0000-0000-0000-000000000005',
         '21000000-0000-0000-0000-000000000001',
         '11000000-0000-0000-0000-000000000001',
+        'practice_member',
         'support_access_requested',
         'allowed',
         'support_access_grant',
