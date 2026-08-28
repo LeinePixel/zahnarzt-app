@@ -27,3 +27,7 @@ _Avoid_: Fachhistorie, Kommunikationsverlauf
 
 **Korrelations-ID**:
 Eine technische Kennung, die die zu einer einzelnen Anfrage oder einem Supportfall gehörenden Audit-Ereignisse verbindet, ohne einen fachlichen Inhalt zu speichern.
+
+**Neutrales verweigertes Ergebnis**:
+Eine technisch erfolgreiche Antwort ohne Ereignisinhalte, die mitteilt, dass eine PROJ-19-Aktion nicht ausgeführt wurde, ohne den Grund oder die Existenz einer Praxis, Freigabe oder Identität offenzulegen. Sie ermöglicht die dauerhafte Aufzeichnung des `denied`-Audit-Ereignisses in derselben Transaktion.
+_Avoid_: SQL-Fehler als Audit-Ersatz, detaillierte Berechtigungsfehlermeldung

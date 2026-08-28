@@ -30,7 +30,7 @@
 
 **Interfaces:**
 - Consumes: supabase/config.toml database port 55422.
-- Produces: an agent-runnable npx supabase test db baseline.
+- Produces: an agent-runnable `npx supabase test db --local` baseline.
 
 - [ ] **Step 1: Prove the current readiness state.**
 
@@ -53,7 +53,7 @@ Expected: 5432/tcp maps to host port 55422; no cloud project is touched.
 
 - [ ] **Step 3: Run the current pgTAP suite.**
 
-Run: npx supabase test db
+Run: npx supabase test db --local
 
 Expected: existing PROJ-1 suites pass before a PROJ-19 migration exists.
 
@@ -99,7 +99,11 @@ Also assert: revoked and expired grants return no rows; 25 hours is rejected; di
 
 - [ ] **Step 4: Run the focused suite to red.**
 
-Run: npx supabase test db --file supabase/tests/proj_19_audit_authorization.test.sql
+Run: npx supabase test db --local
+
+The installed Supabase CLI does not support a per-file `--file` filter. The full
+database suite is therefore the required local feedback loop until the repository
+adds a supported targeted runner.
 
 Expected: FAIL because tables and functions do not exist.
 
@@ -124,9 +128,9 @@ git commit -m "test: define PROJ-19 database security contract"
 ~~~sql
 public.request_support_access(p_requested_duration interval) returns uuid
 public.activate_support_access(p_grant_id uuid, p_reason public.support_reason) returns timestamptz
-public.revoke_support_access(p_grant_id uuid) returns void
+public.revoke_support_access(p_grant_id uuid) returns boolean
 public.read_audit_events(p_practice_id uuid, p_before timestamptz, p_limit integer)
-  returns table(actor_id uuid, occurred_at timestamptz, action public.audit_action, outcome public.audit_outcome, resource_type text, resource_id uuid, correlation_id uuid)
+  returns table(actor_type public.audit_actor_type, actor_id uuid, occurred_at timestamptz, action public.audit_action, outcome public.audit_outcome, resource_type text, resource_id uuid, correlation_id uuid)
 private.purge_expired_audit_events() returns integer
 ~~~
 
@@ -134,6 +138,7 @@ private.purge_expired_audit_events() returns integer
 
 ~~~sql
 create type public.audit_outcome as enum ('allowed', 'denied', 'failed');
+create type public.audit_actor_type as enum ('practice_member', 'portal_admin', 'unknown_authenticated');
 create type public.audit_action as enum (
   'support_access_requested',
   'support_access_activated',
@@ -152,7 +157,9 @@ create table public.support_access_grant (
   activated_by uuid references public.portal_admin(user_id) on delete restrict,
   requested_at timestamptz not null default now(),
   activated_at timestamptz,
-  expires_at timestamptz not null,
+  requested_duration interval not null,
+  activation_deadline timestamptz not null,
+  expires_at timestamptz,
   revoked_at timestamptz,
   support_reason public.support_reason,
   check (expires_at > requested_at and expires_at <= requested_at + interval '24 hours')
@@ -163,11 +170,11 @@ Create audit_event with UUID primary key, nullable practice_id only for denied p
 
 - [ ] **Step 2: Implement the three grant lifecycle functions.**
 
-Every function is SECURITY DEFINER SET search_path = '', uses auth.uid(), schema-qualifies relations and has default execution revoked. request_support_access allows only the caller’s praxisadmin profile, defaults null duration to eight hours and rejects duration over 24 hours. activate_support_access requires a portal_admin identity, locks the row with FOR UPDATE, rejects activated/revoked/expired rows and stores the controlled reason. revoke_support_access requires the owning practice admin and writes revoked_at once. Each writes an allowed or denied audit event in the same transaction.
+Every function is SECURITY DEFINER SET search_path = '', uses auth.uid(), schema-qualifies relations and has default execution revoked. request_support_access allows only the caller’s praxisadmin profile, defaults null duration to eight hours and rejects duration over 24 hours. It records the requested duration, allows activation only for 24 hours, then begins the actual support expiry clock on activation. activate_support_access requires a portal_admin identity, locks the row with FOR UPDATE, rejects activated/revoked/stale rows and stores the controlled reason. revoke_support_access requires the owning practice admin and writes revoked_at once. Each writes an allowed or denied audit event in the same transaction, including a controlled actor type. Cross-table provider/practice identity triggers take a common transaction advisory lock keyed by user ID.
 
 - [ ] **Step 3: Implement bounded atomic audit reading.**
 
-read_audit_events verifies an active, unrevoked grant for auth.uid() and p_practice_id, accepts p_limit from 1 through 100, writes audit_read before returning data and orders by occurred_at descending then id descending. It has no text parameter, no export mode and returns only the declared metadata. A denial raises 42501 without revealing if a practice or grant exists.
+read_audit_events verifies an active, unrevoked grant for auth.uid() and p_practice_id, accepts p_limit from 1 through 100, writes audit_read before returning data and orders by occurred_at descending then id descending. It has no text parameter, no export mode and returns only the declared metadata. A denial writes a `denied` event and returns no events; it never reveals whether a practice or grant exists. The three lifecycle RPCs use the same neutral-result convention (`NULL` for denied UUID/timestamp results and `false` for denied revocation) so their denied audit events commit. The server maps that result to a generic access-denied response.
 
 - [ ] **Step 4: Implement the private daily purge.**
 
@@ -194,8 +201,8 @@ Enable pg_cron, do not expose private through the Data API and revoke applicatio
 - [ ] **Step 5: Run database tests green and commit.**
 
 ~~~
-npx supabase test db --file supabase/tests/proj_19_audit_authorization.test.sql
-npx supabase test db
+npx supabase test db --local
+npx supabase test db --local
 git add supabase/migrations/20260827090000_proj_19_audit_authorization.sql supabase/tests/proj_19_audit_authorization.test.sql
 git commit -m "feat: add PROJ-19 audit authorization database boundary"
 ~~~
@@ -327,7 +334,7 @@ git commit -m "test: cover PROJ-19 provider audit access"
 npm run lint
 npm test
 npm run typecheck
-npx supabase test db
+npx supabase test db --local
 npm run test:e2e:edge-required
 npm run build
 ~~~

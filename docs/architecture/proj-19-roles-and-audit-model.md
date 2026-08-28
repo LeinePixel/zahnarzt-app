@@ -20,7 +20,7 @@ Diese Beschreibung definiert die Begriffe und Sicherheitsgrenzen. Akzeptanzkrite
 
 1. Ein `praxisadmin` eröffnet für seine eigene Praxis einen begrenzten Supportfall.
 2. Ein `portaladmin` aktiviert die Freigabe mit einer strukturierten Supportkategorie und erneuter Anmeldung.
-3. Die Freigabe gilt standardmäßig acht Stunden, höchstens 24 Stunden, und ist durch einen `praxisadmin` widerrufbar.
+3. Die Freigabe gilt ab Aktivierung standardmäßig acht Stunden, höchstens 24 Stunden, und ist durch einen `praxisadmin` widerrufbar. Sie muss innerhalb von 24 Stunden nach Anfrage aktiviert werden; andernfalls ist eine neue Praxisfreigabe nötig.
 4. Nach Ablauf oder Widerruf ist jeder Zugriff sofort zu verweigern. Eine Verlängerung ist eine neue Praxisfreigabe.
 
 Der Supportfall darf länger offen bleiben als seine Zugriffsfreigabe. Eine Freigabe gewährt ausschließlich Audit-Lesezugriff; kein Export, keine Änderung, keine Benutzerverwaltung und keinen Zugriff auf Fach- oder Patienteninhalte.
@@ -36,7 +36,15 @@ Ein Audit-Ereignis enthält nur:
 - Ergebnis (`allowed`, `denied` oder `failed`),
 - Zeitpunkt und Korrelations-ID.
 
+Ein authentifiziertes Konto ohne Praxis- oder Portaladmin-Zuordnung wird im Audit
+als kontrollierter Typ `unknown_authenticated` geführt. Ein verweigerter Vorgang
+wird nur der eigenen Praxis des aufrufenden Praxismitglieds zugeordnet; kann keine
+eigene Praxis bestimmt werden, bleibt die Praxiskennung leer. Er erscheint nie im
+Auditstrom einer nur erratenen oder fremden Zielpraxis.
+
 Nicht zulässig sind Freitext, Anzeige- oder Patientennamen, medizinische Inhalte, Prompts, Request-/Response-Bodies, Passwörter, Tokens, IP-Adressen oder Exportdaten. Audit- und fachliche Kommunikationshistorie bleiben getrennt.
+
+Ein verweigerter Aufruf liefert keine Ereignisinhalte und keine SQL-Fehlerdetails an Praxis- oder Portalnutzer. Er wird als `denied`-Ereignis gespeichert und als neutrales verweigertes Ergebnis zurückgegeben; siehe ADR-0002.
 
 ## Aufbewahrung und Grenzen
 

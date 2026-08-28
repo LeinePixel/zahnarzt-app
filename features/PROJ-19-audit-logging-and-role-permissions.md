@@ -39,7 +39,7 @@ Das Feature verarbeitet weiterhin ausschließlich synthetische Daten. Es öffnet
 
 - Ein Praxisadmin kann nur für die eigene Praxis eine Supportfreigabe anlegen oder widerrufen.
 - Ein Portaladmin aktiviert eine freigegebene Supportfreigabe mit einer strukturierten Kategorie; Freitext ist nicht Teil des MVP.
-- Zugriff gilt standardmäßig acht Stunden; eine Praxisfreigabe darf höchstens 24 Stunden gelten.
+- Zugriff gilt standardmäßig acht Stunden ab Aktivierung; eine Praxisfreigabe darf höchstens 24 Stunden aktive Zugriffszeit geben. Eine nicht innerhalb von 24 Stunden aktivierte Freigabe verfällt und braucht eine neue Praxisfreigabe.
 - Nach Ablauf oder Widerruf ist Audit-Lesen sofort untersagt. Eine Verlängerung benötigt eine neue Freigabe durch die Praxis.
 - Ein Supportfall kann länger offen bleiben als seine Zugriffsfreigabe.
 
@@ -53,7 +53,7 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 
 - Serveraktionen und geschützte Komponenten verwenden einen zentralen Autorisierungsmodul; UI-Ausblendung allein ist nie eine Berechtigung.
 - Jede neue Tabelle erhält RLS, explizite Least-Privilege-Grants und positive sowie negative Mandantentests.
-- Auditpflichtige Mutationen und Audit-Lesezugriffe verwenden zweckgebundene, atomare Datenbankoperationen. Schlägt das Audit-Schreiben fehl, darf die Mutation oder Audit-Anzeige nicht erfolgreich sein.
+- Auditpflichtige Mutationen und Audit-Lesezugriffe verwenden zweckgebundene, atomare Datenbankoperationen. Schlägt das Audit-Schreiben fehl, darf die Mutation oder Audit-Anzeige nicht erfolgreich sein. Verweigerte Aufrufe liefern ein neutrales verweigertes Ergebnis ohne Ereignisinhalte, damit ihr `denied`-Audit-Ereignis dauerhaft gespeichert wird; sie geben keinen SQL-Fehler mit Existenz- oder Berechtigungsdetails nach außen.
 
 ## Out of Scope
 
@@ -68,13 +68,13 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 
 ## Acceptance Criteria
 
-- [ ] Angenommen ich bin `rezeption`, `behandler` oder `praxisadmin`, wenn ich einen Audit-Leseweg aufrufe, dann sehe ich keine Audit-Ereignisse und die Datenbank verweigert die Abfrage.
+- [ ] Angenommen ich bin `rezeption`, `behandler` oder `praxisadmin`, wenn ich einen Audit-Leseweg aufrufe, dann sehe ich keine Audit-Ereignisse, die Datenbank führt keine Lesefunktion aus und der Versuch wird neutral verweigert sowie auditiert.
 - [ ] Angenommen ich bin ein `praxisadmin`, wenn ich eine Supportfreigabe für meine Praxis anlege, dann kann sie ausschließlich dieser Praxis zugeordnet und jederzeit widerrufen werden.
-- [ ] Angenommen ich bin ein `praxisadmin`, wenn ich eine Supportfreigabe für eine fremde Praxis anzulegen oder zu widerrufen versuche, dann wird die Aktion server- und datenbankseitig verweigert.
-- [ ] Angenommen ich bin ein `portaladmin` ohne aktive Supportfreigabe, wenn ich Audit-Ereignisse aufrufe, dann wird der Zugriff verweigert und es werden keine Ereignisinhalte ausgeliefert.
+- [ ] Angenommen ich bin ein `praxisadmin`, wenn ich eine Supportfreigabe für eine fremde Praxis anzulegen oder zu widerrufen versuche, dann wird die Aktion server- und datenbankseitig neutral verweigert und auditiert.
+- [ ] Angenommen ich bin ein `portaladmin` ohne aktive Supportfreigabe, wenn ich Audit-Ereignisse aufrufe, dann wird der Zugriff neutral verweigert, auditiert und es werden keine Ereignisinhalte ausgeliefert.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe, wenn ich Audit-Ereignisse der freigegebenen Praxis aufrufe, dann erhalte ich ausschließlich deren datenminimierte Ereignisse und die Einsicht wird selbst protokolliert.
-- [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe für Praxis A, wenn ich Audit-Ereignisse von Praxis B aufrufe, dann wird der Zugriff verweigert.
-- [ ] Angenommen eine Freigabe ist widerrufen oder abgelaufen, wenn ein Portaladmin anschließend Audit-Ereignisse abfragt, dann wird der Zugriff sofort verweigert.
+- [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe für Praxis A, wenn ich Audit-Ereignisse von Praxis B aufrufe, dann wird der Zugriff neutral verweigert und auditiert.
+- [ ] Angenommen eine Freigabe ist widerrufen oder abgelaufen, wenn ein Portaladmin anschließend Audit-Ereignisse abfragt, dann wird der Zugriff sofort neutral verweigert und auditiert.
 - [ ] Angenommen eine neue Freigabe aktiviert wird, wenn keine Dauer angegeben ist, dann läuft sie acht Stunden nach Aktivierung ab; eine Laufzeit über 24 Stunden wird abgewiesen.
 - [ ] Angenommen eine auditpflichtige Mutation oder Audit-Einsicht ausgeführt wird, wenn das Audit-Schreiben fehlschlägt, dann wird weder die Mutation ausgeführt noch die Auditansicht ausgeliefert.
 - [ ] Angenommen ein Audit-Ereignis geschrieben wird, wenn Eingaben Freitext, medizinische Inhalte, Request-Bodies, Tokens, Passwörter, Prompts oder IP-Adressen enthalten, dann werden sie nicht gespeichert.
@@ -119,3 +119,4 @@ Die detaillierte Architektur ist in [`docs/superpowers/specs/2026-08-26-proj-19-
 | Kein Export und keine Freitextsuche | Verringert Datenabfluss und verhindert, dass Inhaltsdaten in Audit- oder Suchprotokolle geraten. | 2026-08-26 |
 | Automatische Löschung nach 90 Tagen | Bestätigte MVP-Produktentscheidung; vor echten Daten gegen konkrete Aufbewahrungspflichten prüfen. | 2026-08-26 |
 | Kein Break-Glass im MVP | Keine klinisch kritischen Abläufe im synthetischen MVP; ein Notfallzugang braucht eine eigene Risikoentscheidung. | 2026-08-26 |
+| Neutrales Ergebnis bei verweigerten PROJ-19-Aufrufen | Ein anschließender SQL-Fehler würde den verlangten `denied`-Audit-Eintrag zurückrollen. Eine neutrale Antwort bewahrt Mandantengeheimnis und Auditierbarkeit zugleich. | 2026-08-28 |
