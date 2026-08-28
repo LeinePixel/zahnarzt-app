@@ -1,6 +1,6 @@
 begin;
 
-select plan(50);
+select plan(55);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -50,7 +50,9 @@ values
   ('11000000-0000-0000-0000-000000000001', 'proj19-praxisadmin@example.invalid'),
   ('11000000-0000-0000-0000-000000000002', 'proj19-rezeption@example.invalid'),
   ('11000000-0000-0000-0000-000000000003', 'proj19-portal-admin-one@example.invalid'),
-  ('11000000-0000-0000-0000-000000000004', 'proj19-portal-admin-two@example.invalid');
+  ('11000000-0000-0000-0000-000000000004', 'proj19-portal-admin-two@example.invalid'),
+  ('11000000-0000-0000-0000-000000000005', 'proj19-unknown-authenticated@example.invalid'),
+  ('11000000-0000-0000-0000-000000000006', 'proj19-foreign-praxisadmin@example.invalid');
 
 insert into public.practice (id, name)
 values
@@ -70,6 +72,12 @@ values
     '21000000-0000-0000-0000-000000000001',
     'PROJ-19 Rezeption',
     'rezeption'
+  ),
+  (
+    '11000000-0000-0000-0000-000000000006',
+    '21000000-0000-0000-0000-000000000002',
+    'PROJ-19 Fremde Praxisadmin',
+    'praxisadmin'
   );
 
 select lives_ok(
@@ -174,6 +182,17 @@ select is(
 );
 
 reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000005', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(interval '8 hours'),
+  null::uuid,
+  'an authenticated identity without a controlled role is neutrally denied'
+);
+
+reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
@@ -218,8 +237,21 @@ select is(
     from public.audit_event
     where action = 'support_access_requested' and outcome = 'denied'
   ),
-  2::bigint,
+  3::bigint,
   'denied support requests are retained without disclosing a practice or grant'
+);
+select is(
+  (
+    select actor_type::text
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000005'
+      and action = 'support_access_requested'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  'unknown_authenticated',
+  'an authenticated identity without a profile or portal mapping has a controlled unknown actor type'
 );
 select is(
   (
@@ -442,6 +474,64 @@ select is(
 );
 
 reset role;
+set local role service_role;
+
+insert into public.support_access_grant (
+  id,
+  practice_id,
+  requested_by,
+  requested_duration,
+  activation_deadline
+)
+values (
+  '31000000-0000-0000-0000-000000000001',
+  '21000000-0000-0000-0000-000000000002',
+  '11000000-0000-0000-0000-000000000006',
+  interval '8 hours',
+  now() + interval '24 hours'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.revoke_support_access('31000000-0000-0000-0000-000000000001'),
+  false,
+  'a praxisadmin cannot revoke a foreign practice grant'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select practice_id
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000001'
+      and action = 'support_access_revoked'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  '21000000-0000-0000-0000-000000000001'::uuid,
+  'a denied foreign-grant revocation is audited only under the caller practice'
+);
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000001'
+      and action = 'support_access_revoked'
+      and outcome = 'denied'
+      and practice_id = '21000000-0000-0000-0000-000000000002'
+  ),
+  0::bigint,
+  'a denied foreign-grant revocation never records the guessed target practice'
+);
+
+reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
@@ -463,8 +553,8 @@ select is(
     from public.audit_event
     where action = 'support_access_revoked' and outcome = 'denied'
   ),
-  1::bigint,
-  'a denied support revocation is retained'
+  2::bigint,
+  'denied support revocations are retained'
 );
 
 reset role;

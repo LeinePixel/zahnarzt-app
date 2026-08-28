@@ -11,7 +11,8 @@ create type public.audit_outcome as enum (
 
 create type public.audit_actor_type as enum (
   'practice_member',
-  'portal_admin'
+  'portal_admin',
+  'unknown_authenticated'
 );
 
 create type public.audit_action as enum (
@@ -129,7 +130,15 @@ begin
     return 'portal_admin';
   end if;
 
-  return 'practice_member';
+  if exists (
+    select 1
+    from public.user_profile as profile
+    where profile.user_id = p_actor_id
+  ) then
+    return 'practice_member';
+  end if;
+
+  return 'unknown_authenticated';
 end;
 $$;
 
@@ -416,7 +425,7 @@ begin
     or v_grant.practice_id <> v_practice_id
     or v_grant.revoked_at is not null then
     perform private.write_audit_event(
-      coalesce(v_grant.practice_id, v_practice_id),
+      v_practice_id,
       v_actor_id,
       v_actor_type,
       'support_access_revoked',
