@@ -1,6 +1,6 @@
 begin;
 
-select plan(36);
+select plan(37);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -81,6 +81,24 @@ select lives_ok(
   $$,
   'two fixed provider identities can exist without a practice profile'
 );
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select count(*)
+    from public.user_profile
+    where user_id in (
+      '11000000-0000-0000-0000-000000000003',
+      '11000000-0000-0000-0000-000000000004'
+    )
+  ),
+  0::bigint,
+  'portal-admin identities have no practice user-profile rows'
+);
+
+reset role;
 
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
