@@ -127,10 +127,11 @@ git commit -m "test: define PROJ-19 database security contract"
 
 ~~~sql
 public.request_support_access(p_requested_duration interval) returns uuid
-public.activate_support_access(p_grant_id uuid, p_reason public.support_reason) returns timestamptz
+public.activate_support_access(p_grant_id uuid, p_reason public.support_reason)
+  returns public.support_access_activation
 public.revoke_support_access(p_grant_id uuid) returns boolean
 public.read_audit_events(p_practice_id uuid, p_before timestamptz, p_limit integer)
-  returns table(actor_type public.audit_actor_type, actor_id uuid, occurred_at timestamptz, action public.audit_action, outcome public.audit_outcome, resource_type text, resource_id uuid, correlation_id uuid)
+  returns table(id uuid, actor_type public.audit_actor_type, actor_id uuid, occurred_at timestamptz, action public.audit_action, outcome public.audit_outcome, resource_type text, resource_id uuid, correlation_id uuid)
 private.purge_expired_audit_events() returns integer
 ~~~
 
@@ -170,7 +171,7 @@ Create audit_event with UUID primary key, nullable practice_id only for denied p
 
 - [ ] **Step 2: Implement the three grant lifecycle functions.**
 
-Every function is SECURITY DEFINER SET search_path = '', uses auth.uid(), schema-qualifies relations and has default execution revoked. request_support_access allows only the caller’s praxisadmin profile, defaults null duration to eight hours and rejects duration over 24 hours. It records the requested duration, allows activation only for 24 hours, then begins the actual support expiry clock on activation. activate_support_access requires a portal_admin identity, locks the row with FOR UPDATE, rejects activated/revoked/stale rows and stores the controlled reason. revoke_support_access requires the owning practice admin and writes revoked_at once. Each writes an allowed or denied audit event in the same transaction, including a controlled actor type. Cross-table provider/practice identity triggers take a common transaction advisory lock keyed by user ID.
+Every function is SECURITY DEFINER SET search_path = '', uses auth.uid(), schema-qualifies relations and has default execution revoked. request_support_access allows only the caller’s praxisadmin profile, defaults null duration to eight hours and rejects duration over 24 hours. It records the requested duration, allows activation only for 24 hours, then begins the actual support expiry clock on activation. activate_support_access requires a portal_admin identity, locks the row with FOR UPDATE, rejects activated/revoked/stale rows and stores the controlled reason, then returns the activated practice ID and expiry as `support_access_activation`. revoke_support_access requires the owning practice admin and writes revoked_at once. Each writes an allowed or denied audit event in the same transaction, including a controlled actor type. Portal-side denied attempts use no practice ID, so guessed/foreign targets never enter that practice's audit stream. Cross-table provider/practice identity triggers take a common transaction advisory lock keyed by user ID.
 
 - [ ] **Step 3: Implement bounded atomic audit reading.**
 

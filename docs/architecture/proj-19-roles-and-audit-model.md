@@ -19,7 +19,7 @@ Diese Beschreibung definiert die Begriffe und Sicherheitsgrenzen. Akzeptanzkrite
 ## Supportfreigabe
 
 1. Ein `praxisadmin` eröffnet für seine eigene Praxis einen begrenzten Supportfall.
-2. Ein `portaladmin` aktiviert die Freigabe mit einer strukturierten Supportkategorie und erneuter Anmeldung.
+2. Der Praxisadmin übermittelt die dabei erzeugte undurchsichtige Freigabe-ID im bestehenden Supportfall. Ein `portaladmin` aktiviert ausschließlich diese ID mit einer strukturierten Supportkategorie und erneuter Anmeldung; es gibt keine Praxis- oder Freigabeliste und keine Suche.
 3. Die Freigabe gilt ab Aktivierung standardmäßig acht Stunden, höchstens 24 Stunden, und ist durch einen `praxisadmin` widerrufbar. Sie muss innerhalb von 24 Stunden nach Anfrage aktiviert werden; andernfalls ist eine neue Praxisfreigabe nötig.
 4. Nach Ablauf oder Widerruf ist jeder Zugriff sofort zu verweigern. Eine Verlängerung ist eine neue Praxisfreigabe.
 

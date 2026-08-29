@@ -39,6 +39,7 @@ Das Feature verarbeitet weiterhin ausschließlich synthetische Daten. Es öffnet
 
 - Ein Praxisadmin kann nur für die eigene Praxis eine Supportfreigabe anlegen oder widerrufen.
 - Ein Portaladmin aktiviert eine freigegebene Supportfreigabe mit einer strukturierten Kategorie; Freitext ist nicht Teil des MVP.
+- Das Anlegen liefert eine undurchsichtige Freigabe-ID. Sie wird im bestehenden Supportfall an den Anbieter übermittelt; das Portal listet oder sucht Freigaben/Praxen nicht.
 - Zugriff gilt standardmäßig acht Stunden ab Aktivierung; eine Praxisfreigabe darf höchstens 24 Stunden aktive Zugriffszeit geben. Eine nicht innerhalb von 24 Stunden aktivierte Freigabe verfällt und braucht eine neue Praxisfreigabe.
 - Nach Ablauf oder Widerruf ist Audit-Lesen sofort untersagt. Eine Verlängerung benötigt eine neue Freigabe durch die Praxis.
 - Ein Supportfall kann länger offen bleiben als seine Zugriffsfreigabe.
@@ -72,6 +73,7 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 - [ ] Angenommen ich bin ein `praxisadmin`, wenn ich eine Supportfreigabe für meine Praxis anlege, dann kann sie ausschließlich dieser Praxis zugeordnet und jederzeit widerrufen werden.
 - [ ] Angenommen ich bin ein `praxisadmin`, wenn ich eine Supportfreigabe für eine fremde Praxis anzulegen oder zu widerrufen versuche, dann wird die Aktion server- und datenbankseitig neutral verweigert und auditiert.
 - [ ] Angenommen ich bin ein `portaladmin` ohne aktive Supportfreigabe, wenn ich Audit-Ereignisse aufrufe, dann wird der Zugriff neutral verweigert, auditiert und es werden keine Ereignisinhalte ausgeliefert.
+- [ ] Angenommen ich bin ein `portaladmin` und habe eine Freigabe-ID im bestehenden Supportfall erhalten, wenn ich sie mit einer strukturierten Ursache aktiviere, dann wird nur diese Freigabe aktiviert; das Portal liefert keine Liste oder Suche offener Freigaben.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe, wenn ich Audit-Ereignisse der freigegebenen Praxis aufrufe, dann erhalte ich ausschließlich deren datenminimierte Ereignisse und die Einsicht wird selbst protokolliert.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe für Praxis A, wenn ich Audit-Ereignisse von Praxis B aufrufe, dann wird der Zugriff neutral verweigert und auditiert.
 - [ ] Angenommen eine Freigabe ist widerrufen oder abgelaufen, wenn ein Portaladmin anschließend Audit-Ereignisse abfragt, dann wird der Zugriff sofort neutral verweigert und auditiert.
