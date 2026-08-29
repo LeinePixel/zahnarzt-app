@@ -87,9 +87,7 @@ export function PortalAuditTable({ events }: { events: AuditEvent[] }) {
       </TableHeader>
       <TableBody>
         {events.map((event) => (
-          <TableRow
-            key={`${event.correlationId}:${event.actorId}:${event.occurredAt}:${event.resourceId ?? 'none'}`}
-          >
+          <TableRow key={event.id}>
             <TableCell>{event.actorType}</TableCell>
             <TableCell>{new Date(event.occurredAt).toLocaleString('de-DE')}</TableCell>
             <TableCell>{event.action}</TableCell>

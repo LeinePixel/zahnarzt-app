@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 import { getCurrentUserContext } from '@/features/auth/current-user'
 import {
@@ -31,10 +32,11 @@ export async function activateSupportAccessForCurrentPortal(
 
   const client = (await createClient()) as SupportAccessRpcClient
 
-  await activateSupportAccess(
+  const activation = await activateSupportAccess(
     client,
     { kind: 'portal_admin', userId: context.userId },
     { grantId, reason: reason as SupportReason },
   )
   revalidatePath('/portal/audit')
+  redirect(`/portal/audit?practiceId=${activation.practiceId}`)
 }

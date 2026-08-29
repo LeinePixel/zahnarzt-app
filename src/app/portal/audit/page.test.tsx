@@ -34,6 +34,7 @@ describe('PortalAuditPage', () => {
         actorId: '11000000-0000-0000-0000-000000000003',
         actorType: 'portal_admin',
         correlationId: '41000000-0000-0000-0000-000000000001',
+        id: '51000000-0000-0000-0000-000000000001',
         occurredAt: '2026-08-28T12:00:00.000Z',
         outcome: 'allowed',
         resourceId: '31000000-0000-0000-0000-000000000001',

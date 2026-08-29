@@ -18,6 +18,11 @@ export type SupportReason =
   | 'technical_investigation'
   | 'account_support'
 
+export type ActivatedSupportAccess = {
+  expiresAt: string
+  practiceId: string
+}
+
 type SupportAccessInput = {
   requestedDurationHours?: number
 }
@@ -45,6 +50,10 @@ const uuidSchema = z
 const grantIdSchema = uuidSchema
 const reasonSchema = z.enum(['technical_investigation', 'account_support'], {
   error: 'Ungültiger Supportgrund.',
+})
+const activationResultSchema = z.object({
+  expires_at: z.iso.datetime({ offset: true }),
+  practice_id: uuidSchema,
 })
 
 export class SupportAccessError extends Error {
@@ -115,7 +124,7 @@ export async function activateSupportAccess(
   client: SupportAccessRpcClient,
   actor: ActorContext,
   input: ActivateSupportAccessInput,
-): Promise<string> {
+): Promise<ActivatedSupportAccess> {
   assertCapability(actor, 'audit.read')
   const grantId = parseGrantId(input)
   const reason = parseReason(input)
@@ -124,13 +133,16 @@ export async function activateSupportAccess(
     p_grant_id: grantId,
     p_reason: reason,
   })
-  const parsedExpiry = z.iso.datetime({ offset: true }).safeParse(data)
+  const parsedActivation = activationResultSchema.safeParse(data)
 
-  if (error || !parsedExpiry.success) {
+  if (error || !parsedActivation.success) {
     return denied()
   }
 
-  return parsedExpiry.data
+  return {
+    expiresAt: parsedActivation.data.expires_at,
+    practiceId: parsedActivation.data.practice_id,
+  }
 }
 
 export async function revokeSupportAccess(

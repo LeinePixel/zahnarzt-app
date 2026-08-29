@@ -77,15 +77,24 @@ describe('support-access server adapter', () => {
     expect(client.rpc).not.toHaveBeenCalled()
   })
 
-  it('accepts a PostgreSQL timestamptz activation result with a numeric UTC offset', async () => {
-    const client = rpcClient({ data: '2026-08-28T20:00:00+00:00', error: null })
+  it('returns the authorized practice and PostgreSQL timestamptz expiry from activation', async () => {
+    const client = rpcClient({
+      data: {
+        practice_id: '21000000-0000-0000-0000-000000000001',
+        expires_at: '2026-08-28T20:00:00+00:00',
+      },
+      error: null,
+    })
 
     await expect(
       activateSupportAccess(client, portalAdmin, {
         grantId: '31000000-0000-0000-0000-000000000001',
         reason: 'technical_investigation',
       }),
-    ).resolves.toBe('2026-08-28T20:00:00+00:00')
+    ).resolves.toEqual({
+      practiceId: '21000000-0000-0000-0000-000000000001',
+      expiresAt: '2026-08-28T20:00:00+00:00',
+    })
   })
 
   it('maps neutral database denials and provider errors to the same safe message', async () => {

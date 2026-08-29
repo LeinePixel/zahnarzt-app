@@ -23,6 +23,7 @@ export type AuditEvent = {
   actorId: string
   actorType: 'practice_member' | 'portal_admin' | 'unknown_authenticated'
   correlationId: string
+  id: string
   occurredAt: string
   outcome: 'allowed' | 'denied' | 'failed'
   resourceId: string | null
@@ -57,6 +58,7 @@ const eventSchema = z.object({
   actor_id: uuidSchema,
   actor_type: z.enum(['practice_member', 'portal_admin', 'unknown_authenticated']),
   correlation_id: uuidSchema,
+  event_id: uuidSchema,
   occurred_at: z.iso.datetime({ offset: true }),
   outcome: z.enum(['allowed', 'denied', 'failed']),
   resource_id: uuidSchema.nullable(),
@@ -120,6 +122,7 @@ export async function readAuditEvents(
     actorId: event.actor_id,
     actorType: event.actor_type,
     correlationId: event.correlation_id,
+    id: event.event_id,
     occurredAt: event.occurred_at,
     outcome: event.outcome,
     resourceId: event.resource_id,

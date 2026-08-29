@@ -1,6 +1,6 @@
 begin;
 
-select plan(60);
+select plan(64);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -251,14 +251,22 @@ select is(
   0::bigint,
   'a portal admin receives no audit events before activation'
 );
-select lives_ok(
-  $$
-    select public.activate_support_access(
-      current_setting('proj_19.first_grant_id')::uuid,
-      'technical_investigation'
-    )
-  $$,
-  'the first portal admin can activate the requested support access'
+select set_config(
+  'proj_19.first_activation_result',
+  public.activate_support_access(
+    current_setting('proj_19.first_grant_id')::uuid,
+    'technical_investigation'
+  )::text,
+  true
+);
+select is(
+  (current_setting('proj_19.first_activation_result')::jsonb ->> 'practice_id')::uuid,
+  '21000000-0000-0000-0000-000000000001'::uuid,
+  'activation returns exactly the practice authorized by the opaque grant'
+);
+select ok(
+  (current_setting('proj_19.first_activation_result')::jsonb ->> 'expires_at') is not null,
+  'activation returns the corresponding expiry alongside the authorized practice'
 );
 
 reset role;
@@ -375,6 +383,19 @@ select is(
   'practice_member',
   'an allowed audit read includes the controlled actor type'
 );
+select is(
+  (
+    select event_id
+    from public.read_audit_events(
+      '21000000-0000-0000-0000-000000000001',
+      now(),
+      50
+    )
+    where resource_id = '91000000-0000-0000-0000-000000000001'
+  ),
+  '91000000-0000-0000-0000-000000000001'::uuid,
+  'an allowed audit read returns each audit event unique ID'
+);
 
 reset role;
 set local role service_role;
@@ -385,7 +406,7 @@ select is(
     from public.audit_event
     where action = 'audit_read' and outcome = 'allowed'
   ),
-  2::bigint,
+  3::bigint,
   'each allowed audit read records itself exactly once'
 );
 
@@ -417,7 +438,7 @@ select is(
     current_setting('proj_19.first_grant_id')::uuid,
     'technical_investigation'
   ),
-  null::timestamptz,
+  null::jsonb,
   'a second portal admin cannot reuse another portal admin grant'
 );
 select is(
@@ -447,12 +468,38 @@ select is(
 );
 select is(
   (
+    select practice_id
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000004'
+      and action = 'support_access_activated'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  null::uuid,
+  'a denied portal activation never records the opaque grant target practice'
+);
+select is(
+  (
     select count(*)
     from public.audit_event
     where action = 'audit_read' and outcome = 'denied'
   ),
   3::bigint,
   'foreign and ungranted audit reads are retained'
+);
+select is(
+  (
+    select practice_id
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000003'
+      and action = 'audit_read'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  null::uuid,
+  'a denied portal audit read never records the requested foreign practice'
 );
 
 reset role;
