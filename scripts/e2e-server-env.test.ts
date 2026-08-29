@@ -9,6 +9,7 @@ describe('withoutSeedSecrets', () => {
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'public-key',
       NEXT_PUBLIC_SUPABASE_URL: 'https://synthetic.example',
       SEED_BEHANDLER_PASSWORD: 'secret',
+      SEED_PORTALADMIN_PASSWORD: 'secret',
       SEED_PRAXISADMIN_PASSWORD: 'secret',
       SEED_REZEPTION_PASSWORD: 'secret',
       SUPABASE_SERVICE_ROLE_KEY: 'secret',

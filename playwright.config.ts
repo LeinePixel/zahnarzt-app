@@ -7,6 +7,7 @@ if (existsSync('.env.local')) {
     'SUPABASE_SERVICE_ROLE_KEY',
     'SEED_REZEPTION_PASSWORD',
     'SEED_BEHANDLER_PASSWORD',
+    'SEED_PORTALADMIN_PASSWORD',
     'SEED_PRAXISADMIN_PASSWORD',
   ].filter((name) => new RegExp(`^\\s*${name}\\s*=`, 'm').test(appEnvironment))
 
@@ -58,7 +59,7 @@ export default defineConfig({
       ? [
           {
             name: 'edge',
-            testMatch: /baseline\.spec\.ts/,
+            testMatch: /(?:baseline|audit-access)\.spec\.ts/,
             use: { ...devices['Desktop Edge'], channel: 'msedge' as const },
           },
         ]

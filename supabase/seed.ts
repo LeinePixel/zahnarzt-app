@@ -7,6 +7,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { getSeedEnv } from './seed-env'
 
 export type UserRole = 'rezeption' | 'behandler' | 'praxisadmin'
+export type SeedAccountRole = UserRole | 'portaladmin'
 
 export type SeedAccountInput = {
   email: string
@@ -33,11 +34,12 @@ export interface SeedAdminClient {
   ): Promise<{ id: string; name: string } | null>
   listUsers(): Promise<SeedUser[]>
   updateUser(id: string, input: SeedAccountInput): Promise<SeedUser>
+  upsertPortalAdmin(userId: string): Promise<void>
   upsertProfile(input: SeedProfileInput): Promise<void>
 }
 
 type SeedOptions = {
-  passwords: Record<UserRole, string>
+  passwords: Record<SeedAccountRole, string>
 }
 
 type SeedLogger = (line: string) => void
@@ -51,11 +53,23 @@ type SeedResult = {
 
 const PRACTICE_NAME = 'DentPilot Testpraxis'
 
-const accountDefinitions: ReadonlyArray<{
+type PracticeSeedAccountDefinition = {
   displayName: string
   email: string
   role: UserRole
-}> = [
+}
+
+type PortalAdminSeedAccountDefinition = {
+  displayName: string
+  email: string
+  role: 'portaladmin'
+}
+
+type SeedAccountDefinition =
+  | PracticeSeedAccountDefinition
+  | PortalAdminSeedAccountDefinition
+
+const accountDefinitions: ReadonlyArray<SeedAccountDefinition> = [
   {
     displayName: 'Test Rezeption',
     email: 'seed-rezeption@dentpilot.example',
@@ -70,6 +84,11 @@ const accountDefinitions: ReadonlyArray<{
     displayName: 'Test Praxisadministration',
     email: 'seed-praxisadmin@dentpilot.example',
     role: 'praxisadmin',
+  },
+  {
+    displayName: 'Test Anbieter-Support',
+    email: 'seed-portaladmin@dentpilot.example',
+    role: 'portaladmin',
   },
 ]
 
@@ -98,12 +117,16 @@ export async function runSeed(
       ? await client.updateUser(existingUser.id, input)
       : await client.createUser(input)
 
-    await client.upsertProfile({
-      displayName: definition.displayName,
-      practiceId: practice.id,
-      role: definition.role,
-      userId: user.id,
-    })
+    if (definition.role === 'portaladmin') {
+      await client.upsertPortalAdmin(user.id)
+    } else {
+      await client.upsertProfile({
+        displayName: definition.displayName,
+        practiceId: practice.id,
+        role: definition.role,
+        userId: user.id,
+      })
+    }
 
     accounts.push({ email: definition.email, status })
     logger(`${definition.email}: ${status}`)
@@ -124,6 +147,12 @@ type SeedDatabase = {
         Relationships: []
         Row: { created_at: string; id: string; name: string }
         Update: { created_at?: string; id?: string; name?: string }
+      }
+      portal_admin: {
+        Insert: { created_at?: string; user_id: string }
+        Relationships: []
+        Row: { created_at: string; user_id: string }
+        Update: { created_at?: string; user_id?: string }
       }
       user_profile: {
         Insert: {
@@ -245,6 +274,17 @@ export class SupabaseSeedAdminClient implements SeedAdminClient {
     }
 
     return { email: data.user.email, id: data.user.id }
+  }
+
+  async upsertPortalAdmin(userId: string) {
+    const { error } = await this.client.from('portal_admin').upsert(
+      { user_id: userId },
+      { onConflict: 'user_id' },
+    )
+
+    if (error) {
+      throw seedOperationError('Anbieter-Supportkonto konnte nicht gespeichert werden')
+    }
   }
 
   async upsertProfile(input: SeedProfileInput) {
