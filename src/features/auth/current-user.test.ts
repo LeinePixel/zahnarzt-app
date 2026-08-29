@@ -10,6 +10,7 @@ import {
 
 const readyProfile: UserProfileRow = {
   display_name: 'Dr. Test Behandler',
+  practice_id: '21000000-0000-0000-0000-000000000001',
   role: 'behandler',
   practice: { name: 'DentPilot Testpraxis' },
 }
@@ -68,11 +69,12 @@ describe('runGetCurrentUserContext', () => {
     expect(result).toEqual({
       status: 'ready',
       displayName: 'Dr. Test Behandler',
+      practiceId: '21000000-0000-0000-0000-000000000001',
       practiceName: 'DentPilot Testpraxis',
       role: 'behandler',
       roleLabel: 'Behandler',
+      userId: 'user-123',
     })
-    expect(JSON.stringify(result)).not.toContain('user-123')
   })
 
   it.each([
@@ -98,7 +100,38 @@ describe('runGetCurrentUserContext', () => {
       redirectRecorder().redirectTo,
     )
 
-    expect(result).toEqual({ status: 'incomplete' })
+    expect(result).toEqual({
+      status: 'incomplete',
+      userId: 'user-without-profile',
+    })
+  })
+
+  it('recognizes a separate portal-admin identity only after the server check', async () => {
+    const result = await runGetCurrentUserContext(
+      claims('portal-admin-user'),
+      profileResult(null),
+      redirectRecorder().redirectTo,
+      async () => ({ data: true, error: null }),
+    )
+
+    expect(result).toEqual({
+      status: 'portal_admin',
+      userId: 'portal-admin-user',
+    })
+  })
+
+  it('keeps an unassigned authenticated account incomplete when the portal check is false', async () => {
+    const result = await runGetCurrentUserContext(
+      claims('unassigned-user'),
+      profileResult(null),
+      redirectRecorder().redirectTo,
+      async () => ({ data: false, error: null }),
+    )
+
+    expect(result).toEqual({
+      status: 'incomplete',
+      userId: 'unassigned-user',
+    })
   })
 
   it('does not disguise a provider query error as a missing profile', async () => {

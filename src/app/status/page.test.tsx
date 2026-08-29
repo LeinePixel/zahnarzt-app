@@ -19,9 +19,11 @@ describe('StatusPage', () => {
     vi.mocked(getCurrentUserContext).mockResolvedValue({
       status: 'ready',
       displayName: 'Dr. Test Behandler',
+      practiceId: '21000000-0000-0000-0000-000000000001',
       practiceName: 'DentPilot Testpraxis',
       role: 'behandler',
       roleLabel: 'Behandler',
+      userId: '11000000-0000-0000-0000-000000000002',
     })
 
     render(await StatusPage())
@@ -32,10 +34,35 @@ describe('StatusPage', () => {
     expect(screen.getByText('Behandler')).toBeInTheDocument()
     expect(screen.getByText('DentPilot Testpraxis')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sicher abmelden' })).toBeEnabled()
+    expect(
+      screen.queryByRole('button', { name: 'Supportzugriff anfordern' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('renders the default support-access action only for a praxisadmin', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'ready',
+      displayName: 'PROJ-19 Praxisadmin',
+      practiceId: '21000000-0000-0000-0000-000000000001',
+      practiceName: 'PROJ-19 Testpraxis',
+      role: 'praxisadmin',
+      roleLabel: 'Praxisadministration',
+      userId: '11000000-0000-0000-0000-000000000001',
+    })
+
+    render(await StatusPage())
+
+    expect(
+      screen.getByRole('button', { name: 'Supportzugriff anfordern' }),
+    ).toBeEnabled()
+    expect(screen.getByText(/standardmäßig acht Stunden/i)).toBeInTheDocument()
   })
 
   it('shows a clear setup notice instead of profile fields for an incomplete account', async () => {
-    vi.mocked(getCurrentUserContext).mockResolvedValue({ status: 'incomplete' })
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'incomplete',
+      userId: '11000000-0000-0000-0000-000000000005',
+    })
 
     render(await StatusPage())
 

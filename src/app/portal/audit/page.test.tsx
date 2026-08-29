@@ -1,0 +1,114 @@
+import { render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { getCurrentUserContext } from '@/features/auth/current-user'
+import { readAuditEvents } from '@/features/audit/read-events'
+
+import PortalAuditPage from './page'
+
+vi.mock('@/features/auth/current-user', () => ({
+  getCurrentUserContext: vi.fn(),
+}))
+vi.mock('@/features/audit/read-events', () => ({
+  AuditReadError: class AuditReadError extends Error {},
+  readAuditEvents: vi.fn(),
+}))
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn().mockResolvedValue({}),
+}))
+
+describe('PortalAuditPage', () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentUserContext).mockReset()
+    vi.mocked(readAuditEvents).mockReset()
+  })
+
+  it('renders only fixed audit metadata for an allowed provider result', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'portal_admin',
+      userId: '11000000-0000-0000-0000-000000000003',
+    })
+    vi.mocked(readAuditEvents).mockResolvedValue([
+      {
+        action: 'audit_read',
+        actorId: '11000000-0000-0000-0000-000000000003',
+        actorType: 'portal_admin',
+        correlationId: '41000000-0000-0000-0000-000000000001',
+        occurredAt: '2026-08-28T12:00:00.000Z',
+        outcome: 'allowed',
+        resourceId: '31000000-0000-0000-0000-000000000001',
+        resourceType: 'support_access_grant',
+      },
+    ])
+
+    render(
+      await PortalAuditPage({
+        searchParams: Promise.resolve({
+          practiceId: '21000000-0000-0000-0000-000000000001',
+        }),
+      }),
+    )
+
+    for (const heading of ['Akteur', 'Zeit', 'Aktion', 'Ergebnis', 'Objekt']) {
+      expect(screen.getByRole('columnheader', { name: heading })).toBeInTheDocument()
+    }
+    expect(screen.getByText('portal_admin')).toBeInTheDocument()
+    expect(screen.getByText('allowed')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /export/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(readAuditEvents).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        kind: 'portal_admin',
+        userId: '11000000-0000-0000-0000-000000000003',
+      },
+      { practiceId: '21000000-0000-0000-0000-000000000001' },
+    )
+  })
+
+  it('shows a neutral denial and never calls the read RPC for a practice role', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'ready',
+      displayName: 'PROJ-19 Praxisadmin',
+      practiceId: '21000000-0000-0000-0000-000000000001',
+      practiceName: 'PROJ-19 Testpraxis',
+      role: 'praxisadmin',
+      roleLabel: 'Praxisadministration',
+      userId: '11000000-0000-0000-0000-000000000001',
+    })
+
+    render(
+      await PortalAuditPage({
+        searchParams: Promise.resolve({
+          practiceId: '21000000-0000-0000-0000-000000000001',
+        }),
+      }),
+    )
+
+    expect(
+      screen.getByText('Audit-Zugriff wurde verweigert.'),
+    ).toBeInTheDocument()
+    expect(readAuditEvents).not.toHaveBeenCalled()
+  })
+
+  it('shows a neutral denial and never treats an unassigned account as a portal admin', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'incomplete',
+      userId: '11000000-0000-0000-0000-000000000004',
+    })
+    vi.mocked(readAuditEvents).mockResolvedValue([])
+
+    render(
+      await PortalAuditPage({
+        searchParams: Promise.resolve({
+          practiceId: '21000000-0000-0000-0000-000000000001',
+        }),
+      }),
+    )
+
+    expect(
+      screen.getByText('Audit-Zugriff wurde verweigert.'),
+    ).toBeInTheDocument()
+    expect(readAuditEvents).not.toHaveBeenCalled()
+  })
+})

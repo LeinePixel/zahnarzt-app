@@ -6,7 +6,10 @@ import { LogoutButton } from '@/components/auth/logout-button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { getCurrentUserContext, logout } from '@/features/auth/current-user'
+
+import { requestSupportAccessForCurrentPractice } from './support-access-actions'
 
 export const metadata: Metadata = {
   title: 'Kontostatus',
@@ -79,6 +82,21 @@ export default async function StatusPage() {
                   </p>
                   <p className="mt-2 text-lg font-semibold">{context.practiceName}</p>
                 </div>
+
+                {context.role === 'praxisadmin' ? (
+                  <div className="rounded-xl border border-border bg-secondary/70 p-5 sm:col-span-2">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      Technischer Supportzugriff
+                    </p>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                      Eine Freigabe gilt standardmäßig acht Stunden und kann
+                      jederzeit durch Ihre Praxisadministration widerrufen werden.
+                    </p>
+                    <form action={requestSupportAccessForCurrentPractice} className="mt-4">
+                      <Button type="submit">Supportzugriff anfordern</Button>
+                    </form>
+                  </div>
+                ) : null}
 
                 <p className="flex items-start gap-2 pt-2 text-xs leading-5 text-muted-foreground sm:col-span-2">
                   <ShieldCheck
