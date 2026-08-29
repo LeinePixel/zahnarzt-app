@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { z } from 'zod'
 
 import {
@@ -55,7 +57,7 @@ const eventSchema = z.object({
   actor_id: uuidSchema,
   actor_type: z.enum(['practice_member', 'portal_admin', 'unknown_authenticated']),
   correlation_id: uuidSchema,
-  occurred_at: z.iso.datetime(),
+  occurred_at: z.iso.datetime({ offset: true }),
   outcome: z.enum(['allowed', 'denied', 'failed']),
   resource_id: uuidSchema.nullable(),
   resource_type: z.enum(['support_access_grant', 'audit_event']),

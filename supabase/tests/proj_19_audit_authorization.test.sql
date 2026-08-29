@@ -1,6 +1,6 @@
 begin;
 
-select plan(55);
+select plan(60);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -127,6 +127,48 @@ select throws_ok(
   '23514',
   null,
   'a practice member cannot become a portal-admin identity'
+);
+
+select ok(
+  has_function_privilege('authenticated', 'public.is_portal_admin()', 'EXECUTE'),
+  'authenticated identities can execute only the own-identity portal-admin check'
+);
+select ok(
+  not has_function_privilege('anon', 'public.is_portal_admin()', 'EXECUTE'),
+  'anonymous identities cannot execute the portal-admin check'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.is_portal_admin(),
+  true,
+  'the authenticated portal-admin check resolves only the calling provider identity'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.is_portal_admin(),
+  false,
+  'a practice-member identity is never resolved as a portal admin'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000005', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.is_portal_admin(),
+  false,
+  'an unassigned authenticated identity is never resolved as a portal admin'
 );
 
 reset role;

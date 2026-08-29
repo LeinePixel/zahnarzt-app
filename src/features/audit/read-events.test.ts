@@ -82,6 +82,30 @@ describe('audit read server adapter', () => {
     )
   })
 
+  it('accepts a PostgreSQL timestamptz response with a numeric UTC offset', async () => {
+    const client = rpcClient({
+      data: [
+        {
+          action: 'audit_read',
+          actor_id: '11000000-0000-0000-0000-000000000003',
+          actor_type: 'portal_admin',
+          correlation_id: '41000000-0000-0000-0000-000000000001',
+          occurred_at: '2026-08-28T12:00:00+00:00',
+          outcome: 'allowed',
+          resource_id: '31000000-0000-0000-0000-000000000001',
+          resource_type: 'support_access_grant',
+        },
+      ],
+      error: null,
+    })
+
+    await expect(
+      readAuditEvents(client, portalAdmin, {
+        practiceId: '21000000-0000-0000-0000-000000000001',
+      }),
+    ).resolves.toHaveLength(1)
+  })
+
   it('blocks practice identities before the audit RPC', async () => {
     const client = rpcClient({ data: [], error: null })
 

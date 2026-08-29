@@ -55,7 +55,28 @@ describe('StatusPage', () => {
     expect(
       screen.getByRole('button', { name: 'Supportzugriff anfordern' }),
     ).toBeEnabled()
+    expect(screen.getByLabelText('Freigabekennung widerrufen')).toBeEnabled()
+    expect(
+      screen.getByRole('button', { name: 'Supportzugriff widerrufen' }),
+    ).toBeEnabled()
     expect(screen.getByText(/standardmäßig acht Stunden/i)).toBeInTheDocument()
+  })
+
+  it('shows a portal entry for a verified portaladmin instead of the incomplete-account notice', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'portal_admin',
+      userId: '11000000-0000-0000-0000-000000000003',
+    })
+
+    render(await StatusPage())
+
+    expect(screen.getByRole('link', { name: 'Zum Supportportal' })).toHaveAttribute(
+      'href',
+      '/portal/audit',
+    )
+    expect(
+      screen.queryByRole('heading', { name: 'Konto unvollständig eingerichtet' }),
+    ).not.toBeInTheDocument()
   })
 
   it('shows a clear setup notice instead of profile fields for an incomplete account', async () => {

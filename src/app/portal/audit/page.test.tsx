@@ -111,4 +111,21 @@ describe('PortalAuditPage', () => {
     ).toBeInTheDocument()
     expect(readAuditEvents).not.toHaveBeenCalled()
   })
+
+  it('shows only the controlled activation form for an empty portal state', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'portal_admin',
+      userId: '11000000-0000-0000-0000-000000000003',
+    })
+
+    render(await PortalAuditPage({ searchParams: Promise.resolve({}) }))
+
+    expect(screen.getByLabelText('Freigabekennung')).toBeEnabled()
+    expect(screen.getByLabelText('Supportgrund')).toBeEnabled()
+    expect(
+      screen.getByRole('button', { name: 'Supportzugriff aktivieren' }),
+    ).toBeEnabled()
+    expect(readAuditEvents).not.toHaveBeenCalled()
+    expect(screen.queryByRole('textbox', { name: /suche/i })).not.toBeInTheDocument()
+  })
 })

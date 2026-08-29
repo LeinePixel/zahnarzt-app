@@ -5,6 +5,7 @@ import type { SupportAccessRpcClient } from '@/features/audit/support-access'
 
 import {
   SupportAccessActionError,
+  runRevokeSupportAccessForCurrentPractice,
   runRequestSupportAccessForCurrentPractice,
 } from './support-access-actions'
 
@@ -30,7 +31,7 @@ describe('runRequestSupportAccessForCurrentPractice', () => {
         request,
         revalidate,
       ),
-    ).resolves.toBeUndefined()
+    ).resolves.toBe('31000000-0000-0000-0000-000000000001')
 
     expect(request).toHaveBeenCalledWith(
       {},
@@ -65,5 +66,32 @@ describe('runRequestSupportAccessForCurrentPractice', () => {
     ).rejects.toThrow(SupportAccessActionError)
 
     expect(request).not.toHaveBeenCalled()
+  })
+
+  it('revokes only a supplied opaque grant for the current praxisadmin', async () => {
+    const revoke = vi.fn().mockResolvedValue(undefined)
+    const revalidate = vi.fn()
+
+    await expect(
+      runRevokeSupportAccessForCurrentPractice(
+        async () => praxisadmin,
+        {} as SupportAccessRpcClient,
+        revoke,
+        '31000000-0000-0000-0000-000000000001',
+        revalidate,
+      ),
+    ).resolves.toBeUndefined()
+
+    expect(revoke).toHaveBeenCalledWith(
+      {},
+      {
+        kind: 'practice_member',
+        userId: praxisadmin.userId,
+        practiceId: praxisadmin.practiceId,
+        role: 'praxisadmin',
+      },
+      { grantId: '31000000-0000-0000-0000-000000000001' },
+    )
+    expect(revalidate).toHaveBeenCalledWith('/status')
   })
 })

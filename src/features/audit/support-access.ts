@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { z } from 'zod'
 
 import {
@@ -122,7 +124,7 @@ export async function activateSupportAccess(
     p_grant_id: grantId,
     p_reason: reason,
   })
-  const parsedExpiry = z.iso.datetime().safeParse(data)
+  const parsedExpiry = z.iso.datetime({ offset: true }).safeParse(data)
 
   if (error || !parsedExpiry.success) {
     return denied()

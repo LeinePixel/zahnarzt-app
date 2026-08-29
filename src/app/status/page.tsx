@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Building2, CircleCheck, ShieldCheck, TriangleAlert, UserRound } from 'lucide-react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getCurrentUserContext, logout } from '@/features/auth/current-user'
 
-import { requestSupportAccessForCurrentPractice } from './support-access-actions'
+import { SupportAccessControls } from './support-access-controls'
 
 export const metadata: Metadata = {
   title: 'Kontostatus',
@@ -92,9 +93,7 @@ export default async function StatusPage() {
                       Eine Freigabe gilt standardmäßig acht Stunden und kann
                       jederzeit durch Ihre Praxisadministration widerrufen werden.
                     </p>
-                    <form action={requestSupportAccessForCurrentPractice} className="mt-4">
-                      <Button type="submit">Supportzugriff anfordern</Button>
-                    </form>
+                    <SupportAccessControls />
                   </div>
                 ) : null}
 
@@ -106,6 +105,20 @@ export default async function StatusPage() {
                   Aus Datenschutzgründen zeigt diese Statusseite ausschließlich
                   Ihren Kontokontext und keine Patienten- oder Gesundheitsdaten.
                 </p>
+              </CardContent>
+            </Card>
+          ) : context.status === 'portal_admin' ? (
+            <Card className="w-full max-w-xl rounded-2xl border-border/90 bg-card/95 shadow-[0_24px_80px_-38px_hsl(var(--foreground)/0.26)] backdrop-blur-sm">
+              <CardContent className="p-6 sm:p-9">
+                <h1 className="text-2xl font-bold">Anbieter-Supportportal</h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Aktivieren Sie ausschließlich die im bestehenden Supportfall
+                  übermittelte Freigabekennung. Es werden keine Praxen oder
+                  offenen Freigaben aufgelistet.
+                </p>
+                <Button asChild className="mt-5">
+                  <Link href="/portal/audit">Zum Supportportal</Link>
+                </Button>
               </CardContent>
             </Card>
           ) : (

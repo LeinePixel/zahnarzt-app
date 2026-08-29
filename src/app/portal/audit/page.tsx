@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Table,
@@ -17,6 +18,8 @@ import {
   type AuditReadRpcClient,
 } from '@/features/audit/read-events'
 import { createClient } from '@/lib/supabase/server'
+
+import { activateSupportAccessForCurrentPortal } from './support-access-actions'
 
 export const metadata: Metadata = {
   title: 'Audit-Einsicht',
@@ -40,6 +43,36 @@ function AuditDeniedState() {
   )
 }
 
+function SupportActivationForm() {
+  return (
+    <form action={activateSupportAccessForCurrentPortal} className="grid max-w-xl gap-4">
+      <div className="grid gap-2">
+        <label htmlFor="grant-id">Freigabekennung</label>
+        <input
+          id="grant-id"
+          name="grantId"
+          required
+          type="text"
+          className="rounded-md border border-input bg-background px-3 py-2"
+        />
+      </div>
+      <div className="grid gap-2">
+        <label htmlFor="support-reason">Supportgrund</label>
+        <select
+          id="support-reason"
+          name="reason"
+          defaultValue="technical_investigation"
+          className="rounded-md border border-input bg-background px-3 py-2"
+        >
+          <option value="technical_investigation">Technische Untersuchung</option>
+          <option value="account_support">Kontounterstützung</option>
+        </select>
+      </div>
+      <Button type="submit">Supportzugriff aktivieren</Button>
+    </form>
+  )
+}
+
 export function PortalAuditTable({ events }: { events: AuditEvent[] }) {
   return (
     <Table>
@@ -54,7 +87,9 @@ export function PortalAuditTable({ events }: { events: AuditEvent[] }) {
       </TableHeader>
       <TableBody>
         {events.map((event) => (
-          <TableRow key={event.correlationId}>
+          <TableRow
+            key={`${event.correlationId}:${event.actorId}:${event.occurredAt}:${event.resourceId ?? 'none'}`}
+          >
             <TableCell>{event.actorType}</TableCell>
             <TableCell>{new Date(event.occurredAt).toLocaleString('de-DE')}</TableCell>
             <TableCell>{event.action}</TableCell>
@@ -92,6 +127,25 @@ export default async function PortalAuditPage({
     )
   }
 
+  if (!practiceId) {
+    return (
+      <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <Card>
+          <CardHeader>
+            <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Aktivieren Sie eine im Supportfall übermittelte Freigabekennung.
+              Das Portal listet oder sucht keine Praxen und keine Freigaben.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <SupportActivationForm />
+          </CardContent>
+        </Card>
+      </main>
+    )
+  }
+
   let events: AuditEvent[] | null = null
 
   try {
@@ -114,7 +168,9 @@ export default async function PortalAuditPage({
             Es werden ausschließlich freigegebene technische Audit-Metadaten angezeigt.
           </p>
         </CardHeader>
-        <CardContent>{events ? <PortalAuditTable events={events} /> : <AuditDeniedState />}</CardContent>
+        <CardContent>
+          {events ? <PortalAuditTable events={events} /> : <AuditDeniedState />}
+        </CardContent>
       </Card>
     </main>
   )
