@@ -9,6 +9,8 @@ import { getSeedEnv } from './seed-env'
 export type UserRole = 'rezeption' | 'behandler' | 'praxisadmin'
 export type SeedAccountRole = UserRole | 'portaladmin'
 
+export const E2E_FOREIGN_PRACTICE_ID = '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002'
+
 export type SeedAccountInput = {
   email: string
   password: string
@@ -27,7 +29,10 @@ export type SeedProfileInput = {
 }
 
 export interface SeedAdminClient {
-  createPractice(name: string): Promise<{ id: string; name: string }>
+  createPractice(
+    name: string,
+    id?: string,
+  ): Promise<{ id: string; name: string }>
   createUser(input: SeedAccountInput): Promise<SeedUser>
   findPracticeByName(
     name: string,
@@ -48,10 +53,12 @@ type AccountStatus = 'erstellt' | 'aktualisiert'
 
 type SeedResult = {
   accounts: Array<{ email: string; status: AccountStatus }>
+  foreignPractice: { id: string; status: 'erstellt' | 'vorhanden' }
   practice: { id: string; status: 'erstellt' | 'vorhanden' }
 }
 
 const PRACTICE_NAME = 'DentPilot Testpraxis'
+const FOREIGN_PRACTICE_NAME = 'DentPilot E2E-Fremdpraxis'
 
 type PracticeSeedAccountDefinition = {
   displayName: string
@@ -101,6 +108,26 @@ export async function runSeed(
   const practice =
     existingPractice ?? (await client.createPractice(PRACTICE_NAME))
   const practiceStatus = existingPractice ? 'vorhanden' : 'erstellt'
+  const existingForeignPractice = await client.findPracticeByName(
+    FOREIGN_PRACTICE_NAME,
+  )
+
+  if (
+    existingForeignPractice &&
+    existingForeignPractice.id !== E2E_FOREIGN_PRACTICE_ID
+  ) {
+    throw seedOperationError('E2E-Fremdpraxis hat eine unerwartete Kennung')
+  }
+
+  const foreignPractice =
+    existingForeignPractice ??
+    (await client.createPractice(
+      FOREIGN_PRACTICE_NAME,
+      E2E_FOREIGN_PRACTICE_ID,
+    ))
+  const foreignPracticeStatus = existingForeignPractice
+    ? 'vorhanden'
+    : 'erstellt'
   const existingUsers = new Map(
     (await client.listUsers()).map((user) => [user.email, user]),
   )
@@ -134,6 +161,10 @@ export async function runSeed(
 
   return {
     accounts,
+    foreignPractice: {
+      id: foreignPractice.id,
+      status: foreignPracticeStatus,
+    },
     practice: { id: practice.id, status: practiceStatus },
   }
 }
@@ -205,10 +236,10 @@ export class SupabaseSeedAdminClient implements SeedAdminClient {
     return data
   }
 
-  async createPractice(name: string) {
+  async createPractice(name: string, id?: string) {
     const { data, error } = await this.client
       .from('practice')
-      .insert({ name })
+      .insert(id ? { id, name } : { name })
       .select('id, name')
       .single()
 

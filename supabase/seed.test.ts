@@ -22,8 +22,11 @@ class MemorySeedAdminClient implements SeedAdminClient {
     return this.practices.find((practice) => practice.name === name) ?? null
   }
 
-  async createPractice(name: string) {
-    const practice = { id: `practice-${this.practices.length + 1}`, name }
+  async createPractice(name: string, id?: string) {
+    const practice = {
+      id: id ?? `practice-${this.practices.length + 1}`,
+      name,
+    }
     this.practices.push(practice)
     return practice
   }
@@ -76,7 +79,7 @@ function makePasswords() {
 }
 
 describe('runSeed', () => {
-  it('reuses the same synthetic practice on subsequent runs', async () => {
+  it('reuses the same synthetic practices on subsequent runs', async () => {
     const client = new MemorySeedAdminClient()
     const passwords = makePasswords()
 
@@ -85,9 +88,21 @@ describe('runSeed', () => {
 
     expect(client.practices).toEqual([
       { id: 'practice-1', name: 'DentPilot Testpraxis' },
+      {
+        id: '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002',
+        name: 'DentPilot E2E-Fremdpraxis',
+      },
     ])
     expect(first.practice.id).toBe('practice-1')
     expect(second.practice).toEqual({ id: 'practice-1', status: 'vorhanden' })
+    expect(first.foreignPractice).toEqual({
+      id: '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002',
+      status: 'erstellt',
+    })
+    expect(second.foreignPractice).toEqual({
+      id: '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002',
+      status: 'vorhanden',
+    })
   })
 
   it('updates an existing auth user instead of creating a duplicate', async () => {
@@ -145,7 +160,7 @@ describe('runSeed', () => {
     await runSeed(client, { passwords })
     await runSeed(client, { passwords })
 
-    expect(client.practices).toHaveLength(1)
+    expect(client.practices).toHaveLength(2)
     expect(client.users.size).toBe(4)
     expect(client.profiles.size).toBe(3)
     expect(client.portalAdmins.size).toBe(1)

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 import { existsSync } from 'node:fs'
 
+import { E2E_FOREIGN_PRACTICE_ID } from '../supabase/seed'
+
 if (existsSync('.env.seed.local')) {
   process.loadEnvFile('.env.seed.local')
 }
@@ -14,8 +16,6 @@ const portalAdmin = {
   email: 'seed-portaladmin@dentpilot.example',
   passwordVariable: 'SEED_PORTALADMIN_PASSWORD',
 }
-
-const foreignPracticeId = '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002'
 
 function requiredSeedCredential(
   variable:
@@ -88,9 +88,15 @@ test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
     }
 
     await expect(portalPage.getByRole('table')).toBeVisible()
-    await expect(portalPage.getByText(/export/i)).toHaveCount(0)
+    for (const role of ['button', 'link', 'menuitem'] as const) {
+      await expect(
+        portalPage.getByRole(role, { name: /export/i }),
+      ).toHaveCount(0)
+    }
 
-    await portalPage.goto(`/portal/audit?practiceId=${foreignPracticeId}`)
+    await portalPage.goto(
+      `/portal/audit?practiceId=${E2E_FOREIGN_PRACTICE_ID}`,
+    )
     await expect(
       portalPage.getByText('Audit-Zugriff wurde verweigert.'),
     ).toBeVisible()
