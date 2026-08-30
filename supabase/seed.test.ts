@@ -9,6 +9,7 @@ import {
   type SeedProfileInput,
   type SeedUser,
 } from './seed'
+import { E2E_FOREIGN_PRACTICE_ID } from './seed-fixtures'
 
 type StoredUser = SeedUser & { password: string }
 
@@ -89,18 +90,18 @@ describe('runSeed', () => {
     expect(client.practices).toEqual([
       { id: 'practice-1', name: 'DentPilot Testpraxis' },
       {
-        id: '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002',
+        id: E2E_FOREIGN_PRACTICE_ID,
         name: 'DentPilot E2E-Fremdpraxis',
       },
     ])
     expect(first.practice.id).toBe('practice-1')
     expect(second.practice).toEqual({ id: 'practice-1', status: 'vorhanden' })
     expect(first.foreignPractice).toEqual({
-      id: '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002',
+      id: E2E_FOREIGN_PRACTICE_ID,
       status: 'erstellt',
     })
     expect(second.foreignPractice).toEqual({
-      id: '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002',
+      id: E2E_FOREIGN_PRACTICE_ID,
       status: 'vorhanden',
     })
   })

@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 import { existsSync, readFileSync } from 'node:fs'
 
+import { getConfiguredE2ePort } from './scripts/e2e-server-env'
+
 if (existsSync('.env.local')) {
   const appEnvironment = readFileSync('.env.local', 'utf8')
   const forbiddenServerSecrets = [
@@ -25,6 +27,7 @@ const edgeExecutable = [
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
 ].find(existsSync)
 const edgeRequired = process.env.E2E_REQUIRE_EDGE === '1'
+const e2eBaseUrl = `http://localhost:${getConfiguredE2ePort()}`
 
 if (edgeRequired && !edgeExecutable) {
   throw new Error('Microsoft Edge ist für diesen Abnahmelauf erforderlich, wurde aber nicht gefunden.')
@@ -38,7 +41,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3100',
+    baseURL: e2eBaseUrl,
     screenshot: 'off',
     trace: 'off',
     video: 'off',
@@ -67,7 +70,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run start:e2e',
-    url: 'http://localhost:3100',
+    url: e2eBaseUrl,
     reuseExistingServer: false,
   },
 })

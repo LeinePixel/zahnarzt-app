@@ -5,11 +5,10 @@ import { pathToFileURL } from 'node:url'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 import { getSeedEnv } from './seed-env'
+import { E2E_FOREIGN_PRACTICE_ID } from './seed-fixtures'
 
 export type UserRole = 'rezeption' | 'behandler' | 'praxisadmin'
 export type SeedAccountRole = UserRole | 'portaladmin'
-
-export const E2E_FOREIGN_PRACTICE_ID = '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002'
 
 export type SeedAccountInput = {
   email: string

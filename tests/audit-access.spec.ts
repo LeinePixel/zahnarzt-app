@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { existsSync } from 'node:fs'
 
-import { E2E_FOREIGN_PRACTICE_ID } from '../supabase/seed'
+import { E2E_FOREIGN_PRACTICE_ID } from '../supabase/seed-fixtures'
 
 if (existsSync('.env.seed.local')) {
   process.loadEnvFile('.env.seed.local')
