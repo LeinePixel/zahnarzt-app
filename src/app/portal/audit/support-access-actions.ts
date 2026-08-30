@@ -11,7 +11,7 @@ import {
 } from '@/features/audit/support-access'
 import { createClient } from '@/lib/supabase/server'
 
-export class PortalSupportAccessActionError extends Error {
+class PortalSupportAccessActionError extends Error {
   override name = 'PortalSupportAccessActionError'
 }
 

@@ -5,10 +5,10 @@ import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 
 import {
-  initialSupportAccessFormState,
   requestSupportAccessFormAction,
   revokeSupportAccessFormAction,
 } from './support-access-actions'
+import { initialSupportAccessFormState } from './support-access-form-state'
 
 export function SupportAccessControls() {
   const [requestState, requestAction] = useActionState(

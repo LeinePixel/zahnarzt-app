@@ -7,7 +7,7 @@ import {
   SupportAccessActionError,
   runRevokeSupportAccessForCurrentPractice,
   runRequestSupportAccessForCurrentPractice,
-} from './support-access-actions'
+} from './support-access-action-logic'
 
 const praxisadmin: CurrentUserContext = {
   status: 'ready',
