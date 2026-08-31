@@ -41,7 +41,7 @@ Der frische Task-7-Lauf ergab:
 | `npm test` | 17 Testdateien, 90 Tests bestanden |
 | `npm run typecheck` | bestanden (Exit 0) |
 | `npx supabase test db --local` | nach lokalem synthetischem Reset: 3 Dateien, 100 pgTAP-Tests bestanden |
-| `E2E_PORT=3135 npm run test:e2e:edge-required` | vom Nutzer im selben Worktree in normaler, nicht erhöhter PowerShell ausgeführt: Produktions-Build und 17/17 Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Edge 2) |
+| `$env:E2E_PORT = '3135'; npm run test:e2e:edge-required` | vom Nutzer im selben Worktree in normaler, nicht erhöhter PowerShell ausgeführt: Produktions-Build und 17/17 Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Edge 2) |
 
 Der E2E-Nachweis umfasst den browsergestützten Audit-Zugriffsfall. Ein zuvor
 nur in der Codex-Sandbox auftretender Firefox-Playwright-Laufzeitfehler wurde

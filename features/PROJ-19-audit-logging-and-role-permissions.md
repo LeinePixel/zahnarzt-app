@@ -142,7 +142,7 @@ Real-Data-Gate bleibt geschlossen.
 
 ## Open Questions
 
-- [ ] Die technische Wahl und Betriebsfreigabe des Datenbank-Schedulers für die 90-Tage-Wartungsroutine sind vor Umsetzung gegen das Supabase-Zielprojekt zu prüfen.
+- [ ] Die technische Wahl und Betriebsfreigabe des Hosted-Cron-Schedulers für die 90-Tage-Wartungsroutine sind als Produktionsbetriebs-Gate vor Inbetriebnahme im Supabase-Zielprojekt zu prüfen.
 - [ ] MFA und der genaue Re-Authentisierungsmechanismus für Portaladmins werden mit PROJ-31/Auth-Hardening verbindlich umgesetzt; ohne sie bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 
