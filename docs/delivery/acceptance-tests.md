@@ -30,6 +30,37 @@ PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für 
 
 ---
 
+## Abnahme PROJ-19 — Evidenz vom 31.08.2026
+
+Die PROJ-19-Nachweise verwenden ausschließlich lokale, synthetische Daten.
+Der frische Task-7-Lauf ergab:
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| `npm run lint` | bestanden (Exit 0) |
+| `npm test` | 17 Testdateien, 90 Tests bestanden |
+| `npm run typecheck` | bestanden (Exit 0) |
+| `npx supabase test db --local` | nach lokalem synthetischem Reset: 3 Dateien, 100 pgTAP-Tests bestanden |
+| `E2E_PORT=3135 npm run test:e2e:edge-required` | vom Nutzer im selben Worktree in normaler, nicht erhöhter PowerShell ausgeführt: Produktions-Build und 17/17 Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Edge 2) |
+
+Der E2E-Nachweis umfasst den browsergestützten Audit-Zugriffsfall. Ein zuvor
+nur in der Codex-Sandbox auftretender Firefox-Playwright-Laufzeitfehler wurde
+nicht als Produktfehler gewertet, weil derselbe vollständige Lauf in der
+normalen Benutzerumgebung erfolgreich war.
+
+Die statische Task-7-Sicherheitsprüfung bestätigte erneut SECURITY-DEFINER-
+Schutz (`search_path`), Least-Privilege-Grants und RLS, Fremdpraxis-, Ablauf-
+und Widerrufsgrenzen sowie Datenminimierung und Geheimnisbehandlung. Es gibt
+keine neuen Critical- oder Important-Befunde.
+
+Die Hosted-Cron-Abfrage für `dentpilot-purge-expired-audit-events` blieb
+ausdrücklich ausstehend: Es liegt keine freigegebene, nicht geheime
+administrative Session vor. Dieser offene Produktionsnachweis und die
+weiteren Datenschutz-/Compliance-Gates bleiben bestehen; PROJ-19 öffnet das
+Real-Data-Gate nicht.
+
+---
+
 ## Abnahme PROJ-1 — belegter Stand
 
 Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrastructure-setup.md` (20 Stück im Format Angenommen/Wenn/Dann).
