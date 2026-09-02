@@ -1,0 +1,810 @@
+begin;
+
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+set local client_min_messages = warning;
+
+create function pg_temp.query_is_true(p_sql text)
+returns boolean
+language plpgsql
+as $$
+declare
+  v_result boolean;
+begin
+  execute p_sql into v_result;
+  return coalesce(v_result, false);
+exception
+  when others then
+    return false;
+end;
+$$;
+
+create function pg_temp.query_text(p_sql text)
+returns text
+language plpgsql
+as $$
+declare
+  v_result text;
+begin
+  execute p_sql into v_result;
+  return v_result;
+exception
+  when others then
+    return null;
+end;
+$$;
+
+-- Reconstruct the relevant schema, RPC signatures, grants and denied-read
+-- behavior from the already-deployed PROJ-19 migrations before c2ef25c. This
+-- makes the test exercise an incremental upgrade instead of relying on the
+-- edited historical files used by a fresh reset.
+drop function public.read_audit_events(uuid, timestamptz, integer);
+drop function public.activate_support_access(uuid, public.support_reason);
+drop function public.request_support_access(integer);
+drop function public.record_denied_audit_read();
+
+alter table public.support_access_grant
+  drop constraint support_access_grant_requested_duration_hours_check;
+alter table public.support_access_grant
+  drop constraint support_access_grant_activation_metadata_check;
+alter table public.support_access_grant
+  add column requested_duration interval;
+
+update public.support_access_grant
+set requested_duration = pg_catalog.make_interval(
+  hours => requested_duration_hours
+);
+
+alter table public.support_access_grant
+  alter column requested_duration set not null;
+alter table public.support_access_grant
+  drop column requested_duration_hours;
+alter table public.support_access_grant
+  add constraint support_access_grant_requested_duration_check
+    check (
+      requested_duration > interval '0 hours'
+      and requested_duration <= interval '24 hours'
+    );
+alter table public.support_access_grant
+  add constraint support_access_grant_activation_metadata_check
+    check (
+      (
+        activated_at is null
+        and activated_by is null
+        and support_reason is null
+        and expires_at is null
+      )
+      or (
+        activated_at is not null
+        and activated_by is not null
+        and support_reason is not null
+        and expires_at = activated_at + requested_duration
+      )
+    );
+
+create function public.request_support_access(
+  p_requested_duration interval default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor_id uuid := auth.uid();
+  v_actor_type public.audit_actor_type;
+  v_practice_id uuid;
+  v_role public.user_role;
+  v_duration interval := coalesce(p_requested_duration, interval '8 hours');
+  v_grant_id uuid;
+  v_requested_at timestamptz := pg_catalog.now();
+begin
+  if v_actor_id is null then
+    return null;
+  end if;
+
+  v_actor_type := private.audit_actor_type_for(v_actor_id);
+
+  select profile.practice_id, profile.role
+  into v_practice_id, v_role
+  from public.user_profile as profile
+  where profile.user_id = v_actor_id;
+
+  if v_duration <= interval '0 hours'
+    or v_duration > interval '24 hours'
+    or v_role is distinct from 'praxisadmin' then
+    perform private.write_audit_event(
+      v_practice_id,
+      v_actor_id,
+      v_actor_type,
+      'support_access_requested',
+      'denied',
+      'support_access_grant',
+      null
+    );
+    return null;
+  end if;
+
+  insert into public.support_access_grant (
+    practice_id,
+    requested_by,
+    requested_at,
+    requested_duration,
+    activation_deadline
+  )
+  values (
+    v_practice_id,
+    v_actor_id,
+    v_requested_at,
+    v_duration,
+    v_requested_at + interval '24 hours'
+  )
+  returning id into v_grant_id;
+
+  perform private.write_audit_event(
+    v_practice_id,
+    v_actor_id,
+    v_actor_type,
+    'support_access_requested',
+    'allowed',
+    'support_access_grant',
+    v_grant_id,
+    v_grant_id
+  );
+
+  return v_grant_id;
+end;
+$$;
+
+create function public.activate_support_access(
+  p_grant_id uuid,
+  p_reason public.support_reason
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor_id uuid := auth.uid();
+  v_actor_type public.audit_actor_type;
+  v_grant public.support_access_grant%rowtype;
+  v_expires_at timestamptz;
+begin
+  if v_actor_id is null then
+    return null;
+  end if;
+
+  v_actor_type := private.audit_actor_type_for(v_actor_id);
+
+  if p_grant_id is not null then
+    select support_access_grant.*
+    into v_grant
+    from public.support_access_grant
+    where id = p_grant_id
+    for update;
+  end if;
+
+  if p_grant_id is null
+    or p_reason is null
+    or v_actor_type <> 'portal_admin'
+    or not found
+    or v_grant.activated_at is not null
+    or v_grant.revoked_at is not null
+    or v_grant.activation_deadline <= pg_catalog.now() then
+    perform private.write_audit_event(
+      null,
+      v_actor_id,
+      v_actor_type,
+      'support_access_activated',
+      'denied',
+      'support_access_grant',
+      p_grant_id
+    );
+    return null;
+  end if;
+
+  v_expires_at := pg_catalog.now() + v_grant.requested_duration;
+
+  update public.support_access_grant
+  set activated_by = v_actor_id,
+      activated_at = pg_catalog.now(),
+      expires_at = v_expires_at,
+      support_reason = p_reason
+  where id = v_grant.id;
+
+  perform private.write_audit_event(
+    v_grant.practice_id,
+    v_actor_id,
+    v_actor_type,
+    'support_access_activated',
+    'allowed',
+    'support_access_grant',
+    v_grant.id,
+    v_grant.id
+  );
+
+  return pg_catalog.jsonb_build_object(
+    'practice_id', v_grant.practice_id,
+    'expires_at', v_expires_at
+  );
+end;
+$$;
+
+create function public.read_audit_events(
+  p_practice_id uuid,
+  p_before timestamptz,
+  p_limit integer
+)
+returns table (
+  event_id uuid,
+  actor_type public.audit_actor_type,
+  actor_id uuid,
+  occurred_at timestamptz,
+  action public.audit_action,
+  outcome public.audit_outcome,
+  resource_type text,
+  resource_id uuid,
+  correlation_id uuid
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor_id uuid := auth.uid();
+  v_actor_type public.audit_actor_type;
+  v_known_practice_id uuid;
+  v_grant_id uuid;
+begin
+  if v_actor_id is null then
+    return;
+  end if;
+
+  v_actor_type := private.audit_actor_type_for(v_actor_id);
+
+  if p_practice_id is not null then
+    select practice.id
+    into v_known_practice_id
+    from public.practice as practice
+    where practice.id = p_practice_id;
+  end if;
+
+  if v_actor_type = 'portal_admin'
+    and v_known_practice_id is not null
+    and p_before is not null
+    and p_limit between 1 and 100 then
+    select support_access_grant.id
+    into v_grant_id
+    from public.support_access_grant
+    where practice_id = v_known_practice_id
+      and activated_by = v_actor_id
+      and activated_at is not null
+      and revoked_at is null
+      and expires_at > pg_catalog.now()
+    order by activated_at desc, id desc
+    limit 1
+    for update;
+  end if;
+
+  if v_grant_id is null then
+    perform private.write_audit_event(
+      v_known_practice_id,
+      v_actor_id,
+      v_actor_type,
+      'audit_read',
+      'denied',
+      'audit_event',
+      null
+    );
+    return;
+  end if;
+
+  perform private.write_audit_event(
+    v_known_practice_id,
+    v_actor_id,
+    v_actor_type,
+    'audit_read',
+    'allowed',
+    'support_access_grant',
+    v_grant_id,
+    pg_catalog.gen_random_uuid()
+  );
+
+  return query
+  select
+    audit_event.id,
+    audit_event.actor_type,
+    audit_event.actor_id,
+    audit_event.occurred_at,
+    audit_event.action,
+    audit_event.outcome,
+    audit_event.resource_type,
+    audit_event.resource_id,
+    audit_event.correlation_id
+  from public.audit_event
+  where audit_event.practice_id = v_known_practice_id
+    and audit_event.occurred_at <= p_before
+  order by audit_event.occurred_at desc, audit_event.id desc
+  limit p_limit;
+end;
+$$;
+
+revoke all on function public.request_support_access(interval)
+  from public, anon, authenticated;
+revoke all on function public.activate_support_access(uuid, public.support_reason)
+  from public, anon, authenticated;
+revoke all on function public.read_audit_events(uuid, timestamptz, integer)
+  from public, anon, authenticated;
+
+grant execute on function public.request_support_access(interval)
+  to authenticated;
+grant execute on function public.activate_support_access(uuid, public.support_reason)
+  to authenticated;
+grant execute on function public.read_audit_events(uuid, timestamptz, integer)
+  to authenticated;
+
+insert into auth.users (id, email)
+values
+  ('11900000-0000-0000-0000-000000000001', 'proj19-forward-praxisadmin@example.invalid'),
+  ('11900000-0000-0000-0000-000000000002', 'proj19-forward-rezeption@example.invalid'),
+  ('11900000-0000-0000-0000-000000000003', 'proj19-forward-portaladmin@example.invalid'),
+  ('11900000-0000-0000-0000-000000000004', 'proj19-forward-unknown@example.invalid');
+
+insert into public.practice (id, name)
+values
+  ('21900000-0000-0000-0000-000000000001', 'PROJ-19 Forward Praxis Eins'),
+  ('21900000-0000-0000-0000-000000000002', 'PROJ-19 Forward Praxis Zwei');
+
+insert into public.user_profile (user_id, practice_id, display_name, role)
+values
+  (
+    '11900000-0000-0000-0000-000000000001',
+    '21900000-0000-0000-0000-000000000001',
+    'PROJ-19 Forward Praxisadmin',
+    'praxisadmin'
+  ),
+  (
+    '11900000-0000-0000-0000-000000000002',
+    '21900000-0000-0000-0000-000000000001',
+    'PROJ-19 Forward Rezeption',
+    'rezeption'
+  );
+
+insert into public.portal_admin (user_id)
+values ('11900000-0000-0000-0000-000000000003');
+
+insert into public.support_access_grant (
+  id,
+  practice_id,
+  requested_by,
+  requested_at,
+  requested_duration,
+  activation_deadline
+)
+values (
+  '31900000-0000-0000-0000-000000000001',
+  '21900000-0000-0000-0000-000000000001',
+  '11900000-0000-0000-0000-000000000001',
+  pg_catalog.now(),
+  interval '8 hours',
+  pg_catalog.now() + interval '24 hours'
+);
+
+insert into public.support_access_grant (
+  id,
+  practice_id,
+  requested_by,
+  activated_by,
+  requested_at,
+  requested_duration,
+  activation_deadline,
+  activated_at,
+  expires_at,
+  support_reason
+)
+values (
+  '31900000-0000-0000-0000-000000000002',
+  '21900000-0000-0000-0000-000000000001',
+  '11900000-0000-0000-0000-000000000001',
+  '11900000-0000-0000-0000-000000000003',
+  timestamptz '2026-02-28 00:00:00+00',
+  interval '-1 month 31 days',
+  timestamptz '2026-03-01 00:00:00+00',
+  timestamptz '2026-03-01 00:00:00+00',
+  timestamptz '2026-03-04 00:00:00+00',
+  'technical_investigation'
+);
+
+-- PROJ_19_FORWARD_MIGRATION
+
+-- Applying the migration again models a fresh checkout whose edited historical
+-- migrations already expose the hardened schema. It must remain a safe no-op
+-- for schema conversion while reasserting the authoritative RPC definitions.
+-- PROJ_19_FORWARD_MIGRATION
+
+select plan(25);
+
+select has_column(
+  'public',
+  'support_access_grant',
+  'requested_duration_hours',
+  'the forward migration adds the bounded integer-hours column'
+);
+select hasnt_column(
+  'public',
+  'support_access_grant',
+  'requested_duration',
+  'the forward migration removes the legacy interval column'
+);
+select ok(
+  (
+    select attribute.attnotnull
+      and pg_catalog.format_type(attribute.atttypid, attribute.atttypmod) = 'smallint'
+    from pg_catalog.pg_attribute as attribute
+    join pg_catalog.pg_class as relation on relation.oid = attribute.attrelid
+    join pg_catalog.pg_namespace as namespace on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'public'
+      and relation.relname = 'support_access_grant'
+      and attribute.attname = 'requested_duration_hours'
+      and not attribute.attisdropped
+  ),
+  'the upgraded duration column is a required smallint'
+);
+select ok(
+  pg_temp.query_is_true(
+  $$
+    select requested_duration_hours = 8
+    from public.support_access_grant
+    where id = '31900000-0000-0000-0000-000000000001'
+  $$
+  ),
+  'an existing whole-hour grant is backfilled without changing its duration'
+);
+select ok(
+  pg_temp.query_is_true(
+  $$
+    select
+      requested_duration_hours = 1
+      and revoked_at is not null
+      and expires_at = activated_at + interval '1 hour'
+    from public.support_access_grant
+    where id = '31900000-0000-0000-0000-000000000002'
+  $$
+  ),
+  'a calendar-component grant is conservatively normalized and revoked'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'request_support_access'
+      and pg_catalog.pg_get_function_identity_arguments(procedure.oid) = 'p_requested_duration_hours integer'
+  ),
+  1::bigint,
+  'the upgraded database exposes the integer-hours support request API'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'request_support_access'
+      and pg_catalog.pg_get_function_identity_arguments(procedure.oid) = 'p_requested_duration interval'
+  ),
+  0::bigint,
+  'the upgraded database removes the legacy interval overload'
+);
+select has_function(
+  'public',
+  'record_denied_audit_read',
+  array[]::text[],
+  'the upgraded database exposes only the no-target denial recorder'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname in ('public', 'private')
+      and procedure.proname in (
+        'record_denied_audit_read',
+        'request_support_access',
+        'activate_support_access',
+        'read_audit_events'
+      )
+      and procedure.prosecdef
+      and procedure.proconfig = array['search_path=""']::text[]
+  ),
+  4::bigint,
+  'all forward-hardened RPCs remain SECURITY DEFINER with an empty search path'
+);
+select ok(
+  (
+    select has_function_privilege('authenticated', procedure.oid, 'EXECUTE')
+      and not has_function_privilege('anon', procedure.oid, 'EXECUTE')
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'request_support_access'
+      and pg_catalog.pg_get_function_identity_arguments(procedure.oid) = 'p_requested_duration_hours integer'
+  )
+  and (
+    select has_function_privilege('authenticated', procedure.oid, 'EXECUTE')
+      and not has_function_privilege('anon', procedure.oid, 'EXECUTE')
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'record_denied_audit_read'
+      and procedure.pronargs = 0
+  ),
+  'the new RPCs grant only the authenticated application role execution'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11900000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select set_config(
+  'proj_19.forward_requested_grant_id',
+  coalesce(
+    pg_temp.query_text($$ select public.request_support_access(8)::text $$),
+    ''
+  ),
+  true
+);
+select ok(
+  current_setting('proj_19.forward_requested_grant_id') <> '',
+  'the integer-hours API creates a support grant for the owning praxisadmin'
+);
+select ok(
+  pg_temp.query_is_true(
+    $$ select public.request_support_access(25) is null $$
+  ),
+  'the integer-hours API neutrally rejects a duration above 24 hours'
+);
+select throws_ok(
+  $$ select public.request_support_access(interval '-1 month 31 days') $$,
+  '42883',
+  null,
+  'the removed interval overload blocks calendar-component bypasses'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11900000-0000-0000-0000-000000000002', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (
+    select count(*)
+    from public.read_audit_events(
+      '21900000-0000-0000-0000-000000000002',
+      pg_catalog.now(),
+      50
+    )
+  ),
+  0::bigint,
+  'a practice role still receives no contents for a foreign audit target'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select practice_id
+    from public.audit_event
+    where actor_id = '11900000-0000-0000-0000-000000000002'
+      and action = 'audit_read'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  '21900000-0000-0000-0000-000000000001'::uuid,
+  'a practice-role denial is recorded only under the caller practice'
+);
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where actor_id = '11900000-0000-0000-0000-000000000002'
+      and action = 'audit_read'
+      and outcome = 'denied'
+      and practice_id = '21900000-0000-0000-0000-000000000002'
+  ),
+  0::bigint,
+  'a practice-role denial never records the caller-supplied foreign target'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11900000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (
+    select count(*)
+    from public.read_audit_events(
+      '21900000-0000-0000-0000-000000000002',
+      pg_catalog.now(),
+      50
+    )
+  ),
+  0::bigint,
+  'an ungranted portaladmin receives no audit contents'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select practice_id
+    from public.audit_event
+    where actor_id = '11900000-0000-0000-0000-000000000003'
+      and action = 'audit_read'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  null::uuid,
+  'a portaladmin no-target denial keeps practice_id null'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11900000-0000-0000-0000-000000000004', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (
+    select count(*)
+    from public.read_audit_events(
+      '21900000-0000-0000-0000-000000000002',
+      pg_catalog.now(),
+      50
+    )
+  ),
+  0::bigint,
+  'an unknown authenticated identity receives no audit contents'
+);
+
+reset role;
+set local role service_role;
+
+select ok(
+  (
+    select practice_id is null and actor_type = 'unknown_authenticated'
+    from public.audit_event
+    where actor_id = '11900000-0000-0000-0000-000000000004'
+      and action = 'audit_read'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  'an unknown-identity no-target denial keeps practice_id null'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11900000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select set_config(
+  'proj_19.forward_activation_result',
+  public.activate_support_access(
+    '31900000-0000-0000-0000-000000000001',
+    'technical_investigation'
+  )::text,
+  true
+);
+select is(
+  (current_setting('proj_19.forward_activation_result')::jsonb ->> 'practice_id')::uuid,
+  '21900000-0000-0000-0000-000000000001'::uuid,
+  'the upgraded activation API returns only the authorized practice'
+);
+
+reset role;
+set local role service_role;
+
+select ok(
+  pg_temp.query_is_true(
+    $$
+      select requested_duration_hours = 8
+      and expires_at = activated_at + interval '8 hours'
+      from public.support_access_grant
+      where id = '31900000-0000-0000-0000-000000000001'
+    $$
+  ),
+  'activation derives expiry from the bounded integer-hours value'
+);
+
+insert into public.audit_event (
+  id,
+  practice_id,
+  actor_id,
+  actor_type,
+  action,
+  outcome,
+  resource_type,
+  resource_id,
+  correlation_id
+)
+values (
+  '91900000-0000-0000-0000-000000000001',
+  '21900000-0000-0000-0000-000000000001',
+  '11900000-0000-0000-0000-000000000001',
+  'practice_member',
+  'support_access_requested',
+  'allowed',
+  'support_access_grant',
+  '31900000-0000-0000-0000-000000000001',
+  '92900000-0000-0000-0000-000000000001'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11900000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (
+    select count(*)
+    from public.read_audit_events(
+      '21900000-0000-0000-0000-000000000001',
+      pg_catalog.now(),
+      50
+    )
+    where event_id = '91900000-0000-0000-0000-000000000001'
+  ),
+  1::bigint,
+  'an activated portaladmin reads only the granted practice audit stream'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where actor_id = '11900000-0000-0000-0000-000000000003'
+      and action = 'audit_read'
+      and outcome = 'allowed'
+      and practice_id = '21900000-0000-0000-0000-000000000001'
+  ),
+  1::bigint,
+  'the allowed upgraded audit read remains self-auditing'
+);
+select throws_ok(
+  $$
+    insert into public.support_access_grant (
+      practice_id,
+      requested_by,
+      requested_duration_hours,
+      activation_deadline
+    )
+    values (
+      '21900000-0000-0000-0000-000000000001',
+      '11900000-0000-0000-0000-000000000001',
+      25,
+      pg_catalog.now() + interval '24 hours'
+    )
+  $$,
+  '23514',
+  null,
+  'the upgraded table constraint rejects out-of-range direct inserts'
+);
+
+select * from finish();
+rollback;
