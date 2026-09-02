@@ -109,15 +109,19 @@ describe('audit read server adapter', () => {
     ).resolves.toHaveLength(1)
   })
 
-  it('blocks practice identities before the audit RPC', async () => {
-    const client = rpcClient({ data: [], error: null })
+  it('records a practice denial through the no-target RPC without forwarding a foreign practice', async () => {
+    const client = rpcClient({ data: false, error: null })
 
     await expect(
       readAuditEvents(client, praxisadmin, {
-        practiceId: '21000000-0000-0000-0000-000000000001',
+        practiceId: '21000000-0000-0000-0000-000000000002',
       }),
     ).rejects.toThrow(AuditReadError)
-    expect(client.rpc).not.toHaveBeenCalled()
+    expect(client.rpc).toHaveBeenCalledWith('record_denied_audit_read', {})
+    expect(client.rpc).toHaveBeenCalledWith(
+      'record_denied_audit_read',
+      expect.not.objectContaining({ p_practice_id: expect.anything() }),
+    )
   })
 
   it('treats empty, malformed, and failed database responses as neutral denials', async () => {

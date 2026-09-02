@@ -110,6 +110,37 @@ export default async function PortalAuditPage({
   const practiceId =
     typeof parameters.practiceId === 'string' ? parameters.practiceId : ''
 
+  if (context.status === 'ready') {
+    try {
+      const client = (await createClient()) as AuditReadRpcClient
+      await readAuditEvents(
+        client,
+        {
+          kind: 'practice_member',
+          userId: context.userId,
+          practiceId: context.practiceId,
+          role: context.role,
+        },
+        { practiceId: context.practiceId },
+      )
+    } catch {
+      // The database records the denial; the page intentionally stays neutral.
+    }
+
+    return (
+      <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <Card>
+          <CardHeader>
+            <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
+          </CardHeader>
+          <CardContent>
+            <AuditDeniedState />
+          </CardContent>
+        </Card>
+      </main>
+    )
+  }
+
   if (context.status !== 'portal_admin') {
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">

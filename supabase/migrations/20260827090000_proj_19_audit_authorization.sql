@@ -38,17 +38,14 @@ create table public.support_access_grant (
   requested_by uuid not null references public.user_profile(user_id) on delete restrict,
   activated_by uuid references public.portal_admin(user_id) on delete restrict,
   requested_at timestamptz not null default now(),
-  requested_duration interval not null,
+  requested_duration_hours smallint not null,
   activation_deadline timestamptz not null,
   activated_at timestamptz,
   expires_at timestamptz,
   revoked_at timestamptz,
   support_reason public.support_reason,
-  constraint support_access_grant_requested_duration_check
-    check (
-      requested_duration > interval '0 hours'
-      and requested_duration <= interval '24 hours'
-    ),
+  constraint support_access_grant_requested_duration_hours_check
+    check (requested_duration_hours between 1 and 24),
   constraint support_access_grant_activation_deadline_check
     check (activation_deadline = requested_at + interval '24 hours'),
   constraint support_access_grant_activation_metadata_check
@@ -63,7 +60,8 @@ create table public.support_access_grant (
         activated_at is not null
         and activated_by is not null
         and support_reason is not null
-        and expires_at = activated_at + requested_duration
+        and expires_at = activated_at
+          + pg_catalog.make_interval(hours => requested_duration_hours)
       )
     ),
   constraint support_access_grant_revocation_timestamp_check
@@ -185,6 +183,44 @@ begin
 end;
 $$;
 
+create function public.record_denied_audit_read()
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor_id uuid := auth.uid();
+  v_actor_type public.audit_actor_type;
+  v_practice_id uuid;
+begin
+  if v_actor_id is null then
+    return false;
+  end if;
+
+  v_actor_type := private.audit_actor_type_for(v_actor_id);
+
+  if v_actor_type = 'practice_member' then
+    select profile.practice_id
+    into v_practice_id
+    from public.user_profile as profile
+    where profile.user_id = v_actor_id;
+  end if;
+
+  perform private.write_audit_event(
+    v_practice_id,
+    v_actor_id,
+    v_actor_type,
+    'audit_read',
+    'denied',
+    'audit_event',
+    null
+  );
+
+  return false;
+end;
+$$;
+
 create function private.reject_portal_admin_practice_member_overlap()
 returns trigger
 language plpgsql
@@ -243,7 +279,9 @@ create trigger user_profile_reject_portal_admin_overlap
 before insert or update of user_id on public.user_profile
 for each row execute function private.reject_practice_member_portal_admin_overlap();
 
-create function public.request_support_access(p_requested_duration interval default null)
+create function public.request_support_access(
+  p_requested_duration_hours integer default null
+)
 returns uuid
 language plpgsql
 security definer
@@ -254,7 +292,7 @@ declare
   v_actor_type public.audit_actor_type;
   v_practice_id uuid;
   v_role public.user_role;
-  v_duration interval := coalesce(p_requested_duration, interval '8 hours');
+  v_duration_hours integer := coalesce(p_requested_duration_hours, 8);
   v_grant_id uuid;
   v_requested_at timestamptz := pg_catalog.now();
 begin
@@ -269,8 +307,7 @@ begin
   from public.user_profile as profile
   where profile.user_id = v_actor_id;
 
-  if v_duration <= interval '0 hours'
-    or v_duration > interval '24 hours'
+  if v_duration_hours not between 1 and 24
     or v_role is distinct from 'praxisadmin' then
     perform private.write_audit_event(
       v_practice_id,
@@ -288,14 +325,14 @@ begin
     practice_id,
     requested_by,
     requested_at,
-    requested_duration,
+    requested_duration_hours,
     activation_deadline
   )
   values (
     v_practice_id,
     v_actor_id,
     v_requested_at,
-    v_duration,
+    v_duration_hours,
     v_requested_at + interval '24 hours'
   )
   returning id into v_grant_id;
@@ -363,7 +400,8 @@ begin
     return null;
   end if;
 
-  v_expires_at := pg_catalog.now() + v_grant.requested_duration;
+  v_expires_at := pg_catalog.now()
+    + pg_catalog.make_interval(hours => v_grant.requested_duration_hours);
 
   update public.support_access_grant
   set activated_by = v_actor_id,
@@ -486,6 +524,11 @@ begin
 
   v_actor_type := private.audit_actor_type_for(v_actor_id);
 
+  if v_actor_type <> 'portal_admin' then
+    perform public.record_denied_audit_read();
+    return;
+  end if;
+
   if p_practice_id is not null then
     select practice.id
     into v_known_practice_id
@@ -493,8 +536,7 @@ begin
     where practice.id = p_practice_id;
   end if;
 
-  if v_actor_type = 'portal_admin'
-    and v_known_practice_id is not null
+  if v_known_practice_id is not null
     and p_before is not null
     and p_limit between 1 and 100 then
     select support_access_grant.id
@@ -511,15 +553,7 @@ begin
   end if;
 
   if v_grant_id is null then
-    perform private.write_audit_event(
-      v_known_practice_id,
-      v_actor_id,
-      v_actor_type,
-      'audit_read',
-      'denied',
-      'audit_event',
-      null
-    );
+    perform public.record_denied_audit_read();
     return;
   end if;
 
@@ -573,15 +607,17 @@ $$;
 
 revoke all on function private.audit_actor_type_for(uuid) from public, anon, authenticated;
 revoke all on function private.write_audit_event(uuid, uuid, public.audit_actor_type, public.audit_action, public.audit_outcome, text, uuid, uuid) from public, anon, authenticated;
+revoke all on function public.record_denied_audit_read() from public, anon, authenticated;
 revoke all on function private.reject_portal_admin_practice_member_overlap() from public, anon, authenticated;
 revoke all on function private.reject_practice_member_portal_admin_overlap() from public, anon, authenticated;
-revoke all on function public.request_support_access(interval) from public, anon, authenticated;
+revoke all on function public.request_support_access(integer) from public, anon, authenticated;
 revoke all on function public.activate_support_access(uuid, public.support_reason) from public, anon, authenticated;
 revoke all on function public.revoke_support_access(uuid) from public, anon, authenticated;
 revoke all on function public.read_audit_events(uuid, timestamptz, integer) from public, anon, authenticated;
 revoke all on function private.purge_expired_audit_events() from public, anon, authenticated;
 
-grant execute on function public.request_support_access(interval) to authenticated;
+grant execute on function public.record_denied_audit_read() to authenticated;
+grant execute on function public.request_support_access(integer) to authenticated;
 grant execute on function public.activate_support_access(uuid, public.support_reason) to authenticated;
 grant execute on function public.revoke_support_access(uuid) to authenticated;
 grant execute on function public.read_audit_events(uuid, timestamptz, integer) to authenticated;

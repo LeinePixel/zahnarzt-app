@@ -51,7 +51,8 @@ begin
     return null;
   end if;
 
-  v_expires_at := pg_catalog.now() + v_grant.requested_duration;
+  v_expires_at := pg_catalog.now()
+    + pg_catalog.make_interval(hours => v_grant.requested_duration_hours);
 
   update public.support_access_grant
   set activated_by = v_actor_id,
@@ -112,6 +113,11 @@ begin
 
   v_actor_type := private.audit_actor_type_for(v_actor_id);
 
+  if v_actor_type <> 'portal_admin' then
+    perform public.record_denied_audit_read();
+    return;
+  end if;
+
   if p_practice_id is not null then
     select practice.id
     into v_known_practice_id
@@ -119,8 +125,7 @@ begin
     where practice.id = p_practice_id;
   end if;
 
-  if v_actor_type = 'portal_admin'
-    and v_known_practice_id is not null
+  if v_known_practice_id is not null
     and p_before is not null
     and p_limit between 1 and 100 then
     select support_access_grant.id
@@ -137,15 +142,7 @@ begin
   end if;
 
   if v_grant_id is null then
-    perform private.write_audit_event(
-      null,
-      v_actor_id,
-      v_actor_type,
-      'audit_read',
-      'denied',
-      'audit_event',
-      null
-    );
+    perform public.record_denied_audit_read();
     return;
   end if;
 

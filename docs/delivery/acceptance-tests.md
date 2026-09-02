@@ -121,8 +121,9 @@ Die nachfolgende Liste bleibt als detailliertes Runbook erhalten; automatisierte
 
 ## Testdaten
 
-Das Seed-Skript legt an: eine Testpraxis und drei Demo-Konten (eines je Rolle).
+Das Seed-Skript legt an: zwei synthetische Testpraxen und vier Demo-Konten
+(drei Praxisrollen sowie eine separate Portaladmin-Identität).
 
-**Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die drei `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
+**Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die vier `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
 
 Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/assets/dentpilot-ux1-prototype.html`) enthält ebenfalls ausschließlich erfundene Beispieldaten.

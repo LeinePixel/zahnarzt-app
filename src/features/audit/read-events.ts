@@ -106,6 +106,12 @@ export async function readAuditEvents(
   input: ReadAuditEventsInput,
 ): Promise<AuditEvent[]> {
   if (!mayUseCapability(actor, 'audit.read')) {
+    const { data, error } = await client.rpc('record_denied_audit_read', {})
+
+    if (error || data !== false) {
+      return denied()
+    }
+
     return denied()
   }
 

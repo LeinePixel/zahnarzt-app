@@ -1,6 +1,6 @@
 begin;
 
-select plan(64);
+select plan(72);
 
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
@@ -137,6 +137,38 @@ select ok(
   not has_function_privilege('anon', 'public.is_portal_admin()', 'EXECUTE'),
   'anonymous identities cannot execute the portal-admin check'
 );
+select has_function(
+  'public',
+  'record_denied_audit_read',
+  array[]::text[],
+  'the denied audit-read recorder accepts no caller-supplied target'
+);
+select is(
+  (
+    select has_function_privilege('authenticated', procedure.oid, 'EXECUTE')
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'record_denied_audit_read'
+      and procedure.pronargs = 0
+  ),
+  true,
+  'authenticated identities can execute the no-target denied audit recorder'
+);
+select is(
+  (
+    select has_function_privilege('anon', procedure.oid, 'EXECUTE')
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'record_denied_audit_read'
+      and procedure.pronargs = 0
+  ),
+  false,
+  'anonymous identities cannot execute the denied audit recorder'
+);
 
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
@@ -179,7 +211,7 @@ set local role authenticated;
 
 select set_config(
   'proj_19.first_grant_id',
-  public.request_support_access(interval '8 hours')::text,
+  public.request_support_access(8)::text,
   true
 );
 select ok(
@@ -192,7 +224,7 @@ set local role service_role;
 
 select ok(
   (
-    select requested_duration = interval '8 hours'
+    select requested_duration_hours = 8
       and activation_deadline = requested_at + interval '24 hours'
       and expires_at is null
     from public.support_access_grant
@@ -207,9 +239,15 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
 select is(
-  public.request_support_access(interval '25 hours'),
+  public.request_support_access(25),
   null::uuid,
   'a requested support-access duration over 24 hours is neutrally denied'
+);
+select throws_ok(
+  $$ select public.request_support_access(interval '-1 month 31 days') $$,
+  '42883',
+  null,
+  'calendar-component intervals are rejected at the RPC type boundary'
 );
 
 reset role;
@@ -218,7 +256,7 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
 select is(
-  public.request_support_access(interval '8 hours'),
+  public.request_support_access(8),
   null::uuid,
   'a non-praxisadmin support request is neutrally denied'
 );
@@ -229,7 +267,7 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 
 select is(
-  public.request_support_access(interval '8 hours'),
+  public.request_support_access(8),
   null::uuid,
   'an authenticated identity without a controlled role is neutrally denied'
 );
@@ -274,7 +312,7 @@ set local role service_role;
 
 select ok(
   (
-    select requested_duration = interval '8 hours'
+    select requested_duration_hours = 8
       and activation_deadline = requested_at + interval '24 hours'
     from public.support_access_grant
     where id = current_setting('proj_19.first_grant_id')::uuid
@@ -314,7 +352,8 @@ select is(
 );
 select ok(
   (
-    select expires_at = activated_at + requested_duration
+    select expires_at = activated_at
+        + pg_catalog.make_interval(hours => requested_duration_hours)
       and expires_at > activated_at
     from public.support_access_grant
     where id = current_setting('proj_19.first_grant_id')::uuid
@@ -569,14 +608,14 @@ insert into public.support_access_grant (
   id,
   practice_id,
   requested_by,
-  requested_duration,
+  requested_duration_hours,
   activation_deadline
 )
 values (
   '31000000-0000-0000-0000-000000000001',
   '21000000-0000-0000-0000-000000000002',
   '11000000-0000-0000-0000-000000000006',
-  interval '8 hours',
+  8,
   now() + interval '24 hours'
 );
 
@@ -671,7 +710,7 @@ set local role authenticated;
 
 select set_config(
   'proj_19.replacement_grant_id',
-  public.request_support_access(interval '8 hours')::text,
+  public.request_support_access(8)::text,
   true
 );
 select ok(
@@ -738,6 +777,57 @@ select is(
   ),
   5::bigint,
   'revoked and expired audit reads are retained'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.record_denied_audit_read(),
+  false,
+  'the no-target recorder returns only a neutral denial'
+);
+select is(
+  (
+    select count(*)
+    from public.read_audit_events(
+      '21000000-0000-0000-0000-000000000002',
+      now(),
+      50
+    )
+  ),
+  0::bigint,
+  'a direct practice-role read of a foreign target returns no audit contents'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000002'
+      and action = 'audit_read'
+      and outcome = 'denied'
+      and practice_id = '21000000-0000-0000-0000-000000000001'
+  ),
+  2::bigint,
+  'server and direct denied reads are audited only under the caller practice'
+);
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where actor_id = '11000000-0000-0000-0000-000000000002'
+      and action = 'audit_read'
+      and outcome = 'denied'
+      and practice_id = '21000000-0000-0000-0000-000000000002'
+  ),
+  0::bigint,
+  'denied practice-role reads never record the requested foreign practice'
 );
 
 select lives_ok(

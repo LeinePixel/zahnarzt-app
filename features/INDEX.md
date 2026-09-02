@@ -33,7 +33,7 @@
 | PROJ-16 | Automatischer Kostenvoranschlagsentwurf | P0 | Roadmap | PROJ-15 | - | 2026-08-24 |
 | PROJ-17 | Patientenkennzahlen (Termintreue, PZR-Frequenz, Umsatz) | P0 | Roadmap | PROJ-4, PROJ-5 | - | 2026-08-24 |
 | PROJ-18 | Dashboard | P0 | Roadmap | PROJ-9, PROJ-13, PROJ-16, PROJ-17 | - | 2026-08-24 |
-| PROJ-19 | Audit Logging & Rollenrechte | P0 | Architected | PROJ-1 | [Spec](PROJ-19-audit-logging-and-role-permissions.md) | 2026-08-26 |
+| PROJ-19 | Audit Logging & Rollenrechte | P0 | In Review | PROJ-1 | [Spec](PROJ-19-audit-logging-and-role-permissions.md) | 2026-08-26 |
 | PROJ-20 | Analytics (Termin-KPIs, Recall-Quote, KV-Conversion) | P1 | Roadmap | PROJ-13, PROJ-16, PROJ-17 | - | 2026-08-24 |
 | PROJ-21 | Erweitertes Patientenrating (transparente Einzelkennzahlen) | P1 | Roadmap | PROJ-17 | - | 2026-08-24 |
 | PROJ-22 | Rohtranskript-Verarbeitung (eigene Zusammenfassung statt Soniox-Zusammenfassung) | P1 | Roadmap | PROJ-14, PROJ-15 | - | 2026-08-24 |

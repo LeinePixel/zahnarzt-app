@@ -52,7 +52,7 @@ describe('support-access server adapter', () => {
     )
 
     expect(client.rpc).toHaveBeenCalledWith('request_support_access', {
-      p_requested_duration: '8 hours',
+      p_requested_duration_hours: 8,
     })
   })
 

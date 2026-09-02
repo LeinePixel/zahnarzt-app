@@ -67,7 +67,7 @@ describe('PortalAuditPage', () => {
     )
   })
 
-  it('shows a neutral denial and never calls the read RPC for a practice role', async () => {
+  it('shows a neutral denial after sending a practice-role attempt through the audited server path', async () => {
     vi.mocked(getCurrentUserContext).mockResolvedValue({
       status: 'ready',
       displayName: 'PROJ-19 Praxisadmin',
@@ -77,11 +77,14 @@ describe('PortalAuditPage', () => {
       roleLabel: 'Praxisadministration',
       userId: '11000000-0000-0000-0000-000000000001',
     })
+    vi.mocked(readAuditEvents).mockRejectedValue(
+      new Error('neutral audited denial'),
+    )
 
     render(
       await PortalAuditPage({
         searchParams: Promise.resolve({
-          practiceId: '21000000-0000-0000-0000-000000000001',
+          practiceId: '21000000-0000-0000-0000-000000000002',
         }),
       }),
     )
@@ -89,7 +92,16 @@ describe('PortalAuditPage', () => {
     expect(
       screen.getByText('Audit-Zugriff wurde verweigert.'),
     ).toBeInTheDocument()
-    expect(readAuditEvents).not.toHaveBeenCalled()
+    expect(readAuditEvents).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        kind: 'practice_member',
+        practiceId: '21000000-0000-0000-0000-000000000001',
+        role: 'praxisadmin',
+        userId: '11000000-0000-0000-0000-000000000001',
+      },
+      { practiceId: '21000000-0000-0000-0000-000000000001' },
+    )
   })
 
   it('shows a neutral denial and never treats an unassigned account as a portal admin', async () => {

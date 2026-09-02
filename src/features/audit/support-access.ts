@@ -109,7 +109,7 @@ export async function requestSupportAccess(
   const requestedDurationHours = parseDuration(input)
 
   const { data, error } = await client.rpc('request_support_access', {
-    p_requested_duration: `${requestedDurationHours} hours`,
+    p_requested_duration_hours: requestedDurationHours,
   })
   const parsedGrantId = grantIdSchema.safeParse(data)
 
