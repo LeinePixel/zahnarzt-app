@@ -9,18 +9,30 @@ import PortalAuditPage from './page'
 vi.mock('@/features/auth/current-user', () => ({
   getCurrentUserContext: vi.fn(),
 }))
-vi.mock('@/features/audit/read-events', () => ({
-  AuditReadError: class AuditReadError extends Error {},
-  readAuditEvents: vi.fn(),
+vi.mock('@/features/audit/read-events', async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import('@/features/audit/read-events')
+  >()
+
+  return {
+    ...actual,
+    readAuditEvents: vi.fn(),
+  }
+})
+
+const { rpc } = vi.hoisted(() => ({
+  rpc: vi.fn(),
 }))
+
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn().mockResolvedValue({}),
+  createClient: vi.fn().mockResolvedValue({ rpc }),
 }))
 
 describe('PortalAuditPage', () => {
   beforeEach(() => {
     vi.mocked(getCurrentUserContext).mockReset()
     vi.mocked(readAuditEvents).mockReset()
+    rpc.mockReset()
   })
 
   it('renders only fixed audit metadata for an allowed provider result', async () => {
@@ -104,24 +116,32 @@ describe('PortalAuditPage', () => {
     )
   })
 
-  it('shows a neutral denial and never treats an unassigned account as a portal admin', async () => {
+  it('durably audits an unassigned authenticated account without leaking a requested target', async () => {
     vi.mocked(getCurrentUserContext).mockResolvedValue({
       status: 'incomplete',
       userId: '11000000-0000-0000-0000-000000000004',
     })
-    vi.mocked(readAuditEvents).mockResolvedValue([])
+    rpc.mockResolvedValue({ data: false, error: null })
+
+    const requestedPracticeId = '21000000-0000-0000-0000-000000000001'
+    const incompleteUserId = '11000000-0000-0000-0000-000000000004'
 
     render(
       await PortalAuditPage({
         searchParams: Promise.resolve({
-          practiceId: '21000000-0000-0000-0000-000000000001',
+          practiceId: requestedPracticeId,
         }),
       }),
     )
 
+    expect(rpc).toHaveBeenCalledOnce()
+    expect(rpc).toHaveBeenCalledWith('record_denied_audit_read', {})
     expect(
       screen.getByText('Audit-Zugriff wurde verweigert.'),
     ).toBeInTheDocument()
+    expect(screen.queryByText(requestedPracticeId)).not.toBeInTheDocument()
+    expect(screen.queryByText(incompleteUserId)).not.toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(readAuditEvents).not.toHaveBeenCalled()
   })
 

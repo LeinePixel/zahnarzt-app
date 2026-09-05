@@ -141,6 +141,15 @@ export default async function PortalAuditPage({
     )
   }
 
+  if (context.status === 'incomplete') {
+    try {
+      const client = await createClient()
+      await client.rpc('record_denied_audit_read', {})
+    } catch {
+      // The response remains neutral even if the durable denial path is unavailable.
+    }
+  }
+
   if (context.status !== 'portal_admin') {
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
