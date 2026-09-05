@@ -37,7 +37,7 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 
 ## Risiken (keine Frage, aber bekannte Gefahr)
 
-- [ ] **Nur 1 von 31 Features ist spezifiziert.** Für alle übrigen fehlen User Stories und Akzeptanzkriterien. Wer ohne Spec baut, baut auf Vermutungen.
+- [ ] **Nur 2 von 31 Features sind spezifiziert.** Für alle übrigen fehlen User Stories und Akzeptanzkriterien. Wer ohne Spec baut, baut auf Vermutungen.
 - [ ] **Ein einzelner Entwickler** ohne Ausfallschutz.
 - [ ] **Vercel-Konto muss vor dem Deploy manuell angelegt werden** (aus der Git-Historie: Commit 21a97bb).
 
