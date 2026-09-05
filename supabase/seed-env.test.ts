@@ -12,6 +12,7 @@ const validSeedEnv = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'public-anon-key',
   NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
   SEED_BEHANDLER_PASSWORD: `B-${testPasswordPart}-aA1!`,
+  SEED_PORTALADMIN_PASSWORD: `O-${testPasswordPart}-aA1!`,
   SEED_PRAXISADMIN_PASSWORD: `P-${testPasswordPart}-aA1!`,
   SEED_REZEPTION_PASSWORD: `R-${testPasswordPart}-aA1!`,
   SUPABASE_SERVICE_ROLE_KEY: 'local-service-role-key',
@@ -24,6 +25,7 @@ describe('getSeedEnv', () => {
         validSeedEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       NEXT_PUBLIC_SUPABASE_URL: validSeedEnv.NEXT_PUBLIC_SUPABASE_URL,
       SEED_BEHANDLER_PASSWORD: validSeedEnv.SEED_BEHANDLER_PASSWORD,
+      SEED_PORTALADMIN_PASSWORD: validSeedEnv.SEED_PORTALADMIN_PASSWORD,
       SEED_PRAXISADMIN_PASSWORD: validSeedEnv.SEED_PRAXISADMIN_PASSWORD,
       SEED_REZEPTION_PASSWORD: validSeedEnv.SEED_REZEPTION_PASSWORD,
     }
@@ -38,6 +40,7 @@ describe('getSeedEnv', () => {
       serviceRoleKey: 'local-service-role-key',
       seedPasswords: {
         behandler: validSeedEnv.SEED_BEHANDLER_PASSWORD,
+        portaladmin: validSeedEnv.SEED_PORTALADMIN_PASSWORD,
         praxisadmin: validSeedEnv.SEED_PRAXISADMIN_PASSWORD,
         rezeption: validSeedEnv.SEED_REZEPTION_PASSWORD,
       },
@@ -49,6 +52,7 @@ describe('getSeedEnv', () => {
   it.each([
     'SEED_REZEPTION_PASSWORD',
     'SEED_BEHANDLER_PASSWORD',
+    'SEED_PORTALADMIN_PASSWORD',
     'SEED_PRAXISADMIN_PASSWORD',
   ])('requires a strong local value for %s', (variable) => {
     expect(() =>
@@ -81,6 +85,9 @@ describe('environment examples', () => {
     )
     expect(seedExample).toContain(
       'SEED_BEHANDLER_PASSWORD=replace-with-a-local-password',
+    )
+    expect(seedExample).toContain(
+      'SEED_PORTALADMIN_PASSWORD=replace-with-a-local-password',
     )
     expect(seedExample).toContain(
       'SEED_PRAXISADMIN_PASSWORD=replace-with-a-local-password',

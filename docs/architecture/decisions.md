@@ -78,8 +78,19 @@ Bestehende Entscheidungen werden historisch nachvollziehbar gepflegt: Sachfehler
 | KI bereitet ausschließlich vor; Human Oversight bleibt verbindlich | Verhindert autonome medizinische oder wesentlich wirkende Entscheidungen und schafft eine klare Grundlage für DSGVO-/AI-Act-Prüfung. | 2026-08-25 |
 | `getClaims()` statt `getSession()` als serverseitiger Vertrauensanker | Cookie-Inhalte können manipuliert sein; Claims müssen kryptografisch verifiziert werden. | 2026-08-25 |
 
-### PROJ-2 bis PROJ-31
+### PROJ-2 bis PROJ-18 und PROJ-20 bis PROJ-31
 Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Siehe `docs/product/scope.md`.
+
+### PROJ-19: Audit Logging & Rollenrechte
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Audit-Einsicht nur mit praxisfreigegebenem `portaladmin` | Die drei Praxisrollen erhalten keine interne Kontrollrolle. Ein Anbieterzugriff bleibt auf eine Praxis, einen Supportzweck und eine Ablaufzeit beschränkt. | 2026-08-26 |
+| `portaladmin` ist eine separate Anbieteridentität | Eine vierte Praxisrolle würde eine globale Superuser-Rolle nahelegen und die Praxiszugehörigkeit vermischen. | 2026-08-26 |
+| Supportzugriff acht Stunden standardmäßig, maximal 24 Stunden | Ein Supportfall kann länger offen sein; direkter Zugriff muss aber regelmäßig verfallen und erneut von der Praxis freigegeben werden. | 2026-08-26 |
+| Audit-Export und Freitextsuche bleiben gesperrt | Auditdaten dürfen keinen neuen Datenabfluss oder unkontrollierte Inhaltsdaten erzeugen. | 2026-08-26 |
+| Audit-Ereignisse werden nach 90 Tagen automatisch gelöscht | Bestätigte MVP-Produktentscheidung; die Rechts- und Aufbewahrungsprüfung vor echten Daten bleibt offen. | 2026-08-26 |
+| Kein Break-Glass-Zugang im MVP | Es gibt keine klinisch kritischen Abläufe; ein Notfallzugang benötigt später eine eigene Risikoentscheidung. | 2026-08-26 |
 
 ---
 

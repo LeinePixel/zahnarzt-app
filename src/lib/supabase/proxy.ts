@@ -73,7 +73,10 @@ export async function updateSession(
   const pathname = request.nextUrl.pathname
   let response: NextResponse
 
-  if (!isAuthenticated && pathname.startsWith('/status')) {
+  if (
+    !isAuthenticated &&
+    (pathname.startsWith('/status') || pathname.startsWith('/portal'))
+  ) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.search = ''

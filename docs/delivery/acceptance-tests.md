@@ -30,6 +30,39 @@ PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für 
 
 ---
 
+## Abnahme PROJ-19 — Evidenz vom 05.09.2026
+
+Die PROJ-19-Nachweise verwenden ausschließlich lokale, synthetische Daten.
+Die frische Verifikation auf dem aktuellen HEAD ergab:
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| `npm run lint` | bestanden (Exit 0) |
+| `npm test` | 17 Testdateien, 90 Tests bestanden |
+| `npm run typecheck` | bestanden (Exit 0) |
+| `npm run build` | bestanden (Exit 0) |
+| Rollback-only-Harness für historische Migrationen | bestanden: 25/25 und 26/26 |
+| `npx supabase test db --local` | 3 Dateien, 108 pgTAP-Tests bestanden |
+| `$env:E2E_PORT = '3135'; npm run test:e2e:edge-required` | vom Nutzer im selben Worktree in normaler, nicht erhöhter PowerShell ausgeführt: Produktions-Build und 17/17 Browser-Tests in 44,3 s bestanden (Chromium 13, Firefox 1, WebKit 1, Microsoft Edge 2) |
+
+Der E2E-Nachweis umfasst den browsergestützten Audit-Zugriffsfall. Ein zuvor
+nur in der Codex-Sandbox auftretender Firefox-Playwright-Laufzeitfehler wurde
+nicht als Produktfehler gewertet, weil derselbe vollständige Lauf in der
+normalen Benutzerumgebung erfolgreich war.
+
+Die statische Task-7-Sicherheitsprüfung bestätigte erneut SECURITY-DEFINER-
+Schutz (`search_path`), Least-Privilege-Grants und RLS, Fremdpraxis-, Ablauf-
+und Widerrufsgrenzen sowie Datenminimierung und Geheimnisbehandlung. Es gibt
+keine neuen Critical- oder Important-Befunde.
+
+Die Hosted-Cron-Abfrage für `dentpilot-purge-expired-audit-events` blieb
+ausdrücklich ausstehend: Es liegt keine freigegebene, nicht geheime
+administrative Session vor. Hosted-Cron-Commissioning, MFA/Re-Authentisierung
+und die weiteren Datenschutz-/Compliance-Gates bleiben offen; PROJ-19 öffnet
+das Real-Data-Gate nicht.
+
+---
+
 ## Abnahme PROJ-1 — belegter Stand
 
 Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrastructure-setup.md` (20 Stück im Format Angenommen/Wenn/Dann).
@@ -90,8 +123,9 @@ Die nachfolgende Liste bleibt als detailliertes Runbook erhalten; automatisierte
 
 ## Testdaten
 
-Das Seed-Skript legt an: eine Testpraxis und drei Demo-Konten (eines je Rolle).
+Das Seed-Skript legt an: zwei synthetische Testpraxen und vier Demo-Konten
+(drei Praxisrollen sowie eine separate Portaladmin-Identität).
 
-**Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die drei `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
+**Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die vier `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
 
 Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/assets/dentpilot-ux1-prototype.html`) enthält ebenfalls ausschließlich erfundene Beispieldaten.

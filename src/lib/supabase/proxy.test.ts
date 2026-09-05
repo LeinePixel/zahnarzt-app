@@ -47,6 +47,18 @@ describe('updateSession', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store')
   })
 
+  it('redirects anonymous portal access without retaining query data', async () => {
+    const request = new NextRequest(
+      'https://app.example/portal/audit?practiceId=21000000-0000-0000-0000-000000000001',
+    )
+
+    const response = await updateSession(request, anonymous)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://app.example/login')
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+  })
+
   it('redirects an authenticated user away from login', async () => {
     const request = new NextRequest('https://app.example/login')
     const authenticated = authFactory({
@@ -143,6 +155,15 @@ describe('proxy matcher', () => {
       unstable_doesMiddlewareMatch({
         config,
         url: 'https://app.example/status',
+      }),
+    ).toBe(true)
+  })
+
+  it('includes the protected portal route', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        url: 'https://app.example/portal/audit',
       }),
     ).toBe(true)
   })
