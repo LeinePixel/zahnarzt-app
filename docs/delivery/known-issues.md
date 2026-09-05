@@ -1,13 +1,6 @@
 # Known Issues & Tech Debt
 
-Stand 26.08.2026. PROJ-1 ist implementiert und automatisiert abgenommen; verbleibend sind Altlasten und bewusst aufgeschobene Punkte.
-
-## Altlasten aus dem Starter-Kit-Template
-
-| Punkt | Auswirkung | Zu erledigen mit |
-|---|---|---|
-| `public/file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Ungenutzte Template-Assets | kann jederzeit aufgeräumt werden |
-| `package.json` heißt `rl-coding-startup-kit` | Name und Beschreibung stammen vom Template, nicht vom Produkt | kann jederzeit angepasst werden |
+Stand 05.09.2026. PROJ-1 und PROJ-19 sind lokal verifiziert; PROJ-19 bleibt bis zur betrieblichen Freigabe `In Review`. Verbleibend sind bewusst aufgeschobene Punkte und betriebliche Risiken. Die Starter-Kit-Metadaten und ungenutzten Standard-Assets wurden bereinigt.
 
 ## Bewusst aufgeschoben
 
@@ -16,13 +9,14 @@ Jeweils mit Begründung im Decision Log (`docs/architecture/decisions.md`).
 | Punkt | Warum aufgeschoben | Nachzuholen mit |
 |---|---|---|
 | **Keine automatische Sitzungssperre/MFA** | Für rein synthetische Entwicklung vorübergehend akzeptiert | **PROJ-31/Auth-Hardening — Bestandteil des Real-Data-Gates** |
-| Keine Rechtedurchsetzung | Rollen werden in PROJ-1 nur gespeichert und angezeigt | PROJ-19 |
-| Kein Audit-Log | | PROJ-19 |
 | Kein App-Grundgerüst | Hält PROJ-1 klein | PROJ-6 |
 | Keine Benutzerverwaltung | Ein Entwickler, eine Testpraxis | PROJ-30 |
 | Kein Passwort-Zurücksetzen | Im MVP über das Supabase-Dashboard | offen |
 | Kein Löschkonzept, keine Aufbewahrungsregeln | Nur synthetische Daten | vor Pilotbetrieb |
 | Kein Multi-Tenant-Betrieb | `practice_id` ist vorbereitet, wird aber nicht mehrmandantenfähig genutzt | PROJ-24 |
+| Keine Security Header/CSP in `next.config.ts` | Noch kein Produktions-Deployment | Deployment- und Real-Data-Gate |
+| Keine CI-Workflows | Kern- und Vollverifikation laufen derzeit nur lokal und werden nicht automatisch erzwungen | vor Teamarbeit oder Deployment |
+| Hosted-Cron-Commissioning für Auditlöschung | Die 90-Tage-Datenbankroutine ist lokal geprüft, aber im Zielbetrieb noch nicht terminiert und überwacht | vor PROJ-19-Produktivfreigabe |
 | DSFA, AV-Verträge, Löschkonzept und Anbieterprüfungen fehlen | Noch keine echten Daten oder angebundenen Anbieter | Bestandteil des Real-Data-Gates vor Pilotbetrieb |
 | AI-Act-/Medizinprodukte-Einstufung fehlt | KI-Features sind noch unspezifiziert | Pflicht vor PROJ-15/16 |
 
