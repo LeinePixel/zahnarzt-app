@@ -2,7 +2,9 @@
 
 Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts erneut ausdiskutiert wird, was bereits entschieden ist. Zusammengeführt aus den Decision-Log-Abschnitten der Feature-Specs und den projektweiten Festlegungen aus `docs/PRD.md`.
 
-**Bestehende Zeilen nie ändern** — nur neue anfügen oder als überholt markieren.
+Die kanonische Auswahl langlebiger Architekturentscheidungen mit Status, Evidenz und Implikationen steht in `DECISIONS.md`. Dieses Dokument bleibt der vollständige historische Log.
+
+Bestehende Entscheidungen werden historisch nachvollziehbar gepflegt: Sachfehler dürfen mit Quellenbeleg korrigiert werden; fachlich abgelöste Entscheidungen werden als **überholt** markiert und verweisen auf ihre Nachfolgeentscheidung. Reine Umformulierungen ohne inhaltlichen Grund werden vermieden.
 
 ---
 
@@ -71,7 +73,7 @@ Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts 
 | Schreibrechte auf `practice` und `user_profile` vollständig gesperrt | Konten entstehen ausschließlich per Seed-Skript und Dashboard. Was die Anwendung nicht darf, kann sie nicht versehentlich kaputtmachen. | 2026-08-24 |
 | Seed-Skript läuft nur auf der Kommandozeile | Es benötigt den Verwaltungsschlüssel, der alle Zugriffsregeln umgeht. Dieser darf nie in den Browser gelangen. | 2026-08-24 |
 | Anwendung bricht bei fehlenden Umgebungsvariablen sofort mit Klartextmeldung ab | Sonst scheitert die Anmeldung später an unklarer Stelle mit irreführender Fehlermeldung. | 2026-08-24 |
-| Ersetzt die Platzhalter-Datei `src/lib/supabase.ts` | Sie exportiert aktuell `null` und würde bei Verwendung zu Laufzeitfehlern führen. | 2026-08-24 |
+| Drei produktive Clients unter `src/lib/supabase/` ersetzen die frühere Platzhalter-Datei `src/lib/supabase.ts` | Der frühere Platzhalter exportierte `null` und hätte bei Verwendung Laufzeitfehler verursacht. | 2026-08-24; umgesetzt 2026-08-25 |
 | Kein Einsatz echter Patientendaten vor dokumentiertem Real-Data-Gate | Gesundheitsdaten besitzen hohen Schutzbedarf. Synthetische Entwicklung darf nicht zu einem unsicheren späteren Architekturwechsel führen. | 2026-08-25 |
 | KI bereitet ausschließlich vor; Human Oversight bleibt verbindlich | Verhindert autonome medizinische oder wesentlich wirkende Entscheidungen und schafft eine klare Grundlage für DSGVO-/AI-Act-Prüfung. | 2026-08-25 |
 | `getClaims()` statt `getSession()` als serverseitiger Vertrauensanker | Cookie-Inhalte können manipuliert sein; Claims müssen kryptografisch verifiziert werden. | 2026-08-25 |
