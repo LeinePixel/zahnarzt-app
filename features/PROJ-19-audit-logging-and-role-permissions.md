@@ -2,7 +2,7 @@
 
 ## Status: Implementiert — lokale Abnahmeevidenz erfasst; Hosted-Cron-Verifikation offen
 **Created:** 2026-08-26
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-05
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -106,23 +106,26 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 
 Die detaillierte Architektur ist in [`docs/superpowers/specs/2026-08-26-proj-19-audit-and-authorization-design.md`](../docs/superpowers/specs/2026-08-26-proj-19-audit-and-authorization-design.md) festgehalten. Sie definiert eine zentrale Autorisierungsgrenze, getrennte Anbieteridentitäten, atomare Auditoperationen, RLS/Grants sowie Unit-, pgTAP- und Playwright-Nachweise. Die verbindlichen Begriffe stehen in `CONTEXT.md`; die Anbieterzugriffsentscheidung in ADR-0001.
 
-## Abnahmeevidenz — 31.08.2026
+## Abnahmeevidenz — 05.09.2026
 
 Alle nachstehenden Daten sind ausschließlich lokal und synthetisch. Die
-Task-7-Verifikation ergab:
+Verifikation auf dem aktuellen HEAD ergab:
 
 - `npm run lint`: bestanden (Exit 0).
 - `npm test`: bestanden, 17 Testdateien und 90 Tests.
 - `npm run typecheck`: bestanden (Exit 0).
+- `npm run build`: bestanden (Exit 0).
+- Der benutzerdefinierte Rollback-only-Harness für historische Migrationen
+  bestand mit 25/25 und 26/26.
 - Nach einem ausschließlich lokalen `npx supabase db reset --local`:
-  `npx supabase test db --local` bestanden, 3 Dateien und 100 pgTAP-Tests.
+  `npx supabase test db --local` bestanden, 3 Dateien und 108 pgTAP-Tests.
   Der Reset entfernt nur lokale Testdaten, damit vorangegangene E2E-
   Auditereignisse die globalen Zählassertionen nicht beeinflussen.
 - Der Nutzer führte im selben Worktree in einer normalen, nicht erhöhten
-  PowerShell mit `E2E_PORT=3135` den Befehl
+  PowerShell mit `$env:E2E_PORT = '3135'` den Befehl
   `npm run test:e2e:edge-required` aus. Der Produktions-Build und alle 17
-  Browser-Tests bestanden: Chromium 13, Firefox 1, WebKit 1 und Microsoft
-  Edge 2, einschließlich des Audit-Zugriffsfalls.
+  Browser-Tests bestanden in 44,3 Sekunden: Chromium 13, Firefox 1, WebKit 1
+  und Microsoft Edge 2, einschließlich des Audit-Zugriffsfalls.
 
 Der zuvor ausschließlich in der Codex-Sandbox reproduzierbare Firefox-
 Playwright-Laufzeitfehler ist damit umgebungsspezifisch; er ist kein
@@ -135,10 +138,12 @@ beschränkt sich auf kontrollierte Metadaten ohne Freitext, medizinische
 Inhalte, Bodies, Tokens, Passwörter, Prompts oder IP-Adressen.
 
 Die Hosted-Cron-Verifikation wurde nicht ausgeführt, weil keine freigegebene,
-nicht geheime administrative Session vorliegt. Der Nachweis für den
-Produktions-Scheduler `dentpilot-purge-expired-audit-events` bleibt offen.
-Diese Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe; das
-Real-Data-Gate bleibt geschlossen.
+nicht geheime administrative Session vorliegt. Hosted-Cron-Commissioning und
+der Nachweis für den Produktions-Scheduler
+`dentpilot-purge-expired-audit-events` bleiben offen. MFA und Re-
+Authentisierung für Portaladmins bleiben ebenfalls offen. Diese Evidenz ist
+ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate bleibt
+geschlossen.
 
 ## Open Questions
 
