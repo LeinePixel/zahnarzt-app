@@ -34,20 +34,20 @@ exception
 end;
 $$;
 
--- Reconstruct the schema and functions exactly as the first applied PROJ-19
--- migration in commit 586ebf5 left them. In particular, grants have only a
--- non-null request-time expires_at; audit events have no actor_type; and the
--- legacy RPCs raise errors or return their original result shapes.
-delete from public.audit_event;
-delete from public.support_access_grant;
+-- The local test database starts at the current migration head. Remove every
+-- PROJ-19 object inside this rollback-only transaction so the pre-PROJ-19
+-- baseline is rebuilt only by the immutable historical Git blob below.
+drop trigger if exists user_profile_reject_portal_admin_overlap on public.user_profile;
+drop trigger if exists portal_admin_reject_practice_member_overlap on public.portal_admin;
 
-drop function public.read_audit_events(uuid, timestamptz, integer);
-drop function public.activate_support_access(uuid, public.support_reason);
-drop function public.request_support_access(integer);
-drop function public.revoke_support_access(uuid);
-drop function public.record_denied_audit_read();
-drop function public.is_portal_admin();
-drop function private.write_audit_event(
+drop function if exists public.read_audit_events(uuid, timestamptz, integer);
+drop function if exists public.activate_support_access(uuid, public.support_reason);
+drop function if exists public.request_support_access(integer);
+drop function if exists public.request_support_access(interval);
+drop function if exists public.revoke_support_access(uuid);
+drop function if exists public.record_denied_audit_read();
+drop function if exists public.is_portal_admin();
+drop function if exists private.write_audit_event(
   uuid,
   uuid,
   public.audit_actor_type,
@@ -57,377 +57,27 @@ drop function private.write_audit_event(
   uuid,
   uuid
 );
-drop function private.audit_actor_type_for(uuid);
+drop function if exists private.audit_actor_type_for(uuid);
+drop function if exists private.reject_portal_admin_practice_member_overlap();
+drop function if exists private.reject_practice_member_portal_admin_overlap();
+drop function if exists private.purge_expired_audit_events();
 
-alter table public.support_access_grant
-  drop constraint support_access_grant_requested_duration_hours_check;
-alter table public.support_access_grant
-  drop constraint support_access_grant_activation_deadline_check;
-alter table public.support_access_grant
-  drop constraint support_access_grant_activation_metadata_check;
-alter table public.support_access_grant
-  alter column expires_at set not null;
-alter table public.support_access_grant
-  drop column requested_duration_hours;
-alter table public.support_access_grant
-  drop column activation_deadline;
-alter table public.support_access_grant
-  add constraint support_access_grant_duration_check
-    check (
-      expires_at > requested_at
-      and expires_at <= requested_at + interval '24 hours'
-    );
-alter table public.support_access_grant
-  add constraint support_access_grant_activation_metadata_check
-    check (
-      (activated_at is null and activated_by is null and support_reason is null)
-      or (activated_at is not null and activated_by is not null and support_reason is not null)
-    );
+drop table public.audit_event;
+drop table public.support_access_grant;
+drop table public.portal_admin;
 
-alter table public.audit_event drop column actor_type;
 drop type public.audit_actor_type;
+drop type public.support_reason;
+drop type public.audit_action;
+drop type public.audit_outcome;
 
-create or replace function private.reject_portal_admin_practice_member_overlap()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  if exists (
-    select 1
-    from public.user_profile as profile
-    where profile.user_id = new.user_id
-  ) then
-    raise exception using
-      errcode = '23514',
-      message = 'portal-admin identities cannot be practice members';
-  end if;
+drop schema private;
 
-  return new;
-end;
-$$;
-
-create or replace function private.reject_practice_member_portal_admin_overlap()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  if exists (
-    select 1
-    from public.portal_admin as portal_admin
-    where portal_admin.user_id = new.user_id
-  ) then
-    raise exception using
-      errcode = '23514',
-      message = 'practice members cannot be portal-admin identities';
-  end if;
-
-  return new;
-end;
-$$;
-
-create function public.request_support_access(
-  p_requested_duration interval default null
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_actor_id uuid := auth.uid();
-  v_practice_id uuid;
-  v_duration interval := coalesce(p_requested_duration, interval '8 hours');
-  v_grant_id uuid;
-begin
-  if v_actor_id is null then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  if v_duration <= interval '0 hours' or v_duration > interval '24 hours' then
-    raise exception using errcode = '22023', message = 'invalid support-access duration';
-  end if;
-
-  select profile.practice_id
-  into v_practice_id
-  from public.user_profile as profile
-  where profile.user_id = v_actor_id
-    and profile.role = 'praxisadmin';
-
-  if not found then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  insert into public.support_access_grant (
-    practice_id,
-    requested_by,
-    expires_at
-  )
-  values (
-    v_practice_id,
-    v_actor_id,
-    pg_catalog.now() + v_duration
-  )
-  returning id into v_grant_id;
-
-  insert into public.audit_event (
-    practice_id,
-    actor_id,
-    action,
-    outcome,
-    resource_type,
-    resource_id,
-    correlation_id
-  )
-  values (
-    v_practice_id,
-    v_actor_id,
-    'support_access_requested',
-    'allowed',
-    'support_access_grant',
-    v_grant_id,
-    v_grant_id
-  );
-
-  return v_grant_id;
-end;
-$$;
-
-create function public.activate_support_access(
-  p_grant_id uuid,
-  p_reason public.support_reason
-)
-returns timestamptz
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_actor_id uuid := auth.uid();
-  v_grant public.support_access_grant%rowtype;
-begin
-  if v_actor_id is null
-    or p_grant_id is null
-    or p_reason is null
-    or not exists (
-      select 1
-      from public.portal_admin as portal_admin
-      where portal_admin.user_id = v_actor_id
-    ) then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  select support_access_grant.*
-  into v_grant
-  from public.support_access_grant
-  where id = p_grant_id
-  for update;
-
-  if not found
-    or v_grant.activated_at is not null
-    or v_grant.revoked_at is not null
-    or v_grant.expires_at <= pg_catalog.now() then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  update public.support_access_grant
-  set activated_by = v_actor_id,
-      activated_at = pg_catalog.now(),
-      support_reason = p_reason
-  where id = v_grant.id;
-
-  insert into public.audit_event (
-    practice_id,
-    actor_id,
-    action,
-    outcome,
-    resource_type,
-    resource_id,
-    correlation_id
-  )
-  values (
-    v_grant.practice_id,
-    v_actor_id,
-    'support_access_activated',
-    'allowed',
-    'support_access_grant',
-    v_grant.id,
-    v_grant.id
-  );
-
-  return v_grant.expires_at;
-end;
-$$;
-
-create function public.revoke_support_access(p_grant_id uuid)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_actor_id uuid := auth.uid();
-  v_practice_id uuid;
-  v_grant public.support_access_grant%rowtype;
-begin
-  if v_actor_id is null or p_grant_id is null then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  select profile.practice_id
-  into v_practice_id
-  from public.user_profile as profile
-  where profile.user_id = v_actor_id
-    and profile.role = 'praxisadmin';
-
-  if not found then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  select support_access_grant.*
-  into v_grant
-  from public.support_access_grant
-  where id = p_grant_id
-    and practice_id = v_practice_id
-  for update;
-
-  if not found or v_grant.revoked_at is not null then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  update public.support_access_grant
-  set revoked_at = pg_catalog.now()
-  where id = v_grant.id;
-
-  insert into public.audit_event (
-    practice_id,
-    actor_id,
-    action,
-    outcome,
-    resource_type,
-    resource_id,
-    correlation_id
-  )
-  values (
-    v_grant.practice_id,
-    v_actor_id,
-    'support_access_revoked',
-    'allowed',
-    'support_access_grant',
-    v_grant.id,
-    v_grant.id
-  );
-end;
-$$;
-
-create function public.read_audit_events(
-  p_practice_id uuid,
-  p_before timestamptz,
-  p_limit integer
-)
-returns table (
-  actor_id uuid,
-  occurred_at timestamptz,
-  action public.audit_action,
-  outcome public.audit_outcome,
-  resource_type text,
-  resource_id uuid,
-  correlation_id uuid
-)
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_actor_id uuid := auth.uid();
-  v_grant_id uuid;
-begin
-  if v_actor_id is null
-    or p_practice_id is null
-    or p_before is null
-    or p_limit is null
-    or p_limit < 1
-    or p_limit > 100
-    or not exists (
-      select 1
-      from public.portal_admin as portal_admin
-      where portal_admin.user_id = v_actor_id
-    ) then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  select support_access_grant.id
-  into v_grant_id
-  from public.support_access_grant
-  where practice_id = p_practice_id
-    and activated_by = v_actor_id
-    and activated_at is not null
-    and revoked_at is null
-    and expires_at > pg_catalog.now()
-  order by activated_at desc, id desc
-  limit 1
-  for update;
-
-  if not found then
-    raise exception using errcode = '42501', message = 'not authorized';
-  end if;
-
-  insert into public.audit_event (
-    practice_id,
-    actor_id,
-    action,
-    outcome,
-    resource_type,
-    resource_id,
-    correlation_id
-  )
-  values (
-    p_practice_id,
-    v_actor_id,
-    'audit_read',
-    'allowed',
-    'support_access_grant',
-    v_grant_id,
-    pg_catalog.gen_random_uuid()
-  );
-
-  return query
-  select
-    audit_event.actor_id,
-    audit_event.occurred_at,
-    audit_event.action,
-    audit_event.outcome,
-    audit_event.resource_type,
-    audit_event.resource_id,
-    audit_event.correlation_id
-  from public.audit_event
-  where audit_event.practice_id = p_practice_id
-    and audit_event.occurred_at <= p_before
-  order by audit_event.occurred_at desc, audit_event.id desc
-  limit p_limit;
-end;
-$$;
-
-revoke all on function public.request_support_access(interval)
-  from public, anon, authenticated;
-revoke all on function public.activate_support_access(uuid, public.support_reason)
-  from public, anon, authenticated;
-revoke all on function public.revoke_support_access(uuid)
-  from public, anon, authenticated;
-revoke all on function public.read_audit_events(uuid, timestamptz, integer)
-  from public, anon, authenticated;
-
-grant execute on function public.request_support_access(interval)
-  to authenticated;
-grant execute on function public.activate_support_access(uuid, public.support_reason)
-  to authenticated;
-grant execute on function public.revoke_support_access(uuid)
-  to authenticated;
-grant execute on function public.read_audit_events(uuid, timestamptz, integer)
-  to authenticated;
+-- This marker is replaced by the SQL object at
+-- 586ebf5:supabase/migrations/20260827090000_proj_19_audit_authorization.sql.
+-- The runner verifies its immutable Git blob ID before it emits the SQL into
+-- this same transaction, before the compatibility bridge and later migrations.
+-- PROJ_19_ORIGINAL_MIGRATION
 
 insert into auth.users (id, email)
 values
