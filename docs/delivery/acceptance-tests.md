@@ -30,9 +30,9 @@ PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für 
 
 ---
 
-## Abnahme PROJ-19 — Evidenz vom 05.09.2026
+## Abnahme PROJ-19 — Evidenz vom 06.09.2026
 
-Die PROJ-19-Nachweise verwenden ausschließlich lokale, synthetische Daten.
+Die PROJ-19-Nachweise verwenden ausschließlich synthetische Daten.
 Die frische Verifikation auf dem aktuellen HEAD ergab:
 
 | Nachweis | Ergebnis |
@@ -55,10 +55,18 @@ Schutz (`search_path`), Least-Privilege-Grants und RLS, Fremdpraxis-, Ablauf-
 und Widerrufsgrenzen sowie Datenminimierung und Geheimnisbehandlung. Es gibt
 keine neuen Critical- oder Important-Befunde.
 
-Die Hosted-Cron-Abfrage für `dentpilot-purge-expired-audit-events` blieb
-ausdrücklich ausstehend: Es liegt keine freigegebene, nicht geheime
-administrative Session vor. Hosted-Cron-Commissioning, MFA/Re-Authentisierung
-und die weiteren Datenschutz-/Compliance-Gates bleiben offen; PROJ-19 öffnet
+**Hosted-Abnahme (06.09.2026):** Der erneuerte Supabase-Link lieferte für alle
+sechs versionierten Migrationen identische lokale und gehostete IDs. Der
+anschließende `db push --linked` spielte den bis dahin leeren Zielstand ein;
+die PROJ-19-Migration konfiguriert dabei den täglichen
+`dentpilot-purge-expired-audit-events`-Job um 03:17 Uhr. Der synthetische Seed
+aktualisierte die drei Praxisrollen und legte die getrennte Portaladmin-Identität
+an. Der vollständige Cloud-Browserlauf schloss anschließend mit 17/17 ab,
+einschließlich Chromium, Firefox, WebKit und Edge.
+
+Die laufende Überwachung des Schedulers und ein Nachweis mindestens eines
+produktiv ausgeführten Löschlaufs bleiben offen. MFA/Re-Authentisierung und die
+weiteren Datenschutz-/Compliance-Gates bleiben ebenfalls offen; PROJ-19 öffnet
 das Real-Data-Gate nicht.
 
 ---
@@ -67,7 +75,11 @@ das Real-Data-Gate nicht.
 
 Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrastructure-setup.md` (20 Stück im Format Angenommen/Wenn/Dann).
 
-**Cloud-Abnahme:** EU-Projekt verknüpft, Migration `20260825170000_proj_1_identity.sql` eingespielt und der synthetische Seed zweimal ausgeführt. Lauf 1 erstellte genau drei Konten, Lauf 2 aktualisierte dieselben drei Konten.
+**Cloud-Abnahme:** Das EU-Projekt ist verknüpft und enthält die vollständige
+Migrationskette von PROJ-1 und PROJ-19. Der synthetische Seed aktualisierte die
+drei Praxisrollen und legte die getrennte Portaladmin-Identität an; es existieren
+damit vier synthetische Demo-Konten. Der Cloud-Browserlauf vom 06.09.2026
+bestand 17/17 Prüfungen.
 
 **Automatisiert belegt:** Validierung (einschließlich Unit-Beleg, dass ungültige Eingaben keine Supabase-Auth-Anfrage auslösen), neutrale Credential-Fehler, Doppelübermittlung, drei Rollen, Statusdaten, direkter Schutz, query-freie Redirects, Logout, Zurück-Navigation, zweiter Tab, `private/no-store` auch auf dem anonymen Redirect, kein Supabase-Token in Local Storage und ein temporäres Konto ohne Profil. Das temporäre Konto wird über exakte E-Mail und Nutzer-ID reconciled und gezielt gelöscht; Passwörter, Tokens, HTML-Reports, Screenshots, Videos und Traces werden nicht persistiert.
 

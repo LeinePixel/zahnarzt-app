@@ -16,7 +16,7 @@ Jeweils mit Begründung im Decision Log (`docs/architecture/decisions.md`).
 | Kein Multi-Tenant-Betrieb | `practice_id` ist vorbereitet, wird aber nicht mehrmandantenfähig genutzt | PROJ-24 |
 | Keine Security Header/CSP in `next.config.ts` | Noch kein Produktions-Deployment | Deployment- und Real-Data-Gate |
 | Keine CI-Workflows | Kern- und Vollverifikation laufen derzeit nur lokal und werden nicht automatisch erzwungen | vor Teamarbeit oder Deployment |
-| Hosted-Cron-Commissioning für Auditlöschung | Die 90-Tage-Datenbankroutine ist lokal geprüft, aber im Zielbetrieb noch nicht terminiert und überwacht | vor PROJ-19-Produktivfreigabe |
+| Scheduler-Monitoring für Auditlöschung | Die 90-Tage-Datenbankroutine ist im Zielbetrieb terminiert; laufende Überwachung und Nachweis eines Löschlaufs fehlen noch | vor PROJ-19-Produktivfreigabe |
 | DSFA, AV-Verträge, Löschkonzept und Anbieterprüfungen fehlen | Noch keine echten Daten oder angebundenen Anbieter | Bestandteil des Real-Data-Gates vor Pilotbetrieb |
 | AI-Act-/Medizinprodukte-Einstufung fehlt | KI-Features sind noch unspezifiziert | Pflicht vor PROJ-15/16 |
 

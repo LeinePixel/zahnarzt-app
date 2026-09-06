@@ -1,8 +1,8 @@
 # PROJ-19: Audit Logging & Rollenrechte
 
-## Status: Implementiert — lokale Abnahmeevidenz erfasst; Hosted-Cron-Verifikation offen
+## Status: Implementiert — Hosted-Schema und synthetische Cloud-Abnahme verifiziert; Scheduler-Monitoring offen
 **Created:** 2026-08-26
-**Last Updated:** 2026-09-05
+**Last Updated:** 2026-09-06
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -137,17 +137,18 @@ prüfen fremde Praxen sowie Ablauf und Widerruf atomar, und das Auditmodell
 beschränkt sich auf kontrollierte Metadaten ohne Freitext, medizinische
 Inhalte, Bodies, Tokens, Passwörter, Prompts oder IP-Adressen.
 
-Die Hosted-Cron-Verifikation wurde nicht ausgeführt, weil keine freigegebene,
-nicht geheime administrative Session vorliegt. Hosted-Cron-Commissioning und
-der Nachweis für den Produktions-Scheduler
-`dentpilot-purge-expired-audit-events` bleiben offen. MFA und Re-
-Authentisierung für Portaladmins bleiben ebenfalls offen. Diese Evidenz ist
-ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate bleibt
-geschlossen.
+Die vollständige Migrationskette ist am 06.09.2026 im gehosteten Zielprojekt
+nachgewiesen; die PROJ-19-Migration richtet den täglichen Produktions-Scheduler
+`dentpilot-purge-expired-audit-events` um 03:17 Uhr ein. Der synthetische
+Seed und die 17/17 Cloud-Browserabnahme sind ebenfalls belegt. Offen bleiben
+das laufende Scheduler-Monitoring und der Nachweis eines ausgeführten
+Löschlaufs. MFA und Re-Authentisierung für Portaladmins bleiben ebenfalls
+offen. Diese Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe; das
+Real-Data-Gate bleibt geschlossen.
 
 ## Open Questions
 
-- [ ] Die technische Wahl und Betriebsfreigabe des Hosted-Cron-Schedulers für die 90-Tage-Wartungsroutine sind als Produktionsbetriebs-Gate vor Inbetriebnahme im Supabase-Zielprojekt zu prüfen.
+- [ ] Das Scheduler-Monitoring und der Nachweis eines ausgeführten 90-Tage-Löschlaufs sind vor der Produktionsfreigabe festzulegen und zu dokumentieren.
 - [ ] MFA und der genaue Re-Authentisierungsmechanismus für Portaladmins werden mit PROJ-31/Auth-Hardening verbindlich umgesetzt; ohne sie bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 
