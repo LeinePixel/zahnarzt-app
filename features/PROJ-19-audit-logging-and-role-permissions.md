@@ -2,7 +2,7 @@
 
 ## Status: Implementiert — Hosted-Schema und synthetische Cloud-Abnahme verifiziert; Scheduler-Monitoring offen
 **Created:** 2026-08-26
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-07
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
