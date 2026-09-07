@@ -1,0 +1,93 @@
+# PROJ-31: Sitzungshärtung, MFA und Re-Authentisierung
+
+## Status: Planned
+**Created:** 2026-08-24
+
+**Last Updated:** 2026-09-07
+
+**Priority:** P1
+
+## Zusammenfassung
+
+PROJ-31 definiert die verbindliche MFA-, Sitzungs- und Re-Authentisierungsgrenze
+für DentPilot. Es ist eine geplante Sicherheitsvoraussetzung vor echten oder
+re-identifizierbaren Daten; diese Spec ist kein Implementierungs-, Hosting- oder
+Real-Data-Gate-Nachweis.
+
+## Dependencies
+
+- PROJ-1 (Supabase-Identität, SSR-Cookies, verifizierte Claims und RLS)
+- PROJ-19 (praxisgebundene Audit- und Supportfreigabegrenze)
+
+## Beschlossene Entscheidungen (2026-09-07)
+
+| ID | Entscheidung | Status |
+|---|---|---|
+| D01 | TOTP-MFA für `rezeption`, `behandler`, `praxisadmin` und `portaladmin`; kein dauerhafter Recovery-Bypass | beschlossen |
+| D02 | Globale Sperre oder Abmeldung nach fünf Minuten menschlicher Inaktivität; maximale Sitzung acht Stunden | beschlossen |
+| D03 | JWT-Laufzeit fünf Minuten; Widerruf oder Kontensperre wirkt bei neuen geschützten Datenoperationen innerhalb von höchstens 60 Sekunden über eine aktuelle Server-/Datenbank-Sitzungsprüfung | beschlossen |
+| D04 | AAL2 wird in RLS und jeder geschützten `SECURITY DEFINER`-RPC erzwungen | beschlossen |
+| D10 | Bestehendes SSR-Cookie-Modell bleibt; Cookies sind über HTTPS `Secure`; CSP ist nonce-basiert und enthält keine breite Skript-Ausnahme `unsafe-inline` | beschlossen |
+
+Für sensible Supportaktionen ist eine höchstens fünf Minuten alte
+Re-Authentisierung erforderlich. UI-Zustand, lokale Timer oder eine offene
+Browserseite sind keine Autorisierungsgrundlage.
+
+## Weiterhin offene Entscheidungen
+
+| ID | Offener Gegenstand |
+|---|---|
+| D05 | Support-/Audit-Quoten und ihre Auditbehandlung |
+| D06 | Retention und Löschweg für Supportfreigaben |
+| D07 | Empfänger und Kanal für Cron-/Scheduler-Alarmierung |
+| D08 | Backup-RPO/RTO und dokumentierte Betriebs- sowie Wiederherstellungsabläufe |
+| D09 | Rechts-/Datenschutzbereitschaft einschließlich der erforderlichen Freigaben vor dem Real-Data-Gate |
+
+Diese Punkte bleiben offen. Die Umsetzung darf dafür weder Werte, Empfänger,
+externe Dienste noch Rechtsfreigaben annehmen.
+
+## Sicherheits- und Architekturgrenzen
+
+- Der bestehende Next.js-/Supabase-SSR-Cookie-Ansatz bleibt bestehen; es wird
+  keine ungetestete Umstellung auf eine ausschließlich serverseitige oder
+  HttpOnly-Sitzungsarchitektur vorweggenommen.
+- Der Proxy trifft nur frühe Routing-Entscheidungen. Geschützte Serverpfade
+  verifizieren Claims erneut; PostgreSQL-Rechte, RLS und geschützte RPCs
+  bleiben die endgültige Autorisierungsgrenze.
+- Jede geschützte Datenoperation prüft aktuellen server-/datenbankseitigen
+  Sitzungsstatus und AAL2. Widerruf/Kontensperre darf nicht erst beim nächsten
+  UI-Refresh wirken.
+- PROJ-19-Supportaktionen wahren außerdem Praxisbindung, aktive Freigabe,
+  Kein-Export-, 90-Tage-Audit- und Kein-Break-Glass-Grenzen.
+
+## Akzeptanzkriterien
+
+- [ ] Jede aktuelle Rolle und `portaladmin` kann ohne TOTP-MFA keine
+  geschützte Sitzung erhalten oder fortsetzen.
+- [ ] Nach fünf Minuten menschlicher Inaktivität ist der Zugriff global
+  gesperrt oder abgemeldet; nach acht Stunden endet die Sitzung unabhängig von
+  Aktivität.
+- [ ] Ein widerrufenes oder gesperrtes Konto kann innerhalb von höchstens 60
+  Sekunden keine neue geschützte Datenoperation erfolgreich ausführen.
+- [ ] RLS und jede geschützte `SECURITY DEFINER`-RPC verweigern fehlendes AAL2
+  unabhängig von Proxy, UI oder Browserzustand.
+- [ ] Eine sensible Supportaktion wird ohne höchstens fünf Minuten alte
+  Re-Authentisierung verweigert.
+- [ ] Die CSP erlaubt keine breite Skript-Ausnahme `unsafe-inline`; notwendige
+  Skripte verwenden serverseitig erzeugte Nonces.
+- [ ] Alle Nachweise arbeiten ausschließlich mit synthetischen Daten.
+
+## Out of Scope
+
+- Festlegung von D05–D09.
+- Öffnung des Real-Data-Gates, Produktionshosting, Cloud-Konfiguration oder
+  rechtliche Freigabe.
+- Änderung der PROJ-19-Rollen, Supportfreigaben, Audit-Retention, No-Export-
+  oder No-Break-Glass-Entscheidungen.
+
+## Verweise
+
+- `docs/superpowers/specs/2026-09-07-security-remediation-design.md`
+- `docs/architecture/decisions.md`
+- `docs/delivery/open-questions.md`
+- `features/PROJ-19-audit-logging-and-role-permissions.md`

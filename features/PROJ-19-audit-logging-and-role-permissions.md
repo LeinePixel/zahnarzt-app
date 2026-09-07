@@ -35,6 +35,20 @@ Das Feature verarbeitet weiterhin ausschließlich synthetische Daten. Es öffnet
 
 `portaladmin` ist eine eigene Anbieteridentität und kein vierter `user_role`-Wert. Sie besitzt kein Praxisprofil und keine pauschale Praxisberechtigung.
 
+### Verbindliche PROJ-31-Grenze (geplant)
+
+PROJ-19 bleibt bis zur Umsetzung von PROJ-31 `In Review`. Für alle bestehenden
+Praxisrollen und für `portaladmin` wird TOTP-MFA mit AAL2 erforderlich. Jede
+Audit-Leseoperation, Supportfreigabe und sonstige geschützte PROJ-19-RPC muss
+neben Rolle, Praxis- und Freigabeprüfung eine aktuelle server-/datenbankseitige
+Sitzungsprüfung und AAL2 erzwingen. Für sensible Supportaktionen ist eine
+frische Anmeldung von höchstens fünf Minuten erforderlich. UI-Zustand oder eine
+offene Browserseite sind hierfür kein Nachweis.
+
+Diese Anforderungen sind beschlossen, aber noch nicht implementiert. Sie
+ersetzen weder die bestehende Supportfreigabe noch die Grenzen „kein Export“,
+90-Tage-Auditlöschung und „kein Break-Glass“.
+
 ### Supportfreigabe
 
 - Ein Praxisadmin kann nur für die eigene Praxis eine Supportfreigabe anlegen oder widerrufen.
@@ -75,6 +89,7 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 - [ ] Angenommen ich bin ein `portaladmin` ohne aktive Supportfreigabe, wenn ich Audit-Ereignisse aufrufe, dann wird der Zugriff neutral verweigert, auditiert und es werden keine Ereignisinhalte ausgeliefert.
 - [ ] Angenommen ich bin ein `portaladmin` und habe eine Freigabe-ID im bestehenden Supportfall erhalten, wenn ich sie mit einer strukturierten Ursache aktiviere, dann wird nur diese Freigabe aktiviert; das Portal liefert keine Liste oder Suche offener Freigaben.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe, wenn ich Audit-Ereignisse der freigegebenen Praxis aufrufe, dann erhalte ich ausschließlich deren datenminimierte Ereignisse und die Einsicht wird selbst protokolliert.
+- [ ] Angenommen PROJ-31 ist umgesetzt und ich erfülle für eine geschützte PROJ-19-RPC nicht AAL2 oder die höchstens fünf Minuten alte Re-Authentisierung für eine sensible Supportaktion, dann verweigert die RLS-/RPC-Grenze den Zugriff unabhängig vom UI-Zustand.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe für Praxis A, wenn ich Audit-Ereignisse von Praxis B aufrufe, dann wird der Zugriff neutral verweigert und auditiert.
 - [ ] Angenommen eine Freigabe ist widerrufen oder abgelaufen, wenn ein Portaladmin anschließend Audit-Ereignisse abfragt, dann wird der Zugriff sofort neutral verweigert und auditiert.
 - [ ] Angenommen eine neue Freigabe aktiviert wird, wenn keine Dauer angegeben ist, dann läuft sie acht Stunden nach Aktivierung ab; eine Laufzeit über 24 Stunden wird abgewiesen.
@@ -87,7 +102,7 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 ## Edge Cases
 
 - **Parallelzugriff beim Widerruf:** Widerruf zwischen Autorisierung und Anzeige darf keine Ereignisse ausliefern; die Datenbankoperation entscheidet atomar.
-- **Ablauf während einer Sitzung:** Jede Audit-Abfrage prüft die Ablaufzeit neu; eine offene Browserseite verlängert keine Freigabe.
+- **Ablauf während einer Sitzung:** Jede Audit-Abfrage prüft Ablaufzeit, AAL2 und server-/datenbankseitigen Sitzungszustand neu; eine offene Browserseite verlängert weder Freigabe noch Sitzung.
 - **Doppelte Aktivierung:** Eine Freigabe kann nicht parallel von mehreren Portaladmins aktiviert werden.
 - **Fehlende Anbieteridentität:** Ein Auth-Konto ohne Portaladmin-Zuordnung erhält keinen Fallback-Zugriff.
 - **Unvollständiger Auditkontext:** Fehlen kontrollierte Pflichtwerte, schlägt die Operation sicher fehl statt ein teilweise aussagekräftiges Ereignis zu speichern.
@@ -171,7 +186,7 @@ geschlossen.
 ## Open Questions
 
 - [ ] Die technische Wahl und Betriebsfreigabe des Hosted-Cron-Schedulers für die 90-Tage-Wartungsroutine sind als Produktionsbetriebs-Gate vor Inbetriebnahme im Supabase-Zielprojekt zu prüfen.
-- [ ] MFA und der genaue Re-Authentisierungsmechanismus für Portaladmins werden mit PROJ-31/Auth-Hardening verbindlich umgesetzt; ohne sie bleibt die Verarbeitung echter Daten gesperrt.
+- [ ] Die beschlossenen PROJ-31-Kontrollen (TOTP-MFA/AAL2, serverseitiger Sitzungszustand und Re-Authentisierung) müssen implementiert und nachgewiesen werden; ohne sie bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 
 ## Decision Log
