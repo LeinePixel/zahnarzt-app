@@ -78,7 +78,7 @@ Bestehende Entscheidungen werden historisch nachvollziehbar gepflegt: Sachfehler
 | KI bereitet ausschließlich vor; Human Oversight bleibt verbindlich | Verhindert autonome medizinische oder wesentlich wirkende Entscheidungen und schafft eine klare Grundlage für DSGVO-/AI-Act-Prüfung. | 2026-08-25 |
 | `getClaims()` statt `getSession()` als serverseitiger Vertrauensanker | Cookie-Inhalte können manipuliert sein; Claims müssen kryptografisch verifiziert werden. | 2026-08-25 |
 
-### PROJ-2 bis PROJ-18 und PROJ-20 bis PROJ-31
+### PROJ-2 bis PROJ-18 und PROJ-20 bis PROJ-30
 Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Siehe `docs/product/scope.md`.
 
 ### PROJ-19: Audit Logging & Rollenrechte
@@ -91,6 +91,21 @@ Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Sie
 | Audit-Export und Freitextsuche bleiben gesperrt | Auditdaten dürfen keinen neuen Datenabfluss oder unkontrollierte Inhaltsdaten erzeugen. | 2026-08-26 |
 | Audit-Ereignisse werden nach 90 Tagen automatisch gelöscht | Bestätigte MVP-Produktentscheidung; die Rechts- und Aufbewahrungsprüfung vor echten Daten bleibt offen. | 2026-08-26 |
 | Kein Break-Glass-Zugang im MVP | Es gibt keine klinisch kritischen Abläufe; ein Notfallzugang benötigt später eine eigene Risikoentscheidung. | 2026-08-26 |
+
+### PROJ-31: Sitzungshärtung, MFA und Re-Authentisierung
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| D01: TOTP-MFA für alle Praxisrollen und `portaladmin`; kein dauerhafter Recovery-Bypass | Jede Identität mit Praxis- oder Anbieterzugriff benötigt den gleichen zweiten Faktor; eine dauerhafte Umgehung würde die Grenze unterlaufen. | 2026-09-07 |
+| D02: Globale Sperre/Abmeldung nach fünf Minuten menschlicher Inaktivität, maximale Sitzung acht Stunden | Praxisarbeitsplätze befinden sich teilweise in zugänglichen Bereichen; die Grenze begrenzt unbeaufsichtigten Zugriff. | 2026-09-07 |
+| D03: JWT-Laufzeit fünf Minuten; Widerruf oder Kontensperre wirkt bei neuen geschützten Datenoperationen innerhalb von höchstens 60 Sekunden über einen aktuellen Server-/Datenbank-Sitzungszustand | Ein Browser- oder UI-Zustand kann Widerruf und Sperre nicht verlässlich durchsetzen. | 2026-09-07 |
+| D04: AAL2 wird in RLS und jeder geschützten `SECURITY DEFINER`-RPC erzwungen | Der Datenbankrand bleibt die Autorisierungsgrenze; Proxy und UI reichen nicht aus. | 2026-09-07 |
+| D10: Bestehendes SSR-Cookie-Modell beibehalten; Cookies über HTTPS `Secure`; nonce-basierte CSP ohne breite Skript-Ausnahme `unsafe-inline` | Die vorhandene SSR-Architektur bleibt erhalten, während Transport- und Skriptausführungsgrenzen gehärtet werden. | 2026-09-07 |
+
+**Weiterhin offen:** D05 Support-/Audit-Quoten und Auditbehandlung, D06
+Supportfreigabe-Retention, D07 Cron-Alarmempfänger/-kanal, D08 Backup-RPO/RTO
+und Betriebsabläufe sowie D09 Rechts-/Datenschutzbereitschaft. Diese Punkte
+sind keine impliziten Implementierungsparameter.
 
 ---
 

@@ -85,3 +85,27 @@ Dieses Dokument enthält nur langlebige, schwer umkehrbare und ohne Kontext übe
 **Rationale:** Durchgängig autonome medizinische oder abrechnungsrelevante Entscheidungen wären schwer nachvollziehbar, korrigierbar und regulatorisch riskant.
 
 **Implikationen:** KI-Funktionen benötigen Human Oversight, Transparenz, Qualitätsgrenzen, Versionierung und einen eigenen Impact-Check.
+
+## ADR-008 – MFA- und Sitzungsgrenze wird server- und datenbankseitig erzwungen
+
+**Status:** Confirmed; Umsetzung in PROJ-31 geplant
+
+**Entscheidung:** Alle aktuellen Praxisrollen und `portaladmin` verwenden
+TOTP-MFA. Nach fünf Minuten menschlicher Inaktivität wird global gesperrt oder
+abgemeldet; eine Sitzung dauert höchstens acht Stunden. JWTs leben fünf
+Minuten, und ein Widerruf oder eine Kontensperre wird für neue geschützte
+Datenoperationen innerhalb von höchstens 60 Sekunden gegen einen aktuellen
+Server-/Datenbank-Sitzungszustand geprüft. AAL2 wird in RLS und jeder
+geschützten `SECURITY DEFINER`-RPC erzwungen. Sensible Supportaktionen
+benötigen eine Re-Authentisierung, die höchstens fünf Minuten alt ist.
+
+**Evidenz:** Nutzerfreigabe vom 2026-09-07; `features/PROJ-31-session-hardening.md`; `docs/superpowers/specs/2026-09-07-security-remediation-design.md`.
+
+**Rationale:** Nur ein aktueller, server- und datenbankseitig erzwungener
+Sitzungszustand kann Sperrung, Widerruf, AAL und Re-Authentisierung unabhängig
+von Browser- oder UI-Zustand durchsetzen.
+
+**Implikationen:** Das bestehende SSR-Cookie-Modell bleibt erhalten; Cookies
+sind über HTTPS `Secure` und die CSP arbeitet nonce-basiert ohne eine breite
+`unsafe-inline`-Ausnahme für Skripte. Die Entscheidung beschreibt eine
+verbindliche Zielgrenze, keinen Implementierungs- oder Real-Data-Gate-Nachweis.
