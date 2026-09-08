@@ -249,7 +249,8 @@ select is(
 
 reset role;
 update auth.users
-set deleted_at = now()
+set banned_until = null,
+    deleted_at = now()
 where id = '41000000-0000-0000-0000-000000000004';
 
 select set_config(
