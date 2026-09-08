@@ -28,12 +28,15 @@ Die vollständigen Datenschutz-, Real-Data- und KI-Gates stehen in docs/architec
 - Deaktivierte persistente Auth-Testmedien.
 - PROJ-19-Auditgrenze mit RLS, Least-Privilege-RPCs, 90-Tage-Löschroutine und kontrollierten Metadaten ohne medizinische Inhalte oder Freitext.
 - Getrennte `portaladmin`-Identitäten; Audit-Einsicht nur über aktive, praxisgebundene und zeitlich begrenzte Supportfreigaben.
+- Fail-closed AAL2- und aktuelle Datenbank-Session-Prüfung für geschützte
+  RLS-Lesewege und PROJ-19-RPCs; fehlende, widerrufene, abgelaufene oder
+  gesperrte Sitzungen liefern keine geschützten Daten.
 
 ## Authentifizierung und Autorisierung
 
 Der Proxy verwendet verifizierte Claims als Routing-Signal. Er ersetzt weder die erneute serverseitige Claims-Prüfung noch RLS. getSession() und ungeprüfte Cookie-Inhalte sind keine Autorisierungsgrundlage.
 
-Die Praxisrollen `rezeption`, `behandler` und `praxisadmin` sind von `portaladmin` getrennt. Praxisrollen können Auditdaten nicht lesen. Nur ein Portaladmin mit aktiver, von der Praxis erteilter Supportfreigabe darf die minimierte Auditansicht lesen; jede Einsicht wird erneut auditiert. Hosted-Cron-Commissioning sowie MFA/Re-Authentisierung bleiben vor Produktions- und Real-Data-Freigabe offen.
+Die Praxisrollen `rezeption`, `behandler` und `praxisadmin` sind von `portaladmin` getrennt. Praxisrollen können Auditdaten nicht lesen. Nur ein Portaladmin mit aktiver, von der Praxis erteilter Supportfreigabe darf die minimierte Auditansicht lesen; jede Einsicht wird erneut auditiert. Hosted-Cron-Commissioning sowie MFA-Einschreibung, menschliche Inaktivität/Re-Authentisierung und ihre Betriebsnachweise bleiben vor Produktions- und Real-Data-Freigabe offen.
 
 ## Sensitive Daten
 

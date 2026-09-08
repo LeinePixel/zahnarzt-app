@@ -1,6 +1,6 @@
 # PROJ-31: Sitzungshärtung, MFA und Re-Authentisierung
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-08-24
 
 **Last Updated:** 2026-09-07
@@ -76,6 +76,22 @@ externe Dienste noch Rechtsfreigaben annehmen.
 - [ ] Die CSP erlaubt keine breite Skript-Ausnahme `unsafe-inline`; notwendige
   Skripte verwenden serverseitig erzeugte Nonces.
 - [ ] Alle Nachweise arbeiten ausschließlich mit synthetischen Daten.
+
+## T03-Abnahmeevidenz — lokal und synthetisch (08.09.2026)
+
+- Die Datenbankgrenze verlangt für geschützte direkte RLS-Lesewege und die
+  geschützten PROJ-19-RPCs einen passenden AAL2-JWT-Claim, eine aktuelle
+  `auth.sessions`-Zeile derselben Identität, einen nicht abgelaufenen
+  `not_after`-Zeitpunkt sowie ein weder gelöschtes noch aktuell gesperrtes
+  Konto. Fehlende, widerrufene oder ungültige Angaben ergeben nur eine neutrale
+  Verweigerung.
+- `npx supabase test db --local` bestand mit 4 Dateien und 122 pgTAP-Tests,
+  einschließlich positiver AAL2- und negativer AAL1-, fehlender-, abgelaufener-
+  und gesperrter-Session- sowie RLS-/RPC-Nachweise.
+- Die konfigurierte JWT-Laufzeit beträgt lokal fünf Minuten und die
+  Maximalsitzung acht Stunden. Die fünfminütige menschliche Inaktivität,
+  TOTP-Einschreibung, Re-Authentisierungsalter und alle Hosted-Nachweise bleiben
+  ausdrücklich offen und werden nicht durch diese Evidenz behauptet.
 
 ## Out of Scope
 

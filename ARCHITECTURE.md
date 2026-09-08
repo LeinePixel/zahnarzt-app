@@ -42,7 +42,7 @@ Login und Logout verwenden Server Actions; PROJ-1 besitzt keine eigene API-Schic
 
 Die Migrationen definieren `practice`, `user_profile`, `portal_admin`, Supportfreigaben und Audit-Ereignisse. Praxisrollen können nur ihren eigenen Kontokontext lesen und keine Auditdaten einsehen; `portaladmin` ist eine getrennte Identität ohne `user_profile` und erhält Audit-Metadaten nur während einer aktiven praxisgebundenen Supportfreigabe. Browserrollen besitzen keine direkten Schreibrechte auf diese Tabellen. Die `service_role` ist ausschließlich für explizite CLI-Verwaltung vorgesehen.
 
-Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. PROJ-19 ist lokal verifiziert; Hosted-Cron-Commissioning, MFA/Re-Authentisierung und das Real-Data-Gate sind noch offen.
+Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. Der lokale PROJ-31-T03-Stand ergänzt diese Grenze um einen fail-closed AAL2- und aktuellen Auth-Session-Check für geschützte RLS-Lesewege und PROJ-19-RPCs. Hosted-Cron-Commissioning, MFA-Einschreibung, menschliche Inaktivität/Re-Authentisierung und das Real-Data-Gate sind noch offen.
 
 ## Externe Integrationen
 
