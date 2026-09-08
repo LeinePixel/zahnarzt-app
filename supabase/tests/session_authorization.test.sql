@@ -1,6 +1,6 @@
 begin;
 
-select plan(14);
+select plan(24);
 
 insert into auth.users (id, email)
 values
@@ -195,6 +195,11 @@ select is(
   null::uuid,
   'a missing or revoked session cannot request support access'
 );
+select is(
+  public.revoke_support_access('44000000-0000-0000-0000-000000000002'),
+  false,
+  'a missing or revoked session cannot revoke support access'
+);
 
 reset role;
 select set_config(
@@ -240,6 +245,146 @@ select is(
   (select count(*) from public.user_profile),
   0::bigint,
   'a currently banned user cannot read a protected profile'
+);
+
+reset role;
+update auth.users
+set deleted_at = now()
+where id = '41000000-0000-0000-0000-000000000004';
+
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000004","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000003"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000004', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'a deleted user cannot read a protected profile'
+);
+
+reset role;
+select set_config('request.jwt.claims', '', true);
+select set_config('request.jwt.claim.sub', '', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'missing JWT claims cannot read a protected profile'
+);
+
+reset role;
+select set_config('request.jwt.claims', '[]', true);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(8),
+  null::uuid,
+  'a non-object JWT claims value cannot request support access'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"not-a-uuid","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000001"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(8),
+  null::uuid,
+  'an invalid JWT sub cannot request support access'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000001"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'a missing JWT sub cannot read a protected profile'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2","session_id":"not-a-uuid"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(8),
+  null::uuid,
+  'an invalid JWT session ID cannot request support access'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'a missing JWT session ID cannot read a protected profile'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000002","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000002"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(8),
+  null::uuid,
+  'a JWT sub that differs from auth.uid cannot request support access'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000002"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'a syntactically valid session owned by another user cannot read a protected profile'
 );
 
 reset role;
