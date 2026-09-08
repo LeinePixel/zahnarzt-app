@@ -45,7 +45,7 @@
 | PROJ-28 | Online-Terminbuchung | P2 | Roadmap | PROJ-5 | - | 2026-08-24 |
 | PROJ-29 | Anrufer-Erkennung (CTI-Popup mit Patientenübersicht bei eingehendem Anruf) | P1 | Roadmap | PROJ-4, PROJ-6, PROJ-17, PROJ-19 | - | 2026-08-24 |
 | PROJ-30 | Benutzerverwaltung & Einladungen (Nutzer anlegen, einladen, deaktivieren) | P2 | Roadmap | PROJ-1, PROJ-19 | - | 2026-08-24 |
-| PROJ-31 | Automatische Sitzungssperre, MFA und Re-Authentisierung | P1 | Planned | PROJ-1 | [Spec](PROJ-31-session-hardening.md) | 2026-08-24 |
+| PROJ-31 | Automatische Sitzungssperre, MFA und Re-Authentisierung | P1 | In Progress | PROJ-1 | [Spec](PROJ-31-session-hardening.md) | 2026-08-24 |
 
 <!-- Add features above this line -->
 

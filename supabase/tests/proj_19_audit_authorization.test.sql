@@ -54,6 +54,15 @@ values
   ('11000000-0000-0000-0000-000000000005', 'proj19-unknown-authenticated@example.invalid'),
   ('11000000-0000-0000-0000-000000000006', 'proj19-foreign-praxisadmin@example.invalid');
 
+insert into auth.sessions (id, user_id, aal, not_after)
+values
+  ('11100000-0000-0000-0000-000000000001', '11000000-0000-0000-0000-000000000001', 'aal2', now() + interval '8 hours'),
+  ('11100000-0000-0000-0000-000000000002', '11000000-0000-0000-0000-000000000002', 'aal2', now() + interval '8 hours'),
+  ('11100000-0000-0000-0000-000000000003', '11000000-0000-0000-0000-000000000003', 'aal2', now() + interval '8 hours'),
+  ('11100000-0000-0000-0000-000000000004', '11000000-0000-0000-0000-000000000004', 'aal2', now() + interval '8 hours'),
+  ('11100000-0000-0000-0000-000000000005', '11000000-0000-0000-0000-000000000005', 'aal2', now() + interval '8 hours'),
+  ('11100000-0000-0000-0000-000000000006', '11000000-0000-0000-0000-000000000006', 'aal2', now() + interval '8 hours');
+
 insert into public.practice (id, name)
 values
   ('21000000-0000-0000-0000-000000000001', 'PROJ-19 Testpraxis Eins'),
@@ -153,8 +162,8 @@ select is(
       and procedure.proname = 'record_denied_audit_read'
       and procedure.pronargs = 0
   ),
-  true,
-  'authenticated identities can execute the no-target denied audit recorder'
+  false,
+  'authenticated identities cannot execute the internal denied audit recorder'
 );
 select is(
   (
@@ -173,6 +182,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -184,6 +204,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -195,6 +226,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000005', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -207,6 +249,17 @@ reset role;
 
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select set_config(
@@ -236,6 +289,17 @@ select ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -253,6 +317,17 @@ select throws_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -264,6 +339,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000005', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -275,6 +361,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -394,6 +491,17 @@ select lives_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -452,6 +560,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -470,6 +589,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000004', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -544,6 +674,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select throws_ok(
@@ -622,6 +763,17 @@ values (
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -662,6 +814,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -688,6 +851,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -706,6 +880,17 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select set_config(
@@ -721,6 +906,17 @@ select ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select lives_ok(
@@ -751,6 +947,17 @@ select lives_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
@@ -782,12 +989,26 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', current_setting('request.jwt.claim.sub'),
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '11100000-0000-0000-0000-00000000000'
+      || right(current_setting('request.jwt.claim.sub'), 1)
+  )::text,
+  true
+);
 set local role authenticated;
 
 select is(
-  public.record_denied_audit_read(),
-  false,
-  'the no-target recorder returns only a neutral denial'
+  (
+    select count(*)
+    from public.read_audit_events(null, now(), 1)
+  ),
+  0::bigint,
+  'the guarded read RPC records the no-target neutral denial internally'
 );
 select is(
   (

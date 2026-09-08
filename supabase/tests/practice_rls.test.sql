@@ -34,6 +34,21 @@ values
   ('10000000-0000-0000-0000-000000000001', 'rls-one@example.invalid'),
   ('10000000-0000-0000-0000-000000000002', 'rls-two@example.invalid');
 
+insert into auth.sessions (id, user_id, aal, not_after)
+values
+  (
+    '10100000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000001',
+    'aal2',
+    now() + interval '8 hours'
+  ),
+  (
+    '10100000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000002',
+    'aal2',
+    now() + interval '8 hours'
+  );
+
 insert into public.practice (id, name)
 values
   ('20000000-0000-0000-0000-000000000001', 'Testpraxis Eins'),
@@ -83,6 +98,11 @@ select throws_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2","session_id":"10100000-0000-0000-0000-000000000001"}',
+  true
+);
 set local role authenticated;
 
 select is(
