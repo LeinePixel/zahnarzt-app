@@ -42,7 +42,7 @@ Login und Logout verwenden Server Actions; PROJ-1 besitzt keine eigene API-Schic
 
 Die Migrationen definieren `practice`, `user_profile`, `portal_admin`, Supportfreigaben und Audit-Ereignisse. Praxisrollen können nur ihren eigenen Kontokontext lesen und keine Auditdaten einsehen; `portaladmin` ist eine getrennte Identität ohne `user_profile` und erhält Audit-Metadaten nur während einer aktiven praxisgebundenen Supportfreigabe. Browserrollen besitzen keine direkten Schreibrechte auf diese Tabellen. Die `service_role` ist ausschließlich für explizite CLI-Verwaltung vorgesehen.
 
-Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. Der lokale PROJ-31-T03-Stand ergänzt diese Grenze um einen fail-closed AAL2- und aktuellen Auth-Session-Check für geschützte RLS-Lesewege und PROJ-19-RPCs. Hosted-Cron-Commissioning, MFA-Einschreibung, menschliche Inaktivität/Re-Authentisierung und das Real-Data-Gate sind noch offen.
+Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. Der lokale PROJ-31-T04-Stand ergänzt sie durch einen privaten, serverzeitgestempelten Sitzungszustand: AAL2 und eine aktuelle Auth-Sitzung sind Voraussetzung; fünf Minuten ohne erfolgreichen Aktivitäts-Touch oder acht Stunden Sitzungsalter sperren RLS und RPCs. Die Browseroberfläche löst Touches ausschließlich bei Pointer-, Tastatur- oder Touch-Eingaben aus; ein Server kann bei einem weiterhin gültigen, gestohlenen Sitzungstoken jedoch keine physische menschliche Handlung beweisen. Sensible Support-/Audit-RPCs verlangen zusätzlich eine höchstens fünf Minuten alte TOTP-Bestätigung. Der SSR-Gate liefert nur `mfa_required`, `reauth_required` oder `ready`; Proxy und UI sind nie die Autorisierungsgrenze. Hosted-Akzeptanz, Betriebsnachweise und das Real-Data-Gate bleiben offen.
 
 ## Externe Integrationen
 
@@ -52,7 +52,7 @@ Künftige PVS-Anbindungen verwenden Adapter. Herstellerformate dürfen nicht dir
 
 ## Deployment und Betrieb
 
-Es existieren weder Vercel-Konfiguration noch CI-Workflows. Kern- und Vollverifikation laufen lokal über npm run verify und npm run verify:full. Security Header, Monitoring, Backup-/Restore-Nachweise und Incident-Prozesse sind offene Deployment- beziehungsweise Real-Data-Gates.
+Es existiert keine Vercel-Konfiguration. Eingecheckte GitHub-Workflows führen bei Pull Requests und Pushes nach `main` die Kernverifikation sowie Dependency-/Secret-Prüfungen aus; ihre Aktivierung, Branch-Protection und betriebliche Reaktion auf Funde sind nicht belegt. Kern- und Vollverifikation laufen zusätzlich lokal über npm run verify und npm run verify:full. Security Header, Monitoring, Backup-/Restore-Nachweise und Incident-Prozesse sind offene Deployment- beziehungsweise Real-Data-Gates.
 
 ## Architekturinvarianten
 
@@ -66,8 +66,8 @@ Es existieren weder Vercel-Konfiguration noch CI-Workflows. Kern- und Vollverifi
 
 ## Bekannte Schulden
 
-- MFA und automatische Sitzungssperre fehlen bis PROJ-31.
-- Security Header/CSP und CI fehlen.
+- Lokale TOTP-Einschreibung, Sitzungsstatus und Sperre sind einschließlich Browser-/Edge-E2E mit synthetischen Konten verifiziert; Hosted-Akzeptanz und betriebliche Nachweise für PROJ-31 fehlen noch.
+- Die eingecheckten CI-Workflows benötigen noch Aktivierungs-, Branch-Protection- und Betriebsnachweise. Security Header/CSP fehlen weiterhin.
 - Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
 
 ## Geplantes Zielbild

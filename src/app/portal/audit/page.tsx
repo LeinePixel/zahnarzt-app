@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { SessionLock } from '@/components/auth/session-lock'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -129,6 +130,7 @@ export default async function PortalAuditPage({
 
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <SessionLock />
         <Card>
           <CardHeader>
             <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
@@ -144,7 +146,11 @@ export default async function PortalAuditPage({
   if (context.status === 'incomplete') {
     try {
       const client = await createClient()
-      await client.rpc('record_denied_audit_read', {})
+      await client.rpc('read_audit_events', {
+        p_before: new Date().toISOString(),
+        p_limit: 1,
+        p_practice_id: null,
+      })
     } catch {
       // The response remains neutral even if the durable denial path is unavailable.
     }
@@ -153,6 +159,7 @@ export default async function PortalAuditPage({
   if (context.status !== 'portal_admin') {
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <SessionLock />
         <Card>
           <CardHeader>
             <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
@@ -168,6 +175,7 @@ export default async function PortalAuditPage({
   if (!practiceId) {
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <SessionLock />
         <Card>
           <CardHeader>
             <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
@@ -199,6 +207,7 @@ export default async function PortalAuditPage({
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+      <SessionLock />
       <Card>
         <CardHeader>
           <h1 className="text-2xl font-bold">Audit-Einsicht</h1>

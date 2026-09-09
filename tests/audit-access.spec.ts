@@ -1,42 +1,31 @@
 import { expect, test, type Page } from '@playwright/test'
-import { existsSync } from 'node:fs'
 
 import { E2E_FOREIGN_PRACTICE_ID } from '../supabase/seed-fixtures'
+import {
+  createMfaTestAccount,
+  currentTotpCode,
+  deleteMfaTestAccount,
+  type MfaTestAccount,
+} from './support/mfa-test-accounts'
 
-if (existsSync('.env.seed.local')) {
-  process.loadEnvFile('.env.seed.local')
-}
-
-const practiceAdmin = {
-  email: 'seed-praxisadmin@dentpilot.example',
-  passwordVariable: 'SEED_PRAXISADMIN_PASSWORD',
-}
-
-const portalAdmin = {
-  email: 'seed-portaladmin@dentpilot.example',
-  passwordVariable: 'SEED_PORTALADMIN_PASSWORD',
-}
-
-function requiredSeedCredential(
-  variable:
-    | typeof practiceAdmin.passwordVariable
-    | typeof portalAdmin.passwordVariable,
+async function login(
+  page: Page,
+  account: MfaTestAccount,
+  expectedHeading: string,
 ) {
-  const credential = process.env[variable]
-
-  if (!credential) {
-    throw new Error('Die lokale E2E-Seed-Konfiguration ist nicht vollständig.')
-  }
-
-  return credential
-}
-
-async function login(page: Page, email: string, credential: string) {
   await page.goto('/login')
-  await page.getByLabel('E-Mail-Adresse').fill(email)
-  await page.getByLabel('Passwort').fill(credential)
+  await page.getByLabel('E-Mail-Adresse').fill(account.email)
+  await page.getByLabel('Passwort').fill(account.password)
   await page.getByRole('button', { name: 'Sicher anmelden' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Sicherheitsprüfung' }),
+  ).toBeVisible()
+  await page
+    .getByLabel('Code aus der Authenticator-App')
+    .fill(currentTotpCode(account.totpSecret))
+  await page.getByRole('button', { name: 'Sicherheitsprüfung bestätigen' }).click()
   await expect(page).toHaveURL(/\/status$/)
+  await expect(page.getByRole('heading', { name: expectedHeading })).toBeVisible()
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -44,16 +33,24 @@ test.describe.configure({ mode: 'serial' })
 test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
   browser,
 }) => {
+  let practiceAdmin: MfaTestAccount | undefined
+  let portalAdmin: MfaTestAccount | undefined
   const practiceContext = await browser.newContext()
   const portalContext = await browser.newContext()
   const practicePage = await practiceContext.newPage()
   const portalPage = await portalContext.newPage()
 
   try {
+    practiceAdmin = await createMfaTestAccount({
+      displayName: 'Test Praxisadministration',
+      kind: 'practice',
+      role: 'praxisadmin',
+    })
+    portalAdmin = await createMfaTestAccount({ kind: 'portal' })
     await login(
       practicePage,
-      practiceAdmin.email,
-      requiredSeedCredential(practiceAdmin.passwordVariable),
+      practiceAdmin,
+      'Willkommen, Test Praxisadministration',
     )
     await practicePage.getByRole('button', { name: 'Supportzugriff anfordern' }).click()
 
@@ -65,8 +62,8 @@ test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
 
     await login(
       portalPage,
-      portalAdmin.email,
-      requiredSeedCredential(portalAdmin.passwordVariable),
+      portalAdmin,
+      'Anbieter-Supportportal',
     )
     await portalPage.goto(`/portal/audit?practiceId=${grantId}`)
     await expect(
@@ -116,5 +113,7 @@ test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
   } finally {
     await practiceContext.close()
     await portalContext.close()
+    if (practiceAdmin) await deleteMfaTestAccount(practiceAdmin)
+    if (portalAdmin) await deleteMfaTestAccount(portalAdmin)
   }
 })

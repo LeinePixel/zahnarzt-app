@@ -39,6 +39,10 @@ type ProfileResult = {
 type GetClaims = () => Promise<ClaimsResult>
 type GetProfile = (userId: string) => Promise<ProfileResult>
 type GetPortalAdmin = () => Promise<{ data: unknown; error: unknown }>
+type GetSessionGate = () => Promise<{
+  data: 'mfa_required' | 'reauth_required' | 'ready' | null
+  error: unknown
+}>
 type RedirectTo = (path: string) => never
 type SignOut = () => Promise<{ error: unknown }>
 type Revalidate = (path: string, type: 'layout') => void
@@ -65,6 +69,7 @@ export async function runGetCurrentUserContext(
   getProfile: GetProfile,
   redirectTo: RedirectTo,
   getPortalAdmin: GetPortalAdmin = async () => ({ data: false, error: null }),
+  getSessionGate: GetSessionGate = async () => ({ data: 'ready', error: null }),
 ): Promise<CurrentUserContext> {
   const { data: claimsData, error: claimsError } = await getClaims()
   const subject = claimsData?.claims.sub
@@ -75,6 +80,20 @@ export async function runGetCurrentUserContext(
     subject.length === 0
   ) {
     redirectTo('/login')
+  }
+
+  const { data: gate, error: gateError } = await getSessionGate()
+
+  if (gateError || gate === 'reauth_required') {
+    redirectTo('/auth/reauth')
+  }
+
+  if (gate === 'mfa_required') {
+    redirectTo('/auth/mfa')
+  }
+
+  if (gate !== 'ready') {
+    throw new CurrentUserContextError('Kontokontext konnte nicht geladen werden.')
   }
 
   const { data: profileData, error: profileError } = await getProfile(subject)
@@ -140,6 +159,11 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext> {
       const result = await supabase.rpc('is_portal_admin')
 
       return result as unknown as { data: unknown; error: unknown }
+    },
+    async () => {
+      const result = await supabase.rpc('session_gate')
+
+      return result as unknown as Awaited<ReturnType<GetSessionGate>>
     },
   )
 }

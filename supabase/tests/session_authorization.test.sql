@@ -1,6 +1,6 @@
 begin;
 
-select plan(24);
+select plan(41);
 
 insert into auth.users (id, email)
 values
@@ -135,13 +135,224 @@ set local role authenticated;
 
 select is(
   (select count(*) from public.user_profile),
+  0::bigint,
+  'an AAL2 session without state cannot read its own protected profile'
+);
+select is(
+  (select count(*) from public.practice),
+  0::bigint,
+  'an AAL2 session without state cannot read its own protected practice'
+);
+select is(
+  public.session_gate(),
+  'reauth_required',
+  'an AAL2 session without server state is globally locked'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', '41000000-0000-0000-0000-000000000001',
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '43000000-0000-0000-0000-000000000001',
+    'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())::integer))
+  )::text,
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.establish_session_state(),
+  true,
+  'a fresh TOTP AAL2 session establishes server-timestamped state'
+);
+select is(
+  public.session_gate(),
+  'ready',
+  'established state releases the safe SSR gate'
+);
+select is(
+  public.touch_session_state(),
+  true,
+  'human activity can touch a current server state without client time'
+);
+select is(
+  (select count(*) from public.user_profile),
   1::bigint,
-  'a current matching AAL2 session can read its own protected profile'
+  'an established AAL2 session can read its own protected profile'
 );
 select is(
   (select count(*) from public.practice),
   1::bigint,
-  'a current matching AAL2 session can read its own protected practice'
+  'an established AAL2 session can read its own protected practice'
+);
+
+reset role;
+update private.auth_session_state
+set established_at = now() - interval '5 minutes 1 second',
+    last_human_activity_at = now() - interval '5 minutes 1 second'
+where session_id = '43000000-0000-0000-0000-000000000001';
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000001"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.touch_session_state(),
+  false,
+  'an expired inactivity state cannot be renewed by a background touch'
+);
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'RLS denies after five minutes without human activity'
+);
+select is(
+  public.request_support_access(8),
+  null::uuid,
+  'sensitive support RPCs deny after inactivity expires'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', '41000000-0000-0000-0000-000000000001',
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '43000000-0000-0000-0000-000000000001',
+    'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())::integer))
+  )::text,
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.establish_session_state(),
+  true,
+  'a new TOTP confirmation restores the server state'
+);
+
+reset role;
+update private.auth_session_state
+set established_at = now() - interval '7 hours 59 minutes',
+    last_human_activity_at = now() - interval '1 minute',
+    fresh_totp_at = now() - interval '1 minute'
+where session_id = '43000000-0000-0000-0000-000000000001';
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', '41000000-0000-0000-0000-000000000001',
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '43000000-0000-0000-0000-000000000001',
+    'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())::integer))
+  )::text,
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.establish_session_state(),
+  true,
+  'a fresh reauthentication can restore activity before the absolute session limit'
+);
+
+reset role;
+select ok(
+  (
+    select established_at < now() - interval '7 hours 58 minutes'
+    from private.auth_session_state
+    where session_id = '43000000-0000-0000-0000-000000000001'
+  ),
+  'fresh reauthentication does not extend the eight-hour absolute session start'
+);
+
+update private.auth_session_state
+set established_at = now() - interval '6 minutes',
+    fresh_totp_at = now() - interval '5 minutes 1 second',
+    last_human_activity_at = now()
+where session_id = '43000000-0000-0000-0000-000000000001';
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000001"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.request_support_access(8),
+  null::uuid,
+  'a stale TOTP confirmation denies a sensitive support operation'
+);
+
+reset role;
+select is(
+  (
+    select count(*)
+    from public.audit_event
+    where actor_id = '41000000-0000-0000-0000-000000000001'
+      and action = 'support_access_requested'
+      and outcome = 'denied'
+  ),
+  1::bigint,
+  'a stale TOTP denial is retained as a durable audit event'
+);
+
+update private.auth_session_state
+set established_at = now() - interval '8 hours 1 second',
+    last_human_activity_at = now()
+where session_id = '43000000-0000-0000-0000-000000000001';
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated","aal":"aal2","session_id":"43000000-0000-0000-0000-000000000001"}',
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (select count(*) from public.user_profile),
+  0::bigint,
+  'the eight-hour session bound remains enforced after a reload'
+);
+select is(
+  public.touch_session_state(),
+  false,
+  'a maximum-expired state cannot be extended by a touch'
+);
+
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', '41000000-0000-0000-0000-000000000001',
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '43000000-0000-0000-0000-000000000001',
+    'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())::integer))
+  )::text,
+  true
+);
+
+select is(
+  public.establish_session_state(),
+  false,
+  'a fresh TOTP confirmation cannot restore a maximum-expired session'
 );
 
 reset role;

@@ -160,16 +160,17 @@ nachgewiesen; die PROJ-19-Migration richtet den täglichen Produktions-Scheduler
 `dentpilot-purge-expired-audit-events` um 03:17 Uhr ein. Der synthetische
 Seed und die 17/17 Cloud-Browserabnahme sind ebenfalls belegt. Offen bleiben
 das laufende Scheduler-Monitoring und der Nachweis eines ausgeführten
-Löschlaufs. Die T03-AAL2- und Sitzungszustandsprüfung ist implementiert.
-TOTP-Einschreibung, fünfminütige menschliche Inaktivität und
-Re-Authentisierung einschließlich ihrer Evidenz bleiben offen. Diese Evidenz
-ist ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate bleibt
-geschlossen.
+Löschlaufs. Die T03-AAL2- und Sitzungszustandsprüfung sowie der lokale
+PROJ-31-T04-Stand für TOTP, Aktivitätsgrenze und Re-Authentisierung sind
+implementiert. Reproduzierbarer Browser-/Hosted-Nachweis, Betriebsfreigabe und
+die Grenze gegenüber gestohlenen, noch gültigen Sitzungstoken bleiben offen.
+Diese Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe; das
+Real-Data-Gate bleibt geschlossen.
 
 ## Open Questions
 
 - [ ] Das Scheduler-Monitoring und der Nachweis eines ausgeführten 90-Tage-Löschlaufs sind vor der Produktionsfreigabe festzulegen und zu dokumentieren.
-- [ ] TOTP-Einschreibung, fünfminütige menschliche Inaktivität und Re-Authentisierung müssen implementiert und nachgewiesen werden; ohne diese offenen PROJ-31-Kontrollen bleibt die Verarbeitung echter Daten gesperrt.
+- [ ] TOTP-Einschreibung, fünfminütige Inaktivitätsgrenze und Re-Authentisierung benötigen den reproduzierbaren Browser-/Hosted-Nachweis und die Betriebsfreigabe; ohne diese offenen PROJ-31-Kontrollen bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 
 ## Decision Log

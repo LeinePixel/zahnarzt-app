@@ -31,12 +31,15 @@ Die vollständigen Datenschutz-, Real-Data- und KI-Gates stehen in docs/architec
 - Fail-closed AAL2- und aktuelle Datenbank-Session-Prüfung für geschützte
   RLS-Lesewege und PROJ-19-RPCs; fehlende, widerrufene, abgelaufene oder
   gesperrte Sitzungen liefern keine geschützten Daten.
+- Eingecheckte, SHA-pinnte CI-Workflows für Kernverifikation sowie Dependency-
+  und Secret-Prüfungen; ihre GitHub-Aktivierung, Branch-Protection und
+  betriebliche Behandlung von Funden sind noch nicht nachgewiesen.
 
 ## Authentifizierung und Autorisierung
 
 Der Proxy verwendet verifizierte Claims als Routing-Signal. Er ersetzt weder die erneute serverseitige Claims-Prüfung noch RLS. getSession() und ungeprüfte Cookie-Inhalte sind keine Autorisierungsgrundlage.
 
-Die Praxisrollen `rezeption`, `behandler` und `praxisadmin` sind von `portaladmin` getrennt. Praxisrollen können Auditdaten nicht lesen. Nur ein Portaladmin mit aktiver, von der Praxis erteilter Supportfreigabe darf die minimierte Auditansicht lesen; jede Einsicht wird erneut auditiert. Hosted-Cron-Commissioning sowie MFA-Einschreibung, menschliche Inaktivität/Re-Authentisierung und ihre Betriebsnachweise bleiben vor Produktions- und Real-Data-Freigabe offen.
+Die Praxisrollen `rezeption`, `behandler` und `praxisadmin` sind von `portaladmin` getrennt. Praxisrollen können Auditdaten nicht lesen. Nur ein Portaladmin mit aktiver, von der Praxis erteilter Supportfreigabe darf die minimierte Auditansicht lesen; jede Einsicht wird erneut auditiert. Der lokale T04-Stand verlangt hierfür zusätzlich eine höchstens fünf Minuten alte TOTP-Bestätigung. Ein privater serverzeitgestempelter Zustand sperrt nach fünf Minuten ohne erfolgreichen Aktivitäts-Touch und nach acht Stunden. Die reguläre Browseroberfläche sendet einen Touch nur nach menschlich ausgelösten Pointer-, Tastatur- oder Touch-Eingaben; diese Client-Selektion beweist bei einem gestohlenen gültigen Sitzungstoken keine menschliche Anwesenheit. Hosted-TOTP-Akzeptanz und betriebliche Nachweise bleiben vor Produktions- und Real-Data-Freigabe offen.
 
 ## Sensitive Daten
 
@@ -73,9 +76,9 @@ Aktiv angebunden ist Supabase. Für Vercel, Soniox, IONOS AI Model Hub, Resend, 
 
 ## Bekannte Risiken und Lücken
 
-- Keine MFA, Inaktivitätssperre, Maximalsitzung oder Re-Authentisierung.
+- Die lokale TOTP-/Inaktivitäts-/Re-Authentisierungsschicht ist mit synthetischen Browser-/Edge-E2E-Tests belegt, besitzt aber noch keinen gehosteten Browser- oder Betriebsnachweis; die Inaktivitätskontrolle ist keine kryptografische Anwesenheitsprüfung gegen ein gestohlenes, noch gültiges Sitzungstoken.
 - Keine Security Header/CSP in next.config.ts.
-- Keine CI-, Dependency- oder Secret-Scanning-Workflows.
+- Kein Nachweis, dass die eingecheckten CI-, Dependency- und Secret-Scanning-Workflows auf GitHub aktiv sind, Branch-Protection erzwingen oder Funde betrieblich bearbeitet werden.
 - Keine abgenommenen Lösch-, Aufbewahrungs-, Incident- oder Backup-/Restore-Prozesse.
 - Kein Produktionsbetrieb und kein externer Penetrationstest.
 - Hosted-Cron-Commissioning für die datenbankseitige 90-Tage-Auditlöschung ist nicht betrieblich verifiziert.

@@ -120,6 +120,23 @@ describe('runGetCurrentUserContext', () => {
     })
   })
 
+  it('redirects an AAL2 account with no current server state before loading protected context', async () => {
+    const getProfile = vi.fn(profileResult(readyProfile))
+    const redirects = redirectRecorder()
+
+    await expect(
+      runGetCurrentUserContext(
+        claims('user-123'),
+        getProfile,
+        redirects.redirectTo,
+        undefined,
+        async () => ({ data: 'reauth_required', error: null }),
+      ),
+    ).rejects.toThrow('redirect:/auth/reauth')
+
+    expect(getProfile).not.toHaveBeenCalled()
+  })
+
   it('keeps an unassigned authenticated account incomplete when the portal check is false', async () => {
     const result = await runGetCurrentUserContext(
       claims('unassigned-user'),
