@@ -116,12 +116,12 @@ describe('PortalAuditPage', () => {
     )
   })
 
-  it('durably audits an unassigned authenticated account without leaking a requested target', async () => {
+  it('routes an unassigned authenticated account through the guarded denial path without leaking a requested target', async () => {
     vi.mocked(getCurrentUserContext).mockResolvedValue({
       status: 'incomplete',
       userId: '11000000-0000-0000-0000-000000000004',
     })
-    rpc.mockResolvedValue({ data: false, error: null })
+    rpc.mockResolvedValue({ data: [], error: null })
 
     const requestedPracticeId = '21000000-0000-0000-0000-000000000001'
     const incompleteUserId = '11000000-0000-0000-0000-000000000004'
@@ -135,7 +135,11 @@ describe('PortalAuditPage', () => {
     )
 
     expect(rpc).toHaveBeenCalledOnce()
-    expect(rpc).toHaveBeenCalledWith('record_denied_audit_read', {})
+    expect(rpc).toHaveBeenCalledWith('read_audit_events', {
+      p_before: expect.any(String),
+      p_limit: 1,
+      p_practice_id: null,
+    })
     expect(
       screen.getByText('Audit-Zugriff wurde verweigert.'),
     ).toBeInTheDocument()

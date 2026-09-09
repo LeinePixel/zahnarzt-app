@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Building2, CircleCheck, ShieldCheck, TriangleAlert, UserRound } from 'lucide-react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
+import { SessionLock } from '@/components/auth/session-lock'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -24,6 +25,7 @@ export default async function StatusPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background px-5 py-6 sm:px-8 sm:py-8">
+      <SessionLock />
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-[radial-gradient(circle_at_8%_12%,hsl(var(--accent))_0,transparent_30%),radial-gradient(circle_at_92%_88%,hsl(var(--accent))_0,transparent_26%)]"

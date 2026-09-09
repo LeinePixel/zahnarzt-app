@@ -3,7 +3,7 @@
 ## Status: In Progress
 **Created:** 2026-08-24
 
-**Last Updated:** 2026-09-07
+**Last Updated:** 2026-09-09
 
 **Priority:** P1
 
@@ -92,6 +92,33 @@ externe Dienste noch Rechtsfreigaben annehmen.
   Maximalsitzung acht Stunden. Die fünfminütige menschliche Inaktivität,
   TOTP-Einschreibung, Re-Authentisierungsalter und alle Hosted-Nachweise bleiben
   ausdrücklich offen und werden nicht durch diese Evidenz behauptet.
+
+## T04-Abnahmeevidenz — lokal und synthetisch (09.09.2026)
+
+- Der private Sitzungszustand ist an die verifizierte `session_id` und
+  Benutzer-ID gebunden, erhält ausschließlich Datenbankzeitstempel und wird
+  zusammen mit der Auth-Sitzung gelöscht. Ein neuer Zustand entsteht nur mit
+  AAL2 und einem höchstens fünf Minuten alten TOTP-AMR-Zeitstempel im JWT.
+  Eine Re-Authentisierung erneuert Aktivität und TOTP-Frische, niemals den
+  Beginn der absoluten Acht-Stunden-Grenze.
+- Der Proxy und geschützte Serverpfade nutzen nur die datenlose Gate-Antwort
+  `mfa_required`, `reauth_required` oder `ready`. RLS bleibt verbindlich:
+  fünf Minuten ohne serverseitig bestätigte menschliche Aktivität oder acht
+  Stunden Sitzungsalter sperren direkte Lesewege und Touches.
+- `request_support_access`, `activate_support_access`,
+  `revoke_support_access` und `read_audit_events` verlangen zusätzlich eine
+  höchstens fünf Minuten alte TOTP-Bestätigung. `is_portal_admin` bleibt ein
+  datenloser Status-/Bootstrap-Check. Eine Ablehnung bei abgelaufener
+  TOTP-Frische wird für die sensiblen Supportaktionen dauerhaft als `denied`
+  auditiert.
+- Der Browser verwendet nur `pointerdown`, `keydown` und `touchstart` als
+  Aktivität und speichert weder QR, Geheimnis, Code, JWT noch Sitzungs-ID in
+  URL oder Browser-Storage. Diese Client-Selektion ist keine kryptografische
+  Anwesenheitsprüfung gegen ein gestohlenes, noch gültiges Sitzungstoken. Die
+  lokale TOTP-Konfiguration ist aktiviert. Am 09.09.2026 bestanden mit
+  ausschließlich synthetischen Konten Lint, Typecheck, 107 Vitest-Tests,
+  149 pgTAP-Tests, der Produktions-Build und 17 Playwright-Browser-/Edge-Tests.
+  Hosted- und betriebliche Nachweise bleiben explizite Abnahmetore.
 
 ## Out of Scope
 

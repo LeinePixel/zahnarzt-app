@@ -1,12 +1,12 @@
 # Architecture Overview
 
-**Stand:** 27.08.2026
+**Stand:** 09.09.2026
 
 Dieses Dokument trennt die heute ausführbare Architektur ausdrücklich von der geplanten Produktarchitektur. Roadmap-Elemente sind keine implementierten Systembestandteile.
 
 ## Aktueller Systemumfang
 
-Implementiert sind PROJ-1 und PROJ-19: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. PROJ-19 ist lokal abgenommen und `In Review`; betriebliche Produktions-Gates bleiben offen.
+Implementiert sind PROJ-1 und PROJ-19 sowie der lokale T04-Stand von PROJ-31: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. Der T04-Stand ergänzt TOTP, einen privaten Sitzungszustand, SSR-Gates und Re-Authentisierung für sensible Supportaktionen. PROJ-19 und PROJ-31 sind `In Review`; betriebliche Produktions-Gates bleiben offen.
 
 Noch nicht implementiert sind Patienten-, Termin-, CRM-, Kommunikations-, Workflow-, PVS- und KI-Funktionen. Für diese Bereiche existieren Produktplanung und Architekturvorgaben, aber überwiegend noch keine verbindlichen Feature-Specs.
 
@@ -30,7 +30,7 @@ Browser
   │ Cookie-basierte Supabase-Sitzung
   ▼
 src/proxy.ts
-  │ aktualisiert Cookies, prüft getClaims(), steuert /login und /status
+  │ aktualisiert Cookies, prüft getClaims(), steuert /login, MFA, Re-Auth und geschützte Routen
   ▼
 Next.js Server Components / Server Actions
   │ prüfen Claims erneut, validieren Eingaben, laden Kontokontext
@@ -94,8 +94,9 @@ PROJ-19 trennt Praxisrollen von `portaladmin`. Praxisrollen erhalten keine Audit
 2. Der Proxy aktualisiert die Cookie-Sitzung und verwendet verifizierte getClaims()-Ergebnisse als Routing-Signal.
 3. Die Login-Server-Action validiert E-Mail und Passwort serverseitig mit Zod.
 4. Credential-, Rate-Limit- und Dienstfehler werden ohne Kontenoffenlegung oder technische Anbietertexte klassifiziert.
-5. /status verifiziert Claims erneut und lädt über RLS nur das eigene Profil und die eigene Praxis.
-6. Logout beendet die Supabase-Sitzung, invalidiert den App-Layout-Cache und leitet nach /login.
+5. Eine AAL1-Sitzung durchläuft die TOTP-Einschreibung oder -Prüfung; eine AAL2-Sitzung ohne aktuellen Datenbankzustand wird zur Re-Authentisierung geleitet.
+6. /status verifiziert Claims erneut und lädt über RLS nur das eigene Profil und die eigene Praxis.
+7. Logout beendet die Supabase-Sitzung, invalidiert den App-Layout-Cache und leitet nach /login.
 
 Auth-Antworten erhalten Cache-Control: private, no-store; Redirects enthalten keine übernommenen Query- oder Hash-Werte.
 
@@ -129,7 +130,7 @@ Der Mock-PVS dokumentiert seinen lesenden `/v1`-Vertrag einschließlich neutrale
 
 ## Deployment und Betrieb
 
-Es gibt keine Vercel-Konfiguration und keine CI-Workflows im Repository. Verifikation wird lokal über npm run verify beziehungsweise npm run verify:full ausgeführt. Produktionsheader, Monitoring, Backup-/Restore-Nachweise und Incident-Prozesse sind Teil des Real-Data- und Deployment-Gates, nicht aktueller Betriebszustand.
+Es gibt keine Vercel-Konfiguration. Eingecheckte GitHub-Workflows führen Kernverifikation sowie Dependency-/Secret-Prüfungen aus; ihre GitHub-Aktivierung, Branch-Protection und betriebliche Reaktion auf Funde sind nicht belegt. Verifikation wird zusätzlich lokal über npm run verify beziehungsweise npm run verify:full ausgeführt. Produktionsheader, Monitoring, Backup-/Restore-Nachweise und Incident-Prozesse sind Teil des Real-Data- und Deployment-Gates, nicht aktueller Betriebszustand.
 
 ## Architekturinvarianten
 
@@ -142,7 +143,7 @@ Es gibt keine Vercel-Konfiguration und keine CI-Workflows im Repository. Verifik
 
 ## Bekannte Schulden und Ausnahmen
 
-- MFA und automatische Sitzungssperre fehlen bis PROJ-31/Auth-Hardening.
+- PROJ-31 ist lokal implementiert, aber ohne reproduzierbaren Browser-/Hosted-Nachweis und ohne Beweis menschlicher Anwesenheit bei einem gestohlenen, noch gültigen Sitzungstoken.
 - Security Header und CSP sind in next.config.ts noch nicht konfiguriert.
 - Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
 - Die Anwendung ist im Betrieb noch Single-Tenant, obwohl das Schema die Praxisgrenze vorbereitet.

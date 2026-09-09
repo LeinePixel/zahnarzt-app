@@ -11,7 +11,7 @@ import {
 } from './proxy'
 
 type ClaimsResult = {
-  data: { claims: { sub?: string } } | null
+  data: { claims: { aal?: string; sub?: string } } | null
   error: Error | null
 }
 
@@ -26,6 +26,7 @@ function authFactory(
         return result
       },
     },
+    rpc: async () => ({ data: 'ready', error: null }),
   })
 }
 
@@ -35,6 +36,42 @@ const anonymous = authFactory({
 })
 
 describe('updateSession', () => {
+  it('routes an AAL1 account from a protected route to MFA without retaining query data', async () => {
+    const request = new NextRequest(
+      'https://app.example/status?patient=synthetic-123',
+    )
+    const aal1 = authFactory({
+      data: { claims: { aal: 'aal1', sub: 'synthetic-user-id' } },
+      error: null,
+    })
+
+    const response = await updateSession(request, aal1)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://app.example/auth/mfa')
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+  })
+
+  it('routes an AAL2 account with expired server state to reauthentication', async () => {
+    const request = new NextRequest('https://app.example/status')
+    const reauthenticationRequired = (() => ({
+      auth: {
+        getClaims: async () => ({
+          data: { claims: { aal: 'aal2', sub: 'synthetic-user-id' } },
+          error: null,
+        }),
+      },
+      rpc: async () => ({ data: 'reauth_required', error: null }),
+    })) as unknown as ProxyAuthClientFactory
+
+    const response = await updateSession(request, reauthenticationRequired)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe(
+      'https://app.example/auth/reauth',
+    )
+  })
+
   it('redirects anonymous access to a protected route without retaining query data', async () => {
     const request = new NextRequest(
       'https://app.example/status?patient=synthetic-123',

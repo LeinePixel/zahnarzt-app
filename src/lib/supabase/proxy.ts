@@ -18,10 +18,14 @@ export type ProxyCookieMethods = {
 type ProxyAuthClient = {
   auth: {
     getClaims: () => Promise<{
-      data: { claims: { sub?: string } } | null
+      data: { claims: { aal?: string; sub?: string } } | null
       error: unknown
     }>
   }
+  rpc: (functionName: 'session_gate') => PromiseLike<{
+    data: 'mfa_required' | 'reauth_required' | 'ready' | null
+    error: unknown
+  }>
 }
 
 export type ProxyAuthClientFactory = (
@@ -70,13 +74,32 @@ export async function updateSession(
     !error &&
     typeof data?.claims.sub === 'string' &&
     data.claims.sub.length > 0
+  const requiresMfa = isAuthenticated && data?.claims.aal !== 'aal2'
   const pathname = request.nextUrl.pathname
+  const isProtectedRoute =
+    pathname.startsWith('/status') || pathname.startsWith('/portal')
+  const sessionGate =
+    isAuthenticated && !requiresMfa && isProtectedRoute
+      ? await supabase.rpc('session_gate')
+      : null
+  const requiresReauthentication =
+    sessionGate !== null &&
+    (sessionGate.error !== null || sessionGate.data === 'reauth_required')
   let response: NextResponse
 
-  if (
-    !isAuthenticated &&
-    (pathname.startsWith('/status') || pathname.startsWith('/portal'))
-  ) {
+  if (requiresMfa && isProtectedRoute) {
+    const mfaUrl = request.nextUrl.clone()
+    mfaUrl.pathname = '/auth/mfa'
+    mfaUrl.search = ''
+    mfaUrl.hash = ''
+    response = NextResponse.redirect(mfaUrl)
+  } else if (requiresReauthentication && isProtectedRoute) {
+    const reauthenticationUrl = request.nextUrl.clone()
+    reauthenticationUrl.pathname = '/auth/reauth'
+    reauthenticationUrl.search = ''
+    reauthenticationUrl.hash = ''
+    response = NextResponse.redirect(reauthenticationUrl)
+  } else if (!isAuthenticated && isProtectedRoute) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.search = ''

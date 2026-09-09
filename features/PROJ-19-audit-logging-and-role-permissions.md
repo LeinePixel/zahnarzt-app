@@ -182,15 +182,17 @@ Die Hosted-Cron-Verifikation wurde nicht ausgeführt, weil keine freigegebene,
 nicht geheime administrative Session vorliegt. Hosted-Cron-Commissioning und
 der Nachweis für den Produktions-Scheduler
 `dentpilot-purge-expired-audit-events` bleiben offen. Die T03-AAL2- und
-Sitzungszustandsprüfung ist implementiert. TOTP-Einschreibung, fünfminütige
-menschliche Inaktivität und Re-Authentisierung einschließlich ihrer Evidenz
-bleiben offen. Diese Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe;
-das Real-Data-Gate bleibt geschlossen.
+Sitzungszustandsprüfung sowie der lokale PROJ-31-T04-Stand für TOTP,
+Aktivitätsgrenze und Re-Authentisierung sind implementiert. Ein erneuter
+reproduzierbarer Browser-/Hosted-Nachweis, Betriebsfreigabe und die Grenze
+gegenüber gestohlenen, noch gültigen Sitzungstoken bleiben offen. Diese
+Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate
+bleibt geschlossen.
 
 ## Open Questions
 
 - [ ] Die technische Wahl und Betriebsfreigabe des Hosted-Cron-Schedulers für die 90-Tage-Wartungsroutine sind als Produktionsbetriebs-Gate vor Inbetriebnahme im Supabase-Zielprojekt zu prüfen.
-- [ ] TOTP-Einschreibung, fünfminütige menschliche Inaktivität und Re-Authentisierung müssen implementiert und nachgewiesen werden; ohne diese offenen PROJ-31-Kontrollen bleibt die Verarbeitung echter Daten gesperrt.
+- [ ] TOTP-Einschreibung, fünfminütige Inaktivitätsgrenze und Re-Authentisierung benötigen den reproduzierbaren Browser-/Hosted-Nachweis und die Betriebsfreigabe; ohne diese offenen PROJ-31-Kontrollen bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 
 ## Decision Log

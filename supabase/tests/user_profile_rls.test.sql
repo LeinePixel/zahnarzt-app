@@ -60,6 +60,17 @@ values
     now() + interval '8 hours'
   );
 
+insert into private.auth_session_state (session_id, user_id)
+values
+  (
+    '10200000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000001'
+  ),
+  (
+    '10200000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000002'
+  );
+
 insert into public.practice (id, name)
 values
   ('20000000-0000-0000-0000-000000000001', 'Testpraxis Eins'),

@@ -111,6 +111,20 @@ administrative Session vor. Hosted-Cron-Commissioning, MFA/Re-Authentisierung
 und die weiteren Datenschutz-/Compliance-Gates bleiben offen; PROJ-19 öffnet
 das Real-Data-Gate nicht.
 
+### PROJ-31 T04 — lokaler Nachweis, noch In Review
+
+Die lokale synthetische Verifikation vom 09.09.2026 bestand aus Lint,
+Typecheck, 107 Vitest-Tests, 149 pgTAP-Tests, Produktions-Build und 17
+Playwright-Browser-/Edge-Tests. Die DB-Suite deckt AAL1-Verweigerung, einen nur
+nach frischem TOTP-AMR etablierbaren serverzeitgestempelten Zustand,
+fünfminütige Inaktivität, die Acht-Stunden-Grenze, eine Re-Authentisierung ohne
+Verlängerung der absoluten Sitzung sowie frisches TOTP und `denied`-Audits für
+sensible Support- und Audit-RPCs ab. Unit-Tests prüfen die query-freien
+SSR-Redirects, neutrale TOTP-Fehler und dass nur Pointer-, Tastatur- oder
+Touch-Eingaben einen Touch auslösen. Diese Client-Selektion ist kein Nachweis
+menschlicher Anwesenheit bei einem gestohlenen, noch gültigen Sitzungstoken.
+Hosted- und betriebliche Nachweise bleiben explizite Abnahmetore.
+
 ---
 
 ## Abnahme PROJ-1 — belegter Stand
