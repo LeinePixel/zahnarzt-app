@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { z } from 'zod'
 import { hasAccess } from './auth'
 import type { MockPvsConfig } from './config'
-import { appointmentSchema, changeEventSchema, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, patientSchema, timestampSchema } from './contracts'
+import { appointmentSchema, changeEventSchema, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, patientSchema, scenarioNameSchema, timestampSchema } from './contracts'
 import { createScenarioState, InvalidCursorError, type ScenarioState } from './scenario-state'
 
 const errors = {
@@ -50,6 +50,21 @@ function routeMockPvsRequest(request: IncomingMessage, response: ServerResponse,
   try {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1')
     const pathname = url.pathname
+    if (pathname === '/__test' || pathname.startsWith('/__test/')) {
+      if (!hasAccess(request.headers.authorization, 'test', config)) return sendError(response, 'unauthorized')
+      const scenarioMatch = pathname.match(/^\/__test\/scenarios\/([^/]+)$/)
+      const scenario = scenarioNameSchema.safeParse(scenarioMatch?.[1])
+      if (request.method !== 'POST' || (pathname !== '/__test/reset' && !scenario.success)) return sendError(response, 'notFound')
+      parseQuery(z.strictObject({}), url.searchParams)
+      // No body is parsed, buffered or accepted by the fixed control API.
+      if (request.headers['transfer-encoding'] || (request.headers['content-length'] && request.headers['content-length'] !== '0')) {
+        return sendError(response, 'invalidRequest')
+      }
+      if (pathname === '/__test/reset') state.reset()
+      else if (scenario.success) state.activate(scenario.data)
+      response.writeHead(204, { 'cache-control': 'no-store' }).end()
+      return
+    }
     if (pathname === '/v1' || pathname.startsWith('/v1/')) {
       if (!hasAccess(request.headers.authorization, 'read', config)) return sendError(response, 'unauthorized')
       if (request.method !== 'GET') return sendError(response, 'notFound')
@@ -57,19 +72,26 @@ function routeMockPvsRequest(request: IncomingMessage, response: ServerResponse,
         parseQuery(z.strictObject({}), url.searchParams)
         return send(response, 200, { data: { apiVersion: 'v1' } })
       }
+      const active = state.activeScenario()
+      const isDataRoute = /^\/v1\/(patients(?:\/[^/]+)?|appointments|changes)$/.test(pathname)
+      if (isDataRoute && (active === 'rate-limited' || active === 'temporarily-unavailable')) {
+        response.setHeader('retry-after', '1')
+        return send(response, active === 'rate-limited' ? 429 : 503, { error: active === 'rate-limited' ? 'rate_limited' : 'temporarily_unavailable' })
+      }
+      const invalidSource = active === 'invalid-source-data'
       if (pathname === '/v1/patients') {
         const page = state.listPatients(parseQuery(paginationSchema, url.searchParams))
-        return send(response, 200, { data: page.data.map(p => patientSchema.parse(p)), nextCursor: page.nextCursor })
+        return send(response, 200, { data: invalidSource ? page.data : page.data.map(p => patientSchema.parse(p)), nextCursor: page.nextCursor })
       }
       const patientMatch = pathname.match(/^\/v1\/patients\/([^/]+)$/)
       if (patientMatch) {
         parseQuery(z.strictObject({}), url.searchParams)
         const patient = state.listPatients({ cursor: null, limit: MAX_PAGE_SIZE }).data.find(p => p.id === patientMatch[1])
-        return patient ? send(response, 200, { data: patientSchema.parse(patient) }) : sendError(response, 'notFound')
+        return patient ? send(response, 200, { data: invalidSource ? patient : patientSchema.parse(patient) }) : sendError(response, 'notFound')
       }
       if (pathname === '/v1/appointments') {
         const page = state.listAppointments(parseQuery(appointmentQuerySchema, url.searchParams))
-        return send(response, 200, { data: page.data.map(a => appointmentSchema.parse(a)), nextCursor: page.nextCursor })
+        return send(response, 200, { data: invalidSource ? page.data : page.data.map(a => appointmentSchema.parse(a)), nextCursor: page.nextCursor })
       }
       if (pathname === '/v1/changes') {
         const page = state.listChanges(parseQuery(paginationSchema, url.searchParams))
