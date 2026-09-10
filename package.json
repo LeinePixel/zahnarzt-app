@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "mock-pvs": "tsx --env-file=.env.mock-pvs.local services/mock-pvs/server.ts",
+    "test:mock-pvs": "vitest run services/mock-pvs",
     "build": "next build",
     "start": "next start",
     "start:e2e": "tsx scripts/start-e2e-server.ts",
