@@ -1,5 +1,17 @@
 # Acceptance Tests
 
+## PROJ-2 — lokaler Mock-PVS, Evidenz vom 10.09.2026
+
+Der Mock-PVS läuft als separater lokaler TypeScript-/Node-HTTP-Prozess. Er verarbeitet ausschließlich versionierte, deterministische synthetische Fixtures und besitzt weder eine Supabase-Verbindung noch eine Next.js-Route oder Browseranbindung. Lese- und Teststeuerung verwenden getrennte lokale Bearer-Token; die Teststeuerung akzeptiert nur feste Szenarien und keine frei übermittelten Ressourcen.
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| `npm run test:mock-pvs` | 5 Testdateien, 83 Tests bestanden: Konfiguration, Verträge, Cursor/Pagination, HTTP-Grenze, Szenarien und Prozess-Smoke-Test |
+| `npm run verify` | bestanden: Lint, Typecheck, 25 Vitest-Testdateien mit 191 Tests und Produktions-Build |
+| `npm run verify:full` | bestanden: vorstehende Prüfungen, 4 pgTAP-Dateien mit 149 Tests sowie 18 Browserfälle in Chromium, Firefox, WebKit und Microsoft Edge |
+
+Die Nachweise decken neutrale 401/404/422/500-Antworten, 429/503 mit `Retry-After`, Upserts mit vollständiger Ressource, ressourcenlose Tombstones, szenariogebundene opaque Cursor und den Reset auf `baseline` ab. Der Dienst ist lokal und unhosted; er ersetzt keinen echten PVS-Zugang, keine Anbieterprüfung und kein Real-Data-Gate.
+
 ## Teststand — Fakten (26.08.2026)
 
 PROJ-1 besitzt ein dreischichtiges, ausführbares Sicherheitsnetz:
