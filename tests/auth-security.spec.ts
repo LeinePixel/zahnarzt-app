@@ -52,6 +52,24 @@ test.beforeEach(async ({ context }) => {
   await logoutEverywhere(context)
 })
 
+test('liefert eine strikte CSP und bindet ihre Nonce an gerenderte Framework-Skripte', async ({ page }) => {
+  const response = await page.goto('/login')
+  const policy = response?.headers()['content-security-policy']
+  const nonce = policy?.match(/script-src 'self' 'nonce-([^']+)' 'strict-dynamic'/)?.[1]
+
+  expect(policy).toContain("default-src 'self'")
+  expect(policy).not.toContain("'unsafe-inline'")
+  expect(policy).toContain("object-src 'none'")
+  expect(policy).toContain("frame-ancestors 'none'")
+  expect(nonce).toBeDefined()
+
+  const renderedNonces = await page
+    .locator('script[nonce]')
+    .evaluateAll((scripts) => scripts.map((script) => script.nonce))
+
+  expect(renderedNonces).toContain(nonce)
+})
+
 test('setzt query-freie Redirects und private no-store auf geschützten Antworten', async ({ page }) => {
   const redirectResponse = await page.request.get('/status?sensitive=never', {
     maxRedirects: 0,

@@ -28,6 +28,19 @@ async function login(
   await expect(page.getByRole('heading', { name: expectedHeading })).toBeVisible()
 }
 
+async function reauthenticate(page: Page, account: MfaTestAccount) {
+  await page.goto('/auth/reauth')
+  await expect(
+    page.getByRole('heading', { name: 'Erneut bestätigen' }),
+  ).toBeVisible()
+  await page
+    .getByLabel('Code aus der Authenticator-App')
+    .fill(currentTotpCode(account.totpSecret))
+  await page.getByRole('button', { name: 'Sicherheitsprüfung bestätigen' }).click()
+  await expect(page).toHaveURL(/\/status$/)
+  await expect(page.getByRole('button', { name: 'Abmelden' })).toBeVisible()
+}
+
 test.describe.configure({ mode: 'serial' })
 
 test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
@@ -99,6 +112,7 @@ test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
     ).toBeVisible()
     await expect(portalPage.getByRole('table')).toHaveCount(0)
 
+    await reauthenticate(practicePage, practiceAdmin)
     await practicePage.getByLabel('Freigabekennung widerrufen').fill(grantId)
     await practicePage.getByRole('button', { name: 'Supportzugriff widerrufen' }).click()
     await expect(

@@ -9,7 +9,7 @@ Der kompakte operative Sicherheitseinstieg für Implementierungsarbeit steht in 
 
 ## Aktueller technischer Sicherheitsstand
 
-Dieser Abschnitt beschreibt den belegten Ist-Zustand von PROJ-1, PROJ-19 und dem lokalen T04-Stand von PROJ-31. Alle späteren Abschnitte definieren verbindliche Ziel- und Freigabekriterien; sie sind nicht automatisch bereits umgesetzt.
+Dieser Abschnitt beschreibt den belegten Ist-Zustand von PROJ-1, PROJ-19 und dem lokalen T05-Stand von PROJ-31. Alle späteren Abschnitte definieren verbindliche Ziel- und Freigabekriterien; sie sind nicht automatisch bereits umgesetzt.
 
 **Implementiert und automatisiert geprüft:**
 
@@ -21,13 +21,13 @@ Dieser Abschnitt beschreibt den belegten Ist-Zustand von PROJ-1, PROJ-19 und dem
 - Physische Trennung öffentlicher App-Konfiguration in `.env.local` von Service-Role-Key und Seed-Passwörtern in `.env.seed.local`.
 - Ausschließlich synthetische Seed- und Testdaten; persistente Auth-Testmedien sind deaktiviert.
 - PROJ-19-Rollen- und Auditgrenze mit getrennten Portaladmin-Identitäten, aktiver praxisgebundener Supportfreigabe, Least-Privilege-RPCs, RLS und 90-Tage-Auditlöschung in der Datenbank.
-- Lokaler PROJ-31-T04-Stand: AAL2- und aktuelle Datenbank-Sitzungsprüfung, TOTP-Einschreibung/-Prüfung, private serverzeitgestempelte Sitzung, Re-Authentisierung für sensible Support-/Audit-RPCs sowie browserseitige Sperre nach fehlender Aktivität.
+- Lokaler PROJ-31-T05-Stand: AAL2- und aktuelle Datenbank-Sitzungsprüfung, TOTP-Einschreibung/-Prüfung, private serverzeitgestempelte Sitzung, Re-Authentisierung für sensible Support-/Audit-RPCs, browserseitige Sperre nach fehlender Aktivität sowie nonce-basierte CSP ohne `unsafe-inline`.
 - Eingecheckte GitHub-Workflows für Kernverifikation sowie Dependency-/Secret-Prüfungen ohne Repository-Secrets.
 
 **Noch nicht implementiert oder nicht betrieblich abgenommen:**
 
-- Reproduzierbarer Browser-/Hosted-Nachweis und betriebliche Abnahme für MFA, Inaktivitätssperre, Maximalsitzung und Re-Authentisierung (PROJ-31/Auth-Hardening); die Client-Selektion von Eingaben ist kein kryptografischer Anwesenheitsnachweis gegen ein gestohlenes, noch gültiges Sitzungstoken.
-- Security Header und CSP in `next.config.ts`.
+- Hosted-Nachweis und betriebliche Abnahme für MFA, Inaktivitätssperre, Maximalsitzung und Re-Authentisierung (PROJ-31/Auth-Hardening); die Client-Selektion von Eingaben ist kein kryptografischer Anwesenheitsnachweis gegen ein gestohlenes, noch gültiges Sitzungstoken.
+- Weitere Security Header wie HSTS, `X-Content-Type-Options`, Referrer- und Permissions-Policy.
 - GitHub-Aktivierung und Branch-Protection der eingecheckten CI-Workflows sowie der betriebliche Umgang mit Dependency-/Secret-Funden.
 - Lösch- und Aufbewahrungsprozesse, Anbieterakten, DSFA, Incident Response sowie Backup-/Restore-Nachweise.
 - Vercel-Produktionsbetrieb, Monitoring und externe Penetrationstests.
