@@ -18,6 +18,15 @@ describe('loadMockPvsConfig', () => {
     expect(config.testToken === validEnvironment.MOCK_PVS_TEST_TOKEN).toBe(true)
   })
 
+  it('ignores unrelated process environment variables', () => {
+    const config = loadMockPvsConfig({
+      ...validEnvironment,
+      UNRELATED_PROCESS_VARIABLE: 'ignored',
+    })
+
+    expect(config.port).toBe(3181)
+  })
+
   it.each([
     {},
     ...['', '0', '-1', '65536', '1.5', 'not-a-port'].map(MOCK_PVS_PORT => ({ ...validEnvironment, MOCK_PVS_PORT })),
