@@ -8,7 +8,6 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 |---|---|---|---|
 | Bekommen wir API-Zugang zu Dampsoft, und zu welchen Konditionen? | PROJ-23 | 2026-08-24 | Direktkontakt (support@dampsoft.de) nötig, NDA/Partnervertrag wahrscheinlich. Hinweise auf ein kostenpflichtiges „API/SBI"-Modul, Umfang unbestätigt. Ausweichoptionen: Evident (wirbt mit REST-API), Middleware-Anbieter (Dr. Flex, Dentero, iie Systems, Nelly), RPA als Notlösung. |
 | Welche Telefonanlage nutzt die Pilotpraxis? | PROJ-29 | 2026-08-24 | Entschieden: Entwicklung gegen einen generischen Anruf-Webhook, echte Anbindung später als Adapter. Cloud-PBX (Placetel, sipgate, 3CX) böte Webhooks; lokale Anlage mit TAPI bräuchte einen Windows-Client. |
-| Wie geht das Mock-PVS mit Telefonnummern um? | PROJ-2, PROJ-4 | 2026-08-24 | **Muss schon im MVP berücksichtigt werden**, sonst ist das Datenmodell für PROJ-29 nachträglich zu erweitern. Normalisierung auf E.164 erforderlich. |
 
 ## Produktentscheidungen offen
 
