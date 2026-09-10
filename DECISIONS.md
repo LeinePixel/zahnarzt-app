@@ -88,7 +88,7 @@ Dieses Dokument enthält nur langlebige, schwer umkehrbare und ohne Kontext übe
 
 ## ADR-008 – MFA- und Sitzungsgrenze wird server- und datenbankseitig erzwungen
 
-**Status:** Confirmed; lokale T04-Umsetzung in Review
+**Status:** Confirmed; lokale T05-Umsetzung in Review
 
 **Entscheidung:** Alle aktuellen Praxisrollen und `portaladmin` verwenden
 TOTP-MFA. Nach fünf Minuten menschlicher Inaktivität wird global gesperrt oder
@@ -105,7 +105,7 @@ benötigen eine Re-Authentisierung, die höchstens fünf Minuten alt ist.
 Sitzungszustand kann Sperrung, Widerruf, AAL und Re-Authentisierung unabhängig
 von Browser- oder UI-Zustand durchsetzen.
 
-**Lokaler Stand (09.09.2026):** Der DB-Zustand ist pro verifizierter
+**Lokaler Stand (10.09.2026):** Der DB-Zustand ist pro verifizierter
 `session_id`/Benutzer-ID privat und ausschließlich serverzeitgestempelt. Der
 SSR-Gate gibt nur `mfa_required`, `reauth_required` oder `ready` zurück;
 regelmäßige Aktivität kann nur einen vorhandenen, nicht abgelaufenen Zustand
@@ -114,6 +114,6 @@ kein Hosted- oder Real-Data-Gate-Nachweis.
 
 **Implikationen:** Das bestehende SSR-Cookie-Modell bleibt erhalten. `Secure`
 über HTTPS sowie eine nonce-basierte CSP ohne breite Skript-Ausnahme
-`unsafe-inline` sind verbindliche Zielkontrollen, aber auf diesem Branch noch
-nicht implementiert. Die Entscheidung beschreibt eine verbindliche Zielgrenze,
-keinen Implementierungs- oder Real-Data-Gate-Nachweis.
+`unsafe-inline` sind verbindliche Kontrollen. Die CSP ist lokal implementiert
+und getestet, bleibt aber ebenso wie die Entscheidung selbst kein Hosted- oder
+Real-Data-Gate-Nachweis.

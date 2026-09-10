@@ -36,6 +36,20 @@ const anonymous = authFactory({
 })
 
 describe('updateSession', () => {
+  it('returns a strict nonce-based CSP without unsafe-inline', async () => {
+    const request = new NextRequest('https://app.example/login')
+
+    const response = await updateSession(request, anonymous)
+    const policy = response.headers.get('content-security-policy')
+
+    expect(policy).toContain("default-src 'self'")
+    expect(policy).toMatch(/script-src 'self' 'nonce-[^']+' 'strict-dynamic'/)
+    expect(policy).toContain("style-src 'self' 'nonce-")
+    expect(policy).not.toContain("'unsafe-inline'")
+    expect(policy).toContain("object-src 'none'")
+    expect(policy).toContain("frame-ancestors 'none'")
+  })
+
   it('routes an AAL1 account from a protected route to MFA without retaining query data', async () => {
     const request = new NextRequest(
       'https://app.example/status?patient=synthetic-123',

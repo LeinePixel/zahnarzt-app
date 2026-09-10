@@ -6,7 +6,7 @@ Dieses Dokument trennt die heute ausführbare Architektur ausdrücklich von der 
 
 ## Aktueller Systemumfang
 
-Implementiert sind PROJ-1 und PROJ-19 sowie der lokale T04-Stand von PROJ-31: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. Der T04-Stand ergänzt TOTP, einen privaten Sitzungszustand, SSR-Gates und Re-Authentisierung für sensible Supportaktionen. PROJ-19 und PROJ-31 sind `In Review`; betriebliche Produktions-Gates bleiben offen.
+Implementiert sind PROJ-1 und PROJ-19 sowie der lokale T05-Stand von PROJ-31: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. Der T05-Stand ergänzt TOTP, einen privaten Sitzungszustand, SSR-Gates, Re-Authentisierung für sensible Supportaktionen und eine nonce-basierte CSP. PROJ-19 und PROJ-31 sind `In Review`; betriebliche Produktions-Gates bleiben offen.
 
 Noch nicht implementiert sind Patienten-, Termin-, CRM-, Kommunikations-, Workflow-, PVS- und KI-Funktionen. Für diese Bereiche existieren Produktplanung und Architekturvorgaben, aber überwiegend noch keine verbindlichen Feature-Specs.
 
@@ -143,8 +143,8 @@ Es gibt keine Vercel-Konfiguration. Eingecheckte GitHub-Workflows führen Kernve
 
 ## Bekannte Schulden und Ausnahmen
 
-- PROJ-31 ist lokal implementiert, aber ohne reproduzierbaren Browser-/Hosted-Nachweis und ohne Beweis menschlicher Anwesenheit bei einem gestohlenen, noch gültigen Sitzungstoken.
-- Security Header und CSP sind in next.config.ts noch nicht konfiguriert.
+- PROJ-31 ist lokal mit Browser-/Edge-E2E implementiert, aber ohne Hosted-Nachweis und ohne Beweis menschlicher Anwesenheit bei einem gestohlenen, noch gültigen Sitzungstoken.
+- Die nonce-basierte CSP liegt im Proxy; weitere Security Header sind noch nicht implementiert oder betrieblich nachgewiesen.
 - Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
 - Die Anwendung ist im Betrieb noch Single-Tenant, obwohl das Schema die Praxisgrenze vorbereitet.
 

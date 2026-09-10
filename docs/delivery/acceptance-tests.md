@@ -125,6 +125,16 @@ Touch-Eingaben einen Touch auslösen. Diese Client-Selektion ist kein Nachweis
 menschlicher Anwesenheit bei einem gestohlenen, noch gültigen Sitzungstoken.
 Hosted- und betriebliche Nachweise bleiben explizite Abnahmetore.
 
+### PROJ-31 T05 — lokale CSP-Evidenz, noch In Review
+
+Die synthetische Vollverifikation vom 10.09.2026 bestand aus Lint, Typecheck,
+108 Vitest-Tests, 149 pgTAP-Tests, Produktions-Build und 18
+Playwright-Browser-/Edge-Tests. Der Browsernachweis prüft eine per Request
+erzeugte CSP-Nonce im Response-Header und an gerenderten Next.js-Skripten;
+`unsafe-inline` ist nicht erlaubt. Der End-to-End-Auditfluss bestätigt vor dem
+späten Support-Widerruf die erforderliche frische TOTP-Reauthentisierung.
+Hosted- und betriebliche Nachweise bleiben explizite Abnahmetore.
+
 ---
 
 ## Abnahme PROJ-1 — belegter Stand

@@ -3,7 +3,7 @@
 ## Status: In Progress
 **Created:** 2026-08-24
 
-**Last Updated:** 2026-09-09
+**Last Updated:** 2026-09-10
 
 **Priority:** P1
 
@@ -73,7 +73,7 @@ externe Dienste noch Rechtsfreigaben annehmen.
   unabhängig von Proxy, UI oder Browserzustand.
 - [ ] Eine sensible Supportaktion wird ohne höchstens fünf Minuten alte
   Re-Authentisierung verweigert.
-- [ ] Die CSP erlaubt keine breite Skript-Ausnahme `unsafe-inline`; notwendige
+- [x] Die CSP erlaubt keine breite Skript-Ausnahme `unsafe-inline`; notwendige
   Skripte verwenden serverseitig erzeugte Nonces.
 - [ ] Alle Nachweise arbeiten ausschließlich mit synthetischen Daten.
 
@@ -119,6 +119,21 @@ externe Dienste noch Rechtsfreigaben annehmen.
   ausschließlich synthetischen Konten Lint, Typecheck, 107 Vitest-Tests,
   149 pgTAP-Tests, der Produktions-Build und 17 Playwright-Browser-/Edge-Tests.
   Hosted- und betriebliche Nachweise bleiben explizite Abnahmetore.
+
+## T05-Abnahmeevidenz — lokal und synthetisch (10.09.2026)
+
+- Der Next.js-Proxy erzeugt pro Anfrage eine kryptografische Nonce und setzt
+  dieselbe restriktive CSP im Request- und Response-Header. Dadurch übernimmt
+  Next.js die Nonce für seine gerenderten Framework-Skripte. Die Richtlinie
+  enthält weder `unsafe-inline` noch unbeschränkte Script-Quellen; `connect-src`
+  erlaubt neben `self` ausschließlich den konfigurierten Supabase-Ursprung.
+- Das Root-Layout erzwingt dynamisches Rendering, damit die Nonce für jede
+  Antwort neu entsteht. Das schließt statische Seiten- und CDN-Caches für diese
+  Antworten bewusst aus.
+- Ein Proxy-Unit-Test und ein Browser-/Edge-Test gegen den Produktions-Build
+  prüfen die Header, die fehlende `unsafe-inline`-Ausnahme sowie die Nonce auf
+  den gerenderten Framework-Skripten. Alle Prüfungen nutzen nur synthetische
+  Konten und lokale Infrastruktur.
 
 ## Out of Scope
 
