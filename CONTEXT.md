@@ -19,6 +19,14 @@ _Avoid_: Dauerzugriff, Break-Glass-Zugang
 **Break-Glass-Zugang**:
 Ein zeitlich eng begrenzter, außergewöhnlicher Notfallzugang außerhalb der normalen Berechtigungen. Er ist im MVP nicht vorhanden.
 
+## Externe Datenquellen
+
+**Mock-PVS-Service**:
+Ein eigenständiger, ausschließlich lokaler und synthetischer HTTP-Dienst, der eine lesende PVS-Quelle für Adapter- und Synchronisationstests simuliert. Er ist weder Teil der DentPilot-Anwendung noch eine echte Praxissoftware-Anbindung.
+
+**Externe PVS-Kennung**:
+Eine stabile Kennung aus der simulierten oder später echten PVS-Quelle. Sie ist keine DentPilot-, Supabase- oder Praxis-Kennung und wird erst mit dem Integration-Adapter einer DentPilot-Praxis zugeordnet.
+
 ## Nachvollziehbarkeit
 
 **Audit-Ereignis**:

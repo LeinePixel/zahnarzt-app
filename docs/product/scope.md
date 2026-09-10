@@ -4,7 +4,7 @@ _Quelle: `docs/PRD.md` und `features/INDEX.md` (Stand 24.08.2026). `features/IND
 
 ## Status-Realität — wichtig für Codex
 
-**Nur PROJ-1 hat eine vollständige Spezifikation und einen technischen Entwurf.** Alle übrigen 30 Features stehen auf *Roadmap*: Sie sind benannt, priorisiert und mit Abhängigkeiten versehen, haben aber **keine User Stories und keine Akzeptanzkriterien**.
+**PROJ-1, PROJ-19, PROJ-31 und PROJ-2 besitzen inzwischen vollständige Spezifikationen.** Für PROJ-2 ist zusätzlich ein Architekturentwurf vorhanden; der Status steht auf `Planned`, nicht auf Implementierung. Alle übrigen Roadmap-Features sind benannt, priorisiert und mit Abhängigkeiten versehen, haben aber **keine User Stories und keine Akzeptanzkriterien**.
 
 Das ist kein Versäumnis dieses Handoffs, sondern der bewusste Arbeitsstand: Spezifiziert wird Feature für Feature kurz vor der Umsetzung. **Codex sollte für Roadmap-Features keinen Code schreiben**, ohne dass vorher eine Spec entsteht.
 

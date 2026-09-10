@@ -85,6 +85,14 @@ Aus dem Ursprungskonzept §27 als Kern-Entitäten benannt. **Feldstrukturen, Bez
 
 ---
 
+## Externe Mock-PVS-Quelle (PROJ-2)
+
+PROJ-2 definiert bewusst **keine** DentPilot-Tabelle, Migration oder Supabase-RLS-Policy. Der eigenständige Mock-PVS-Service hält nur flüchtige, synthetische Quellfixtures für Patienten und Termine. Sein Vertrag steht in [`features/PROJ-2-mock-pvs-service.md`](../../features/PROJ-2-mock-pvs-service.md).
+
+Die externen PVS-Kennungen werden erst in PROJ-3 einem Integrationskontext und später in PROJ-4 beziehungsweise PROJ-5 internen, praxisgebundenen Tabellen zugeordnet. Das Mock-PVS darf nicht als Vorgriff auf dieses interne Datenmodell gelesen werden.
+
+---
+
 ## Hinweis zur Datenminimierung
 
 Aus dem Ursprungskonzept §18: **Daten nur importieren, wenn sie tatsächlich für eine Funktion benötigt werden.** Patientenbezogene Kennzahlen (Termintreue, PZR-Historie, Rechnungen, CLV, Behandlungsinformationen, Kommunikationshistorie) sind personenbezogene Daten und erfordern Aufbewahrungsregeln sowie ein Löschkonzept — beides vor dem Pilotbetrieb zu definieren.

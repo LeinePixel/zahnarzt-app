@@ -121,7 +121,7 @@ Automatisierte PROJ-1- und Cloud-Abnahme wurden am 26.08.2026 dokumentiert. Offe
 |---|---|
 | Supabase | EU-Entwicklungsprojekt verknüpft; Auth, Schema und RLS aktiv |
 | Vercel | Hosting-Ziel geplant, nicht eingerichtet |
-| Mock-PVS | nicht implementiert |
+| Mock-PVS | Vertrag spezifiziert, nicht implementiert |
 | Dampsoft | kein API-Zugang; Partnerschaft/Vertrag offen |
 | Soniox | nicht angebunden |
 | IONOS AI Model Hub | nicht angebunden |
