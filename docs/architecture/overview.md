@@ -1,14 +1,14 @@
 # Architecture Overview
 
-**Stand:** 09.09.2026
+**Stand:** 10.09.2026
 
 Dieses Dokument trennt die heute ausführbare Architektur ausdrücklich von der geplanten Produktarchitektur. Roadmap-Elemente sind keine implementierten Systembestandteile.
 
 ## Aktueller Systemumfang
 
-Implementiert sind PROJ-1 und PROJ-19 sowie der lokale T05-Stand von PROJ-31: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. Der T05-Stand ergänzt TOTP, einen privaten Sitzungszustand, SSR-Gates, Re-Authentisierung für sensible Supportaktionen und eine nonce-basierte CSP. PROJ-19 und PROJ-31 sind `In Review`; betriebliche Produktions-Gates bleiben offen.
+Implementiert sind PROJ-1 und PROJ-19 sowie der lokale T05-Stand von PROJ-31: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. Der T05-Stand ergänzt TOTP, einen privaten Sitzungszustand, SSR-Gates, Re-Authentisierung für sensible Supportaktionen und eine nonce-basierte CSP. Zusätzlich ist PROJ-2 als eigenständiger lokaler Mock-PVS-Prozess unter `services/mock-pvs/` implementiert. PROJ-2, PROJ-19 und PROJ-31 sind `In Review`; betriebliche Produktions-Gates bleiben offen.
 
-Noch nicht implementiert sind Patienten-, Termin-, CRM-, Kommunikations-, Workflow-, PVS- und KI-Funktionen. Für diese Bereiche existieren Produktplanung und Architekturvorgaben, aber überwiegend noch keine verbindlichen Feature-Specs.
+Noch nicht implementiert sind PVS-Adapter, Synchronisierung, interne Patienten- und Termindaten, CRM-, Kommunikations-, Workflow- und KI-Funktionen. Der Mock-PVS liefert keine DentPilot-Daten und ist keine Herstellerintegration.
 
 ## Technologie
 
@@ -107,9 +107,9 @@ supabase/seed.ts läuft ausschließlich als CLI-Prozess. Es legt zwei synthetisc
 Die Verifikationsschichten sind:
 
 - ESLint und TypeScript,
-- 90 Vitest-Tests,
-- 108 pgTAP-/RLS-Tests,
-- 17 Playwright-Tests einschließlich Auth-/Security- und Audit-Flows,
+- 191 Vitest-Tests einschließlich 83 Mock-PVS-Vertragstests,
+- 149 pgTAP-/RLS-Tests,
+- 18 Playwright-Tests einschließlich Auth-/Security- und Audit-Flows,
 - Chromium sowie Browser-Smokes in Firefox, WebKit und echtem Microsoft Edge,
 - Next.js-Produktions-Build.
 
@@ -121,7 +121,7 @@ Automatisierte PROJ-1- und Cloud-Abnahme wurden am 26.08.2026 dokumentiert. Offe
 |---|---|
 | Supabase | EU-Entwicklungsprojekt verknüpft; Auth, Schema und RLS aktiv |
 | Vercel | Hosting-Ziel geplant, nicht eingerichtet |
-| Mock-PVS | Vertrag spezifiziert, nicht implementiert |
+| Mock-PVS | lokaler, synthetischer TypeScript-HTTP-Prozess; keine App-, Supabase- oder Browseranbindung |
 | Dampsoft | kein API-Zugang; Partnerschaft/Vertrag offen |
 | Soniox | nicht angebunden |
 | IONOS AI Model Hub | nicht angebunden |

@@ -4,7 +4,7 @@
 
 DentPilot ergänzt bestehende Zahnarzt-Praxissoftware um Workflows, CRM, Kommunikation, Auswertung und später KI-gestützte Vorbereitung. Die Praxissoftware bleibt Source of Truth für medizinische und abrechnungsrelevante Daten.
 
-Ausführbar sind PROJ-1 (Next.js-/Supabase-Anmeldung, Profil, geschützter Kontostatus, RLS und synthetischer Seed) sowie PROJ-19 (Audit-Logging und Rollenautorisierung). PROJ-19 trennt `portaladmin`-Identitäten von Praxisrollen und erlaubt Audit-Einsicht nur nach einer zeitlich begrenzten, praxisinitiierten Supportfreigabe. Patienten-, Termin-, PVS-, CRM-, Kommunikations-, Workflow- und KI-Funktionen sind weiterhin geplant, aber nicht implementiert.
+Ausführbar sind PROJ-1 (Next.js-/Supabase-Anmeldung, Profil, geschützter Kontostatus, RLS und synthetischer Seed), PROJ-19 (Audit-Logging und Rollenautorisierung) sowie PROJ-2 als separater lokaler Mock-PVS-Prozess. PROJ-19 trennt `portaladmin`-Identitäten von Praxisrollen und erlaubt Audit-Einsicht nur nach einer zeitlich begrenzten, praxisinitiierten Supportfreigabe. PROJ-2 stellt ausschließlich synthetische Patienten-, Termin- und Fehlerszenarien bereit und besitzt keine Supabase-, Next.js- oder Browseranbindung. Patienten- und Terminsynchronisierung, PVS-Adapter, CRM-, Kommunikations-, Workflow- und KI-Funktionen sind weiterhin geplant, aber nicht implementiert.
 
 ## Aktuelle Laufzeitarchitektur
 
@@ -46,7 +46,7 @@ Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabell
 
 ## Externe Integrationen
 
-Produktiv angebunden ist nur Supabase. Vercel ist geplant, aber nicht eingerichtet. Mock-PVS, Dampsoft, Soniox, IONOS AI Model Hub, Resend und Sentry besitzen aktuell keinen ausführbaren Datenfluss.
+Produktiv angebunden ist nur Supabase. Vercel ist geplant, aber nicht eingerichtet. Der Mock-PVS ist ausschließlich ein lokaler synthetischer Prozess ohne DentPilot-Datenfluss; Dampsoft, Soniox, IONOS AI Model Hub, Resend und Sentry besitzen keinen ausführbaren Datenfluss.
 
 Künftige PVS-Anbindungen verwenden Adapter. Herstellerformate dürfen nicht direkt in Feature- oder Geschäftslogik durchsickern.
 

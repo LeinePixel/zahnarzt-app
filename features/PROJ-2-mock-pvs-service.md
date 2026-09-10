@@ -1,6 +1,6 @@
 # PROJ-2: Mock-PVS-Service
 
-## Status: In Progress
+## Status: In Review
 **Created:** 2026-09-10
 **Last Updated:** 2026-09-10
 **Priority:** P0 (MVP)
@@ -143,15 +143,19 @@ Antworten enthalten keine Stacktraces, Token, Konfigurationswerte oder nicht ang
 
 ## Akzeptanzkriterien
 
-- [ ] Angenommen der Dienst startet mit gültiger lokaler Konfiguration, wenn ein Client den regulären Bearer-Token sendet, dann sind ausschließlich die versionierten, lesenden `/v1`-Endpunkte erreichbar.
-- [ ] Angenommen ein Token fehlt oder ist ungültig, wenn ein regulärer oder Testendpunkt aufgerufen wird, dann antwortet der Dienst neutral mit HTTP 401 und liefert keine Fixture- oder Konfigurationsdaten.
-- [ ] Angenommen der `baseline`-Zustand ist aktiv, wenn Patienten oder Termine über mehrere Seiten abgefragt werden, dann ist die Reihenfolge stabil, jeder Datensatz erscheint höchstens einmal und der letzte Cursor ist `null`.
-- [ ] Angenommen ein regulärer Client ruft den Änderungsstrom wiederholt auf, wenn ein Ereignis erneut geliefert wird, dann sind Kennung, Version, Reihenfolge und bei `upsert` die vollständige Ressource unverändert.
-- [ ] Angenommen `changes` oder `deletions` ist aktiv, wenn der Änderungsstrom abgefragt wird, dann liefert er die definierten Änderungen beziehungsweise Tombstones reproduzierbar.
-- [ ] Angenommen ungültige Quellwerte, Rate Limiting oder ein temporärer Ausfall aktiviert sind, wenn reguläre Datenendpunkte aufgerufen werden, dann entsprechen Statuscode und Header dem Fehlervertrag.
-- [ ] Angenommen ein Testlauf abgeschlossen oder der Dienst neu gestartet ist, wenn `baseline` aktiviert wird, dann stellt der Dienst ohne persistente Nebenwirkung exakt den Ausgangszustand wieder her.
-- [ ] Angenommen die Service-Fixtures, Konfiguration und Tests geprüft werden, dann enthalten sie ausschließlich synthetische Daten und keine Tokens oder Geheimnisse.
-- [ ] Angenommen die direkte Service-Test-Suite und die Repository-Vollverifikation laufen, dann bestehen sie mit dem gestarteten Mock-PVS; vorhandene Auth-, RLS- und Real-Data-Gates bleiben unverändert.
+- [x] Angenommen der Dienst startet mit gültiger lokaler Konfiguration, wenn ein Client den regulären Bearer-Token sendet, dann sind ausschließlich die versionierten, lesenden `/v1`-Endpunkte erreichbar.
+- [x] Angenommen ein Token fehlt oder ist ungültig, wenn ein regulärer oder Testendpunkt aufgerufen wird, dann antwortet der Dienst neutral mit HTTP 401 und liefert keine Fixture- oder Konfigurationsdaten.
+- [x] Angenommen der `baseline`-Zustand ist aktiv, wenn Patienten oder Termine über mehrere Seiten abgefragt werden, dann ist die Reihenfolge stabil, jeder Datensatz erscheint höchstens einmal und der letzte Cursor ist `null`.
+- [x] Angenommen ein regulärer Client ruft den Änderungsstrom wiederholt auf, wenn ein Ereignis erneut geliefert wird, dann sind Kennung, Version, Reihenfolge und bei `upsert` die vollständige Ressource unverändert.
+- [x] Angenommen `changes` oder `deletions` ist aktiv, wenn der Änderungsstrom abgefragt wird, dann liefert er die definierten Änderungen beziehungsweise Tombstones reproduzierbar.
+- [x] Angenommen ungültige Quellwerte, Rate Limiting oder ein temporärer Ausfall aktiviert sind, wenn reguläre Datenendpunkte aufgerufen werden, dann entsprechen Statuscode und Header dem Fehlervertrag.
+- [x] Angenommen ein Testlauf abgeschlossen oder der Dienst neu gestartet ist, wenn `baseline` aktiviert wird, dann stellt der Dienst ohne persistente Nebenwirkung exakt den Ausgangszustand wieder her.
+- [x] Angenommen die Service-Fixtures, Konfiguration und Tests geprüft werden, dann enthalten sie ausschließlich synthetische Daten und keine Tokens oder Geheimnisse.
+- [x] Angenommen die direkte Service-Test-Suite und die Repository-Vollverifikation laufen, dann bestehen sie mit dem gestarteten Mock-PVS; vorhandene Auth-, RLS- und Real-Data-Gates bleiben unverändert.
+
+### Lokale Abnahmeevidenz (10.09.2026)
+
+Die lokale, ausschließlich synthetische Verifikation besteht aus `npm run test:mock-pvs` (5 Testdateien, 83 Tests), `npm run verify` (25 Vitest-Testdateien, 191 Tests sowie Lint, Typecheck und Produktions-Build) und `npm run verify:full` (zusätzlich 4 pgTAP-Dateien mit 149 Tests und 18 Browserfällen in Chromium, Firefox, WebKit und Microsoft Edge). Die Suite prüft die getrennten Bearer-Grenzen, nur lesende `/v1`-Routen, opaque Cursor, Pagination, Filter, Upserts, Tombstones, feste Fehlerszenarien und den separaten Prozessstart. PROJ-2 bleibt `In Review`: Der Dienst ist lokal, unhosted und kein Nachweis für einen echten PVS-Zugang oder das Real-Data-Gate.
 
 ## Teststrategie
 

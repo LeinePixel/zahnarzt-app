@@ -16,6 +16,8 @@ PROJ-1 stellt die technische Grundlage bereit; PROJ-19 ergänzt sie um die lokal
 
 PROJ-1 und PROJ-19 sind `In Review`: lokale automatisierte Abnahme ist dokumentiert. Echter Safari-Smoke, vollständiger Browser-Neustart, kontrollierte Dienstunterbrechung, Hosted-Cron-Commissioning sowie MFA/Re-Authentisierung bleiben vor Produktions- und Real-Data-Freigabe offene Gates. Der verbindliche Status steht in [`features/INDEX.md`](features/INDEX.md).
 
+PROJ-2 ist ebenfalls `In Review`: Der Mock-PVS ist ein separat gestarteter, ausschließlich lokaler TypeScript-HTTP-Dienst mit deterministischen synthetischen Patienten-, Termin- und Fehlerszenarien. Er hat keine Supabase-Verbindung, keine Next.js-Route und keinen Browserzugriff.
+
 ## Technologie
 
 - Next.js 16, React 19 und TypeScript
@@ -76,6 +78,18 @@ npm run build
 ```
 
 `verify:full` benötigt eine passende lokale Supabase-/Docker-Umgebung, synthetische Cloud-Testkonfiguration, installierte Playwright-Browser und Microsoft Edge.
+
+## Lokaler Mock-PVS
+
+Der Dienst dient nur PROJ-3 bis PROJ-5 als reproduzierbare externe Quellgrenze. Die beiden getrennten Bearer-Token verbleiben in der ignorierten lokalen Konfiguration und gelangen nie in Browsercode, URLs, Logs oder das Repository.
+
+```powershell
+Copy-Item .env.mock-pvs.local.example .env.mock-pvs.local
+npm run mock-pvs
+npm run test:mock-pvs
+```
+
+`npm run test:mock-pvs` startet weder Supabase noch Datenbankmigrationen. Der Dienst ist weder gehostet noch eine echte PVS-Anbindung und öffnet das Real-Data-Gate nicht.
 
 ## Repository-Struktur
 
