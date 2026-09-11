@@ -155,7 +155,7 @@ Antworten enthalten keine Stacktraces, Token, Konfigurationswerte oder nicht ang
 
 ### Lokale Abnahmeevidenz (10.09.2026)
 
-Die lokale, ausschließlich synthetische Verifikation besteht aus `npm run test:mock-pvs` (5 Testdateien, 83 Tests), `npm run verify` (25 Vitest-Testdateien, 191 Tests sowie Lint, Typecheck und Produktions-Build) und `npm run verify:full` (zusätzlich 4 pgTAP-Dateien mit 149 Tests und 18 Browserfällen in Chromium, Firefox, WebKit und Microsoft Edge). Die Suite prüft die getrennten Bearer-Grenzen, nur lesende `/v1`-Routen, opaque Cursor, Pagination, Filter, Upserts, Tombstones, feste Fehlerszenarien und den separaten Prozessstart. PROJ-2 bleibt `In Review`: Der Dienst ist lokal, unhosted und kein Nachweis für einen echten PVS-Zugang oder das Real-Data-Gate.
+Die lokale, ausschließlich synthetische Verifikation besteht aus `npm run test:mock-pvs` (5 Testdateien, 84 Tests), `npm run lint`, `npm run typecheck`, `npm test` (16 Vitest-Testdateien, 142 Tests) und `npm run build` sowie `npx supabase test db --local` (2 pgTAP-Dateien, 36 Tests) und `npm run test:e2e:edge-required` (15 Browserfälle in Chromium, Firefox, WebKit und Microsoft Edge). Die Suite prüft die getrennten Bearer-Grenzen, nur lesende `/v1`-Routen, opaque Cursor, Pagination, Filter, Upserts, Tombstones, feste Fehlerszenarien und den separaten Prozessstart. PROJ-2 bleibt `In Review`: Der Dienst ist lokal, unhosted und kein Nachweis für einen echten PVS-Zugang oder das Real-Data-Gate.
 
 ## Teststrategie
 

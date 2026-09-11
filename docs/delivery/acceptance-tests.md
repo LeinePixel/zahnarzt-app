@@ -6,9 +6,9 @@ Der Mock-PVS läuft als separater lokaler TypeScript-/Node-HTTP-Prozess. Er vera
 
 | Nachweis | Ergebnis |
 | --- | --- |
-| `npm run test:mock-pvs` | 5 Testdateien, 83 Tests bestanden: Konfiguration, Verträge, Cursor/Pagination, HTTP-Grenze, Szenarien und Prozess-Smoke-Test |
-| `npm run verify` | bestanden: Lint, Typecheck, 25 Vitest-Testdateien mit 191 Tests und Produktions-Build |
-| `npm run verify:full` | bestanden: vorstehende Prüfungen, 4 pgTAP-Dateien mit 149 Tests sowie 18 Browserfälle in Chromium, Firefox, WebKit und Microsoft Edge |
+| `npm run test:mock-pvs` | 5 Testdateien, 84 Tests bestanden: Konfiguration, Verträge, Cursor/Pagination, HTTP-Grenze, Szenarien und Prozess-Smoke-Test |
+| `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` | bestanden: Lint, Typecheck, 16 Vitest-Testdateien mit 142 Tests und Produktions-Build |
+| `npx supabase test db --local`, `npm run test:e2e:edge-required` | bestanden: 2 pgTAP-Dateien mit 36 Tests sowie 15 Browserfälle in Chromium, Firefox, WebKit und Microsoft Edge |
 
 Die Nachweise decken neutrale 401/404/422/500-Antworten, 429/503 mit `Retry-After`, Upserts mit vollständiger Ressource, ressourcenlose Tombstones, szenariogebundene opaque Cursor und den Reset auf `baseline` ab. Der Dienst ist lokal und unhosted; er ersetzt keinen echten PVS-Zugang, keine Anbieterprüfung und kein Real-Data-Gate.
 
