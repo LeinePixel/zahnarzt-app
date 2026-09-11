@@ -1,6 +1,6 @@
 # PROJ-2 Mock-PVS-Service — Architekturentwurf
 
-**Status:** Von der Produktverantwortung bestätigt, Implementierung ausstehend
+**Status:** Lokal implementiert und verifiziert; In Review
 **Datum:** 2026-09-10
 **Verbindliche Feature-Spezifikation:** `features/PROJ-2-mock-pvs-service.md`
 
