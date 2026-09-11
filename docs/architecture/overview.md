@@ -61,13 +61,13 @@ Seitlich angebunden:
 | Dienst | Zweck | Status | Konfiguration |
 |---|---|---|---|
 | **Supabase** | Datenbank, Auth, Storage | EU-Entwicklungsprojekt verknüpft | Öffentliche App-Werte in `.env.local`; Service-Key ausschließlich in `.env.seed.local` |
-| **Mock-PVS** | simuliertes Praxisverwaltungssystem | nicht gebaut (PROJ-2) | offen |
+| **Mock-PVS** | simuliertes Praxisverwaltungssystem | lokaler, synthetischer HTTP-Prozess (PROJ-2, In Review) | ignorierte lokale Konfiguration |
 | **Soniox** | Gesprächstranskription | nicht angebunden (PROJ-14) | offen |
 | **IONOS AI Model Hub** | KI-Extraktion | nicht angebunden (PROJ-15) | offen |
 | **Resend** | E-Mail-Versand | nicht angebunden (PROJ-12) | offen |
 | **Dampsoft** | echtes PVS | **kein API-Zugang** — siehe open-questions.md | offen |
 
-Fehler-, Retry- und Rate-Limit-Verhalten sind für keinen dieser Dienste spezifiziert, da nur PROJ-1 einen technischen Entwurf hat. Das gehört jeweils in die Feature-Spec.
+Der Mock-PVS dokumentiert seinen lesenden `/v1`-Vertrag einschließlich neutraler Fehler, Rate Limits und fester Testszenarien in `features/PROJ-2-mock-pvs-service.md`. Für die übrigen Dienste werden Fehler-, Retry- und Rate-Limit-Verhalten jeweils mit der Feature-Spec festgelegt.
 
 ## Datenhaltung und Mandantentrennung
 

@@ -4,7 +4,7 @@ _Quelle: `docs/PRD.md` und `features/INDEX.md` (Stand 24.08.2026). `features/IND
 
 ## Status-Realität — wichtig für Codex
 
-**Nur PROJ-1 hat eine vollständige Spezifikation und einen technischen Entwurf.** Alle übrigen 30 Features stehen auf *Roadmap*: Sie sind benannt, priorisiert und mit Abhängigkeiten versehen, haben aber **keine User Stories und keine Akzeptanzkriterien**.
+**PROJ-1, PROJ-19, PROJ-31 und PROJ-2 besitzen inzwischen vollständige Spezifikationen.** Für PROJ-2 ist zusätzlich ein Architekturentwurf vorhanden; der lokale Mock-PVS ist implementiert, lokal verifiziert und steht auf `In Review`. Alle übrigen Roadmap-Features sind benannt, priorisiert und mit Abhängigkeiten versehen, haben aber **keine User Stories und keine Akzeptanzkriterien**.
 
 Das ist kein Versäumnis dieses Handoffs, sondern der bewusste Arbeitsstand: Spezifiziert wird Feature für Feature kurz vor der Umsetzung. **Codex sollte für Roadmap-Features keinen Code schreiben**, ohne dass vorher eine Spec entsteht.
 
@@ -16,7 +16,7 @@ Reihenfolge = empfohlene Baureihenfolge aus `features/INDEX.md`.
 |---|---|---|---|
 | 1 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | **Architected** |
 | 2 | PROJ-19 | Audit Logging & Rollenrechte | Roadmap |
-| 3 | PROJ-2 | Mock-PVS-Service | Roadmap |
+| 3 | PROJ-2 | Mock-PVS-Service | **In Review** |
 | 4 | PROJ-3 | Integration-Adapter-Schicht | Roadmap |
 | 5 | PROJ-4 | Patienten-Synchronisierung | Roadmap |
 | 6 | PROJ-5 | Termin-Synchronisierung | Roadmap |

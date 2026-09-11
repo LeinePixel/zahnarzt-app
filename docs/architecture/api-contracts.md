@@ -1,8 +1,8 @@
 # API Contracts
 
-## Status: keine API-Verträge definiert
+## Status: ein externer Mock-PVS-Vertrag spezifiziert
 
-**Es existiert keine einzige API-Route im Projekt** (`git ls-files src/app/api/` liefert nichts), und für keine ist ein Vertrag spezifiziert.
+**Es existiert keine interne API-Route im Projekt** (`git ls-files src/app/api/` liefert nichts). PROJ-2 definiert jedoch einen versionierten Vertrag für einen eigenständigen, lokalen Mock-PVS-Service. Er ist keine Next.js-Route und liefert nur synthetische Daten.
 
 Das ist kein Versäumnis, sondern folgt aus zwei Entscheidungen:
 
@@ -12,15 +12,15 @@ Das ist kein Versäumnis, sondern folgt aus zwei Entscheidungen:
 
 ---
 
-## Absehbare Schnittstellen — noch ohne Vertrag
+## Absehbare Schnittstellen
 
-Aus den Feature-Beschreibungen in `features/INDEX.md` und den zugehörigen Notizen. **Alle Formate sind offen** und nicht mit dem Nutzer abgestimmt.
+Aus den Feature-Beschreibungen in `features/INDEX.md` und den zugehörigen Spezifikationen. Nicht ausdrücklich dokumentierte Formate bleiben offen.
 
 ### Eingehend (DentPilot empfängt)
 
 | Schnittstelle | Feature | Bekannt | Offen |
 |---|---|---|---|
-| **Mock-PVS-API** | PROJ-2, PROJ-3 | Wird als eigenständiger Dienst gebaut, den der Adapter genauso anspricht wie später die echte Dampsoft-API. Soll Dampsoft-ähnliche Datenstrukturen liefern. | Endpunkte, Datenformat, Authentifizierung, Paginierung — alles offen |
+| **Mock-PVS-API** | PROJ-2, PROJ-3 | Eigenständiger lokaler REST-/JSON-Dienst mit Bearer-Token, `/v1`-Ressourcen für Patienten, Termine und cursor-basierten Änderungsstrom; ausschließlich synthetische Fixtures. | Adapter-Normalisierung, Praxiszuordnung, Retry/Backoff, Sync-Status und Konfliktbehandlung entstehen mit PROJ-3. |
 | **Soniox-Transkripte** | PROJ-14 | MVP verarbeitet **fertige Text-Zusammenfassungen**, kein Rohtranskript. Zuordnung über Patienten-ID und Termin-ID. | Abrufverfahren (Webhook oder Polling), Datenformat, Fehlerbehandlung |
 | **Anruf-Ereignis** | PROJ-29 | Entwurf sieht ein normalisiertes Ereignis vor: Rufnummer, Zeitpunkt, Richtung. Bewusst herstellerneutral, damit die echte Telefonanlage später ein Adapter-Austausch ist. | Konkrete Anlage unbekannt — siehe open-questions.md |
 
@@ -48,11 +48,11 @@ Aus `.claude/rules/backend.md` — gelten ohne Ausnahme:
 
 ## Sync-Anforderungen (aus dem Ursprungskonzept §22)
 
-Für die PVS-Anbindung, sobald sie spezifiziert wird, sind vorgesehen:
+Für die echte PVS-Anbindung, sobald sie spezifiziert wird, sind vorgesehen:
 - Webhook bevorzugt; falls nicht verfügbar, Polling (Richtwert alle fünf Minuten)
 - Sync-Status sichtbar
 - Fehlerprotokoll
 - Retry-Mechanismus
 - Konflikterkennung
 
-Diese Anforderungen sind notiert, aber **nicht als Vertrag ausgearbeitet**.
+PROJ-2 liefert dafür gezielt keine Webhooks und keine Sync-Logik. Sein cursor-basierter Änderungsstrom ist ein lokaler Adapter-Testvertrag, keine Vorwegnahme eines echten Herstellerprotokolls.

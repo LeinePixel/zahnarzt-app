@@ -325,6 +325,20 @@ Created by **Alex Sprogis** – AI Product Engineer & Content Creator.
 
 ---
 
+## Lokaler Mock-PVS
+
+Der Mock-PVS aus PROJ-2 ist ein separat gestarteter, lokaler TypeScript-HTTP-Dienst mit ausschließlich synthetischen Fixtures. Er dient den Folgefeatures als externe Quellgrenze und hat weder eine Next.js-Route noch eine Supabase- oder Browseranbindung.
+
+```powershell
+Copy-Item .env.mock-pvs.local.example .env.mock-pvs.local
+npm run mock-pvs
+npm run test:mock-pvs
+```
+
+Die getrennten lokalen Bearer-Token verbleiben in der ignorierten Konfiguration und gelangen nicht in Browsercode, URLs, Logs oder das Repository. `npm run test:mock-pvs` startet weder Supabase noch Datenbankmigrationen. Der Dienst ist nicht gehostet und öffnet kein Real-Data-Gate.
+
+---
+
 ## License
 
 MIT License - feel free to use for your projects!
