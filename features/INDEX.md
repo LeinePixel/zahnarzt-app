@@ -17,7 +17,7 @@
 |----|---------|----------|--------|---------------|------|---------|
 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | P0 | In Review | None | [Spec](PROJ-1-supabase-infrastructure-setup.md) | 2026-08-24 |
 | PROJ-2 | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem) | P0 | In Review | None | [Spec](PROJ-2-mock-pvs-service.md) | 2026-08-24 |
-| PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | Roadmap | PROJ-1, PROJ-2 | - | 2026-08-24 |
+| PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | Planned | PROJ-1, PROJ-2 | [Spec](PROJ-3-integration-adapter-layer.md) | 2026-09-13 |
 | PROJ-4 | Patienten-Synchronisierung | P0 | Roadmap | PROJ-3 | - | 2026-08-24 |
 | PROJ-5 | Termin-Synchronisierung | P0 | Roadmap | PROJ-3 | - | 2026-08-24 |
 | PROJ-6 | Patientenübersicht & Patientenprofil (360°) | P0 | Roadmap | PROJ-4 | - | 2026-08-24 |
