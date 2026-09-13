@@ -42,10 +42,28 @@ PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für 
 
 ---
 
-## Abnahme PROJ-19 — Evidenz vom 05.09.2026
+## Abnahme PROJ-19 — isolierter Review-Stand vom 13.09.2026
+
+Die erneute Verifikation erfolgte nur mit lokalen, synthetischen Daten. Der
+lokale Supabase-Stack wurde aus den versionierten Migrationen neu aufgebaut.
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| `npm run lint` | bestanden (Exit 0) |
+| `npm run typecheck` | bestanden (Exit 0) |
+| `npm test` | 22 Testdateien, 174 Tests bestanden |
+| `npx supabase test db --local` | 3 Dateien, 108 pgTAP-Tests bestanden |
+| Lokale Auth-Probe | ein synthetisches, provisioniertes Konto erhielt eine Sitzung; Self-Sign-up wurde mit HTTP 422 ohne Benutzer oder Sitzung abgewiesen |
+| `npm run test:e2e:edge-required` | Produktions-Build und 17/17 Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Microsoft Edge 2), einschließlich Audit-Zugriff |
+
+Die unabhängige Standards- und Spezifikationsprüfung fand keinen lokal
+blockierenden Befund. Die Hosted-Cron-Verifikation, MFA/Re-Authentisierung und
+das Real-Data-Gate bleiben offen.
+
+### Historische Evidenz vom 05.09.2026
 
 Die PROJ-19-Nachweise verwenden ausschließlich lokale, synthetische Daten.
-Die frische Verifikation auf dem aktuellen HEAD ergab:
+Die frische Verifikation auf dem damaligen HEAD ergab:
 
 | Nachweis | Ergebnis |
 | --- | --- |

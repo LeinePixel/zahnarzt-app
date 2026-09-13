@@ -1,8 +1,8 @@
 # PROJ-19: Audit Logging & Rollenrechte
 
-## Status: Implementiert — lokale Abnahmeevidenz erfasst; Hosted-Cron-Verifikation offen
+## Status: In Review — lokale Abnahmeevidenz auf isoliertem Branch bestätigt; Hosted-Cron-Verifikation offen
 **Created:** 2026-08-26
-**Last Updated:** 2026-09-05
+**Last Updated:** 2026-09-13
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -106,10 +106,33 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 
 Die detaillierte Architektur ist in [`docs/superpowers/specs/2026-08-26-proj-19-audit-and-authorization-design.md`](../docs/superpowers/specs/2026-08-26-proj-19-audit-and-authorization-design.md) festgehalten. Sie definiert eine zentrale Autorisierungsgrenze, getrennte Anbieteridentitäten, atomare Auditoperationen, RLS/Grants sowie Unit-, pgTAP- und Playwright-Nachweise. Die verbindlichen Begriffe stehen in `CONTEXT.md`; die Anbieterzugriffsentscheidung in ADR-0001.
 
-## Abnahmeevidenz — 05.09.2026
+## Abnahmeevidenz — isolierter Review-Stand vom 13.09.2026
+
+Die erneute Verifikation erfolgte ausschließlich auf dem isolierten
+PROJ-19-Branch mit lokalen, synthetischen Daten. Der lokale Stack wurde aus
+den versionierten Migrationen neu aufgebaut; echte Praxis-, Patienten- oder
+Zugangsdaten kamen nicht zum Einsatz.
+
+- `npm run lint`: bestanden (Exit 0).
+- `npm run typecheck`: bestanden (Exit 0).
+- `npm test`: bestanden, 22 Testdateien und 174 Tests.
+- `npx supabase test db --local`: bestanden, 3 Dateien und 108 pgTAP-Tests.
+- Ein lokal provisioniertes synthetisches Konto konnte sich anmelden; ein
+  Anmeldeversuch über den Self-Sign-up-Endpunkt wurde mit HTTP 422 ohne
+  Benutzer oder Sitzung abgewiesen.
+- `npm run test:e2e:edge-required`: Produktions-Build und alle 17
+  Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Microsoft Edge
+  2), einschließlich des Audit-Zugriffsfalls.
+
+Die unabhängige Standards- und Spezifikationsprüfung ergab keinen Befund, der
+die lokale Branch-Abnahme blockiert. Die Hosted-Cron-Verifikation und MFA/Re-
+Authentisierung für Portaladmins bleiben ausdrücklich offen; dieser Stand
+öffnet das Real-Data-Gate nicht.
+
+## Abnahmeevidenz — 05.09.2026 (historisch)
 
 Alle nachstehenden Daten sind ausschließlich lokal und synthetisch. Die
-Verifikation auf dem aktuellen HEAD ergab:
+Verifikation auf dem damaligen HEAD ergab:
 
 - `npm run lint`: bestanden (Exit 0).
 - `npm test`: bestanden, 17 Testdateien und 90 Tests.
