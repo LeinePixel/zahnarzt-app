@@ -1,9 +1,9 @@
 # Data Model
 
 ## Status
-**Nur die zwei Tabellen aus PROJ-1 sind spezifiziert.** Alles Weitere ist eine Liste geplanter Entitäten ohne Feldstruktur — bewusst so, siehe Entscheidung „Nur `practice` und `user_profile` im Schema" in `decisions.md`.
+**Die zwei Tabellen aus PROJ-1 und die eng begrenzten PROJ-19-Entitäten sind spezifiziert.** Alles Weitere ist eine Liste geplanter Entitäten ohne Feldstruktur und entsteht erst mit der jeweiligen bindenden Feature-Spezifikation.
 
-**Codex: keine Tabellen anlegen, die hier nicht spezifiziert sind.** Jedes Feature bringt seine eigenen mit, wenn es spezifiziert wird.
+**Codex: keine Tabellen anlegen, die hier oder in einer bindenden Feature-Spezifikation nicht spezifiziert sind.** Jedes Feature bringt seine eigenen mit, wenn es spezifiziert wird.
 
 ---
 
@@ -52,6 +52,14 @@ Existiert von Beginn an, obwohl der MVP nur eine Praxis kennt.
 
 Feinere Regeln je Rolle folgen mit PROJ-19.
 
+### PROJ-19: getrennte Anbieteridentität und Audit-Entitäten
+
+PROJ-19 ergänzt ausschließlich die für Autorisierung, Audit und zeitlich begrenzten Anbieter-Support nötigen Entitäten. Das verbindliche Feld- und Zugriffsmodell steht in [`features/PROJ-19-audit-logging-and-role-permissions.md`](../../features/PROJ-19-audit-logging-and-role-permissions.md); dieses Dokument wiederholt es nicht.
+
+- `portal_admin` ordnet ein Supabase-Auth-Konto einer Anbieteridentität zu; es hat keine `practice_id` und keine Praxisrolle.
+- `support_access_grant` hält die von einem `praxisadmin` veranlasste, widerrufbare Freigabe für genau eine Praxis samt Aktivierung, Ablaufzeit und technischem Supportbezug.
+- `audit_event` enthält nur die in PROJ-19 erlaubten technischen Metadaten und wird nach 90 Tagen datenbankseitig gelöscht.
+
 ---
 
 ## Geplant, aber NICHT spezifiziert
@@ -73,7 +81,7 @@ Aus dem Ursprungskonzept §27 als Kern-Entitäten benannt. **Feldstrukturen, Bez
 | `Recall` | PROJ-13 | |
 | `PatientMetric` | PROJ-17 | Termintreue, PZR-Frequenz, CLV, Conversion |
 | `Integration` | PROJ-3 | Sync-Status, Fehlerprotokoll, Retry |
-| `AuditEvent` | PROJ-19 | |
+| `AuditEvent` | PROJ-19 | spezifiziert; siehe PROJ-19-Feature-Spec |
 
 ---
 

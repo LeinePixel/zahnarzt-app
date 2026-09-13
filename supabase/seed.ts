@@ -5,8 +5,10 @@ import { pathToFileURL } from 'node:url'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 import { getSeedEnv } from './seed-env'
+import { E2E_FOREIGN_PRACTICE_ID } from './seed-fixtures'
 
 export type UserRole = 'rezeption' | 'behandler' | 'praxisadmin'
+export type SeedAccountRole = UserRole | 'portaladmin'
 
 export type SeedAccountInput = {
   email: string
@@ -26,18 +28,22 @@ export type SeedProfileInput = {
 }
 
 export interface SeedAdminClient {
-  createPractice(name: string): Promise<{ id: string; name: string }>
+  createPractice(
+    name: string,
+    id?: string,
+  ): Promise<{ id: string; name: string }>
   createUser(input: SeedAccountInput): Promise<SeedUser>
   findPracticeByName(
     name: string,
   ): Promise<{ id: string; name: string } | null>
   listUsers(): Promise<SeedUser[]>
   updateUser(id: string, input: SeedAccountInput): Promise<SeedUser>
+  upsertPortalAdmin(userId: string): Promise<void>
   upsertProfile(input: SeedProfileInput): Promise<void>
 }
 
 type SeedOptions = {
-  passwords: Record<UserRole, string>
+  passwords: Record<SeedAccountRole, string>
 }
 
 type SeedLogger = (line: string) => void
@@ -46,16 +52,30 @@ type AccountStatus = 'erstellt' | 'aktualisiert'
 
 type SeedResult = {
   accounts: Array<{ email: string; status: AccountStatus }>
+  foreignPractice: { id: string; status: 'erstellt' | 'vorhanden' }
   practice: { id: string; status: 'erstellt' | 'vorhanden' }
 }
 
 const PRACTICE_NAME = 'DentPilot Testpraxis'
+const FOREIGN_PRACTICE_NAME = 'DentPilot E2E-Fremdpraxis'
 
-const accountDefinitions: ReadonlyArray<{
+type PracticeSeedAccountDefinition = {
   displayName: string
   email: string
   role: UserRole
-}> = [
+}
+
+type PortalAdminSeedAccountDefinition = {
+  displayName: string
+  email: string
+  role: 'portaladmin'
+}
+
+type SeedAccountDefinition =
+  | PracticeSeedAccountDefinition
+  | PortalAdminSeedAccountDefinition
+
+const accountDefinitions: ReadonlyArray<SeedAccountDefinition> = [
   {
     displayName: 'Test Rezeption',
     email: 'seed-rezeption@dentpilot.example',
@@ -71,6 +91,11 @@ const accountDefinitions: ReadonlyArray<{
     email: 'seed-praxisadmin@dentpilot.example',
     role: 'praxisadmin',
   },
+  {
+    displayName: 'Test Anbieter-Support',
+    email: 'seed-portaladmin@dentpilot.example',
+    role: 'portaladmin',
+  },
 ]
 
 export async function runSeed(
@@ -82,6 +107,26 @@ export async function runSeed(
   const practice =
     existingPractice ?? (await client.createPractice(PRACTICE_NAME))
   const practiceStatus = existingPractice ? 'vorhanden' : 'erstellt'
+  const existingForeignPractice = await client.findPracticeByName(
+    FOREIGN_PRACTICE_NAME,
+  )
+
+  if (
+    existingForeignPractice &&
+    existingForeignPractice.id !== E2E_FOREIGN_PRACTICE_ID
+  ) {
+    throw seedOperationError('E2E-Fremdpraxis hat eine unerwartete Kennung')
+  }
+
+  const foreignPractice =
+    existingForeignPractice ??
+    (await client.createPractice(
+      FOREIGN_PRACTICE_NAME,
+      E2E_FOREIGN_PRACTICE_ID,
+    ))
+  const foreignPracticeStatus = existingForeignPractice
+    ? 'vorhanden'
+    : 'erstellt'
   const existingUsers = new Map(
     (await client.listUsers()).map((user) => [user.email, user]),
   )
@@ -98,12 +143,16 @@ export async function runSeed(
       ? await client.updateUser(existingUser.id, input)
       : await client.createUser(input)
 
-    await client.upsertProfile({
-      displayName: definition.displayName,
-      practiceId: practice.id,
-      role: definition.role,
-      userId: user.id,
-    })
+    if (definition.role === 'portaladmin') {
+      await client.upsertPortalAdmin(user.id)
+    } else {
+      await client.upsertProfile({
+        displayName: definition.displayName,
+        practiceId: practice.id,
+        role: definition.role,
+        userId: user.id,
+      })
+    }
 
     accounts.push({ email: definition.email, status })
     logger(`${definition.email}: ${status}`)
@@ -111,6 +160,10 @@ export async function runSeed(
 
   return {
     accounts,
+    foreignPractice: {
+      id: foreignPractice.id,
+      status: foreignPracticeStatus,
+    },
     practice: { id: practice.id, status: practiceStatus },
   }
 }
@@ -124,6 +177,12 @@ type SeedDatabase = {
         Relationships: []
         Row: { created_at: string; id: string; name: string }
         Update: { created_at?: string; id?: string; name?: string }
+      }
+      portal_admin: {
+        Insert: { created_at?: string; user_id: string }
+        Relationships: []
+        Row: { created_at: string; user_id: string }
+        Update: { created_at?: string; user_id?: string }
       }
       user_profile: {
         Insert: {
@@ -176,10 +235,10 @@ export class SupabaseSeedAdminClient implements SeedAdminClient {
     return data
   }
 
-  async createPractice(name: string) {
+  async createPractice(name: string, id?: string) {
     const { data, error } = await this.client
       .from('practice')
-      .insert({ name })
+      .insert(id ? { id, name } : { name })
       .select('id, name')
       .single()
 
@@ -245,6 +304,17 @@ export class SupabaseSeedAdminClient implements SeedAdminClient {
     }
 
     return { email: data.user.email, id: data.user.id }
+  }
+
+  async upsertPortalAdmin(userId: string) {
+    const { error } = await this.client.from('portal_admin').upsert(
+      { user_id: userId },
+      { onConflict: 'user_id' },
+    )
+
+    if (error) {
+      throw seedOperationError('Anbieter-Supportkonto konnte nicht gespeichert werden')
+    }
   }
 
   async upsertProfile(input: SeedProfileInput) {

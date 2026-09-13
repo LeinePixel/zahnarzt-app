@@ -16,6 +16,7 @@ function strongSeedPassword(variable: string) {
 
 const seedEnvSchema = z.object({
   SEED_BEHANDLER_PASSWORD: strongSeedPassword('SEED_BEHANDLER_PASSWORD'),
+  SEED_PORTALADMIN_PASSWORD: strongSeedPassword('SEED_PORTALADMIN_PASSWORD'),
   SEED_PRAXISADMIN_PASSWORD: strongSeedPassword(
     'SEED_PRAXISADMIN_PASSWORD',
   ),
@@ -42,6 +43,7 @@ export function getSeedEnv(input: Environment = process.env) {
     ...publicEnv,
     seedPasswords: {
       behandler: result.data.SEED_BEHANDLER_PASSWORD,
+      portaladmin: result.data.SEED_PORTALADMIN_PASSWORD,
       praxisadmin: result.data.SEED_PRAXISADMIN_PASSWORD,
       rezeption: result.data.SEED_REZEPTION_PASSWORD,
     },

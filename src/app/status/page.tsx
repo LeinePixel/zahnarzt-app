@@ -1,12 +1,16 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Building2, CircleCheck, ShieldCheck, TriangleAlert, UserRound } from 'lucide-react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { getCurrentUserContext, logout } from '@/features/auth/current-user'
+
+import { SupportAccessControls } from './support-access-controls'
 
 export const metadata: Metadata = {
   title: 'Kontostatus',
@@ -80,6 +84,19 @@ export default async function StatusPage() {
                   <p className="mt-2 text-lg font-semibold">{context.practiceName}</p>
                 </div>
 
+                {context.role === 'praxisadmin' ? (
+                  <div className="rounded-xl border border-border bg-secondary/70 p-5 sm:col-span-2">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      Technischer Supportzugriff
+                    </p>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                      Eine Freigabe gilt standardmäßig acht Stunden und kann
+                      jederzeit durch Ihre Praxisadministration widerrufen werden.
+                    </p>
+                    <SupportAccessControls />
+                  </div>
+                ) : null}
+
                 <p className="flex items-start gap-2 pt-2 text-xs leading-5 text-muted-foreground sm:col-span-2">
                   <ShieldCheck
                     aria-hidden="true"
@@ -88,6 +105,20 @@ export default async function StatusPage() {
                   Aus Datenschutzgründen zeigt diese Statusseite ausschließlich
                   Ihren Kontokontext und keine Patienten- oder Gesundheitsdaten.
                 </p>
+              </CardContent>
+            </Card>
+          ) : context.status === 'portal_admin' ? (
+            <Card className="w-full max-w-xl rounded-2xl border-border/90 bg-card/95 shadow-[0_24px_80px_-38px_hsl(var(--foreground)/0.26)] backdrop-blur-sm">
+              <CardContent className="p-6 sm:p-9">
+                <h1 className="text-2xl font-bold">Anbieter-Supportportal</h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Aktivieren Sie ausschließlich die im bestehenden Supportfall
+                  übermittelte Freigabekennung. Es werden keine Praxen oder
+                  offenen Freigaben aufgelistet.
+                </p>
+                <Button asChild className="mt-5">
+                  <Link href="/portal/audit">Zum Supportportal</Link>
+                </Button>
               </CardContent>
             </Card>
           ) : (
