@@ -24,7 +24,7 @@ const accounts = [
   },
 ] as const
 
-let mfaAccounts: Partial<
+const mfaAccounts: Partial<
   Record<(typeof accounts)[number]['userRole'], MfaTestAccount>
 > = {}
 
@@ -58,18 +58,13 @@ async function loginSuccessfully(page: Page, account: MfaTestAccount) {
 test.describe.configure({ mode: 'serial' })
 
 test.beforeAll(async () => {
-  const created = await Promise.all(
-    accounts.map(async (account) => [
-      account.userRole,
-      await createMfaTestAccount({
-        displayName: account.name,
-        kind: 'practice',
-        role: account.userRole,
-      }),
-    ] as const),
-  )
-
-  mfaAccounts = Object.fromEntries(created) as typeof mfaAccounts
+  for (const account of accounts) {
+    mfaAccounts[account.userRole] = await createMfaTestAccount({
+      displayName: account.name,
+      kind: 'practice',
+      role: account.userRole,
+    })
+  }
 })
 
 test.afterAll(async () => {
