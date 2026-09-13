@@ -11,7 +11,6 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 
 ## Produktentscheidungen offen
 
-- [ ] **Ab wann und nach welcher Zeitspanne greift die Sitzungssperre?** (PROJ-31) Muss vor dem Pilotbetrieb mit echten Patientendaten entschieden sein.
 - [ ] **Passwortregeln** über den Supabase-Standard hinaus? Bei synthetischen Daten unkritisch, vor Pilotbetrieb zu klären.
 - [ ] **Kann eine Person mehreren Praxen angehören?** Bestimmt, ob die Praxiszugehörigkeit am Profil hängt oder eine Zuordnungstabelle braucht (PROJ-24).
 - [ ] **Umgang mit mehrdeutigen Rufnummern-Treffern** (PROJ-29): gemeinsame Familien-Festnetznummer, mehrere Patienten pro Nummer, unbekannte oder unterdrückte Nummer.
@@ -25,7 +24,11 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 - [ ] Welche Aufbewahrungs- und Löschfristen gelten je Datenkategorie und gesetzlicher Dokumentationspflicht?
 - [ ] Welche Regionen, Subprozessoren und Drittlandzugriffe haben Supabase, Vercel, Soniox, IONOS, Resend und Fehlertracking?
 - [ ] Wer führt und genehmigt die Datenschutz-Folgenabschätzung und das Real-Data-Gate?
-- [ ] Welche MFA-, Inaktivitäts-, Maximalsitzungs- und Re-Authentisierungswerte gelten für Praxisarbeitsplätze?
+- [ ] **D05 — Support-/Audit-Quoten und ihre Auditbehandlung:** Welche Grenzen gelten, wie werden Überschreitungen neutral behandelt und welche Metadaten werden dazu auditiert?
+- [ ] **D06 — Aufbewahrung von Supportfreigaben:** Welche Retention einschließlich Löschweg gilt für abgelaufene oder widerrufene Freigaben?
+- [ ] **D07 — Cron-Alarmierung:** Wer erhält über welchen Kanal einen Alarm für die 90-Tage-Auditlöschung oder einen Scheduler-Ausfall?
+- [ ] **D08 — Backups und Wiederherstellung:** Welche RPO/RTO-Ziele und welche dokumentierten Betriebs- und Restore-Prozesse gelten?
+- [ ] **D09 — Rechts-/Datenschutzbereitschaft:** Welche fachlichen Freigaben zu Rechtsgrundlage, Art.-9-Kontext, DSFA, AVV, Subprozessoren, Transfers und Real-Data-Gate liegen vor?
 - [ ] Welche KI-Funktionen fallen unter welche AI-Act-Klasse, und kann PROJ-15/16 aufgrund des beabsichtigten Zwecks Medizinprodukterecht berühren?
 - [ ] Welche Inhalte dürfen externe KI-Anbieter verarbeiten, wie werden sie pseudonymisiert, und ist Training/Retention vertraglich ausgeschlossen?
 
@@ -37,7 +40,7 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 
 ## Risiken (keine Frage, aber bekannte Gefahr)
 
-- [ ] **Nur 1 von 31 Features ist spezifiziert.** Für alle übrigen fehlen User Stories und Akzeptanzkriterien. Wer ohne Spec baut, baut auf Vermutungen.
+- [ ] **Nur 2 von 31 Features sind spezifiziert.** Für alle übrigen fehlen User Stories und Akzeptanzkriterien. Wer ohne Spec baut, baut auf Vermutungen.
 - [ ] **Ein einzelner Entwickler** ohne Ausfallschutz.
 - [ ] **Vercel-Konto muss vor dem Deploy manuell angelegt werden** (aus der Git-Historie: Commit 21a97bb).
 

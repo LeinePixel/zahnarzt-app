@@ -1,64 +1,48 @@
-# Security Headers Configuration
+# Sicherheitsheader – aktueller Stand
 
-Protect against XSS, Clickjacking, MIME sniffing, and other common web attacks.
+## Implementierte Content Security Policy
 
-## Setup
+Der Next.js-Proxy erzeugt pro Antwort eine kryptografisch zufällige Nonce und
+setzt dieselbe Content Security Policy im Request- und Response-Header. Die
+Richtlinie wird bereits erzwungen; es gibt keinen Report-Only-Betrieb und keine
+breite Skript-Ausnahme `unsafe-inline`.
 
-Add security headers to `next.config.ts`:
+Die Richtlinie begrenzt Skripte auf `self`, die serverseitig erzeugte Nonce und
+`strict-dynamic`. Sie beschränkt Verbindungen auf `self` und den konfigurierten
+Supabase-Ursprung, verbietet Objektinhalte und verhindert Einbettung über
+`frame-ancestors 'none'`. In der lokalen Entwicklung kommt ausschließlich
+`unsafe-eval` für die Entwicklungswerkzeuge hinzu; das ist keine
+Produktionsrichtlinie.
 
-```typescript
-import type { NextConfig } from 'next'
+Der Proxy setzt außerdem `Cache-Control: private, no-store` auf seine
+Antworten. Das verhindert, dass geschützte Antworten durch gemeinsame Caches
+weitergegeben werden.
 
-const nextConfig: NextConfig = {
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
-          },
-        ],
-      },
-    ]
-  },
-}
+## Noch offene Produktionsheader
 
-export default nextConfig
-```
+Die folgenden Header sind noch nicht implementiert oder betrieblich belegt und
+bleiben vor dem Real-Data-Gate offene Arbeit:
 
-## What Each Header Does
+- `Strict-Transport-Security`, nach bestätigter HTTPS- und Domain-Konfiguration.
+- `X-Content-Type-Options: nosniff`.
+- eine dokumentierte `Referrer-Policy`.
+- eine dokumentierte `Permissions-Policy`.
 
-| Header | Protection |
-|--------|-----------|
-| X-Frame-Options: DENY | Prevents your site from being embedded in iframes (clickjacking) |
-| X-Content-Type-Options: nosniff | Prevents browsers from guessing content types (MIME sniffing) |
-| Referrer-Policy | Controls how much URL info is sent to other sites |
-| Strict-Transport-Security | Forces HTTPS connections |
+Sie dürfen nicht über ein pauschales `next.config.ts`-Beispiel ergänzt werden,
+ohne die konkrete Hosting- und Proxy-Konfiguration zu prüfen.
 
-## Verify After Deployment
-1. Open Chrome DevTools
-2. Go to Network tab
-3. Click on any request to your site
-4. Check Response Headers section
-5. Verify all 4 headers are present
+## Hosted-Verifikation
 
-## Content Security Policy (vor echten Daten verbindlich)
-**Content-Security-Policy (CSP)** wird zunächst im Report-Only-Modus getestet und vor Öffnung des Real-Data-Gates erzwungen:
-```
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
-```
-Start with report-only mode first: `Content-Security-Policy-Report-Only`
+Vor einer Freigabe werden auf jeder ausgelieferten Route geprüft:
+
+1. `Content-Security-Policy` ist ein erzwungener Header, kein
+   `Content-Security-Policy-Report-Only`.
+2. `script-src` enthält keine breite `unsafe-inline`-Ausnahme und die
+   gerenderten Next.js-Skripte tragen die im Header erlaubte Nonce.
+3. `connect-src` enthält nur `self` und den vorgesehenen Supabase-Ursprung.
+4. Die noch offenen Header sind implementiert, getestet und mit der finalen
+   HTTPS- und Domain-Konfiguration abgestimmt.
+
+Die lokalen Proxy- und Browser-/Edge-Tests prüfen bereits die erzwungene CSP,
+das Fehlen von `unsafe-inline` und die Nonce-Bindung. Sie ersetzen keinen
+Hosted- oder Real-Data-Gate-Nachweis.

@@ -2,7 +2,9 @@
 
 Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts erneut ausdiskutiert wird, was bereits entschieden ist. Zusammengeführt aus den Decision-Log-Abschnitten der Feature-Specs und den projektweiten Festlegungen aus `docs/PRD.md`.
 
-**Bestehende Zeilen nie ändern** — nur neue anfügen oder als überholt markieren.
+Die kanonische Auswahl langlebiger Architekturentscheidungen mit Status, Evidenz und Implikationen steht in `DECISIONS.md`. Dieses Dokument bleibt der vollständige historische Log.
+
+Bestehende Entscheidungen werden historisch nachvollziehbar gepflegt: Sachfehler dürfen mit Quellenbeleg korrigiert werden; fachlich abgelöste Entscheidungen werden als **überholt** markiert und verweisen auf ihre Nachfolgeentscheidung. Reine Umformulierungen ohne inhaltlichen Grund werden vermieden.
 
 ---
 
@@ -71,12 +73,12 @@ Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts 
 | Schreibrechte auf `practice` und `user_profile` vollständig gesperrt | Konten entstehen ausschließlich per Seed-Skript und Dashboard. Was die Anwendung nicht darf, kann sie nicht versehentlich kaputtmachen. | 2026-08-24 |
 | Seed-Skript läuft nur auf der Kommandozeile | Es benötigt den Verwaltungsschlüssel, der alle Zugriffsregeln umgeht. Dieser darf nie in den Browser gelangen. | 2026-08-24 |
 | Anwendung bricht bei fehlenden Umgebungsvariablen sofort mit Klartextmeldung ab | Sonst scheitert die Anmeldung später an unklarer Stelle mit irreführender Fehlermeldung. | 2026-08-24 |
-| Ersetzt die Platzhalter-Datei `src/lib/supabase.ts` | Sie exportiert aktuell `null` und würde bei Verwendung zu Laufzeitfehlern führen. | 2026-08-24 |
+| Drei produktive Clients unter `src/lib/supabase/` ersetzen die frühere Platzhalter-Datei `src/lib/supabase.ts` | Der frühere Platzhalter exportierte `null` und hätte bei Verwendung Laufzeitfehler verursacht. | 2026-08-24; umgesetzt 2026-08-25 |
 | Kein Einsatz echter Patientendaten vor dokumentiertem Real-Data-Gate | Gesundheitsdaten besitzen hohen Schutzbedarf. Synthetische Entwicklung darf nicht zu einem unsicheren späteren Architekturwechsel führen. | 2026-08-25 |
 | KI bereitet ausschließlich vor; Human Oversight bleibt verbindlich | Verhindert autonome medizinische oder wesentlich wirkende Entscheidungen und schafft eine klare Grundlage für DSGVO-/AI-Act-Prüfung. | 2026-08-25 |
 | `getClaims()` statt `getSession()` als serverseitiger Vertrauensanker | Cookie-Inhalte können manipuliert sein; Claims müssen kryptografisch verifiziert werden. | 2026-08-25 |
 
-### PROJ-2 bis PROJ-18 und PROJ-20 bis PROJ-31
+### PROJ-2 bis PROJ-18 und PROJ-20 bis PROJ-30
 Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Siehe `docs/product/scope.md`.
 
 ### PROJ-19: Audit Logging & Rollenrechte
@@ -89,6 +91,21 @@ Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Sie
 | Audit-Export und Freitextsuche bleiben gesperrt | Auditdaten dürfen keinen neuen Datenabfluss oder unkontrollierte Inhaltsdaten erzeugen. | 2026-08-26 |
 | Audit-Ereignisse werden nach 90 Tagen automatisch gelöscht | Bestätigte MVP-Produktentscheidung; die Rechts- und Aufbewahrungsprüfung vor echten Daten bleibt offen. | 2026-08-26 |
 | Kein Break-Glass-Zugang im MVP | Es gibt keine klinisch kritischen Abläufe; ein Notfallzugang benötigt später eine eigene Risikoentscheidung. | 2026-08-26 |
+
+### PROJ-31: Sitzungshärtung, MFA und Re-Authentisierung
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| D01: TOTP-MFA für alle Praxisrollen und `portaladmin`; kein dauerhafter Recovery-Bypass | Jede Identität mit Praxis- oder Anbieterzugriff benötigt den gleichen zweiten Faktor; eine dauerhafte Umgehung würde die Grenze unterlaufen. | 2026-09-07 |
+| D02: Globale Sperre/Abmeldung nach fünf Minuten menschlicher Inaktivität, maximale Sitzung acht Stunden | Praxisarbeitsplätze befinden sich teilweise in zugänglichen Bereichen; die Grenze begrenzt unbeaufsichtigten Zugriff. | 2026-09-07 |
+| D03: JWT-Laufzeit fünf Minuten; Widerruf oder Kontensperre wirkt bei neuen geschützten Datenoperationen innerhalb von höchstens 60 Sekunden über einen aktuellen Server-/Datenbank-Sitzungszustand | Ein Browser- oder UI-Zustand kann Widerruf und Sperre nicht verlässlich durchsetzen. | 2026-09-07 |
+| D04: AAL2 wird in RLS und jeder geschützten `SECURITY DEFINER`-RPC erzwungen | Der Datenbankrand bleibt die Autorisierungsgrenze; Proxy und UI reichen nicht aus. | 2026-09-07 |
+| D10: Bestehendes SSR-Cookie-Modell beibehalten; Cookies über HTTPS `Secure`; nonce-basierte CSP ohne breite Skript-Ausnahme `unsafe-inline` | Die vorhandene SSR-Architektur bleibt erhalten, während Transport- und Skriptausführungsgrenzen gehärtet werden. | 2026-09-07 |
+
+**Weiterhin offen:** D05 Support-/Audit-Quoten und Auditbehandlung, D06
+Supportfreigabe-Retention, D07 Cron-Alarmempfänger/-kanal, D08 Backup-RPO/RTO
+und Betriebsabläufe sowie D09 Rechts-/Datenschutzbereitschaft. Diese Punkte
+sind keine impliziten Implementierungsparameter.
 
 ---
 

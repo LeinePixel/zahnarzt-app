@@ -1,34 +1,30 @@
-import { randomUUID } from 'node:crypto'
-import { existsSync } from 'node:fs'
-
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import {
+  createMfaTestAccount,
+  currentTotpCode,
+  deleteMfaTestAccount,
+  type MfaTestAccount,
+} from './support/mfa-test-accounts'
 
-if (existsSync('.env.seed.local')) {
-  process.loadEnvFile('.env.seed.local')
-}
+let account: MfaTestAccount
 
-const account = {
-  email: 'seed-rezeption@dentpilot.example',
-  passwordVariable: 'SEED_REZEPTION_PASSWORD',
-}
-
-function required(variable: string) {
-  const value = process.env[variable]
-
-  if (!value) {
-    throw new Error(`Fehlende E2E-Umgebungsvariable: ${variable}`)
-  }
-
-  return value
-}
-
-async function login(page: Page, email = account.email, password = required(account.passwordVariable)) {
+async function login(page: Page, target = account) {
   await page.goto('/login')
-  await page.getByLabel('E-Mail-Adresse').fill(email)
-  await page.getByLabel('Passwort').fill(password)
+  await page.getByLabel('E-Mail-Adresse').fill(target.email)
+  await page.getByLabel('Passwort').fill(target.password)
   await page.getByRole('button', { name: 'Sicher anmelden' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Sicherheitsprüfung' }),
+  ).toBeVisible()
+  await page.getByLabel('Code aus der Authenticator-App').fill(currentTotpCode(target.totpSecret))
+  await page.getByRole('button', { name: 'Sicherheitsprüfung bestätigen' }).click()
   await expect(page).toHaveURL(/\/status$/)
+
+  if (target === account) {
+    await expect(
+      page.getByRole('heading', { name: 'Willkommen, Test Rezeption' }),
+    ).toBeVisible()
+  }
 }
 
 async function logoutEverywhere(context: BrowserContext) {
@@ -38,30 +34,40 @@ async function logoutEverywhere(context: BrowserContext) {
   }
 }
 
-async function findExactUserIds(admin: SupabaseClient, email: string) {
-  const ids: string[] = []
-  const perPage = 100
-
-  for (let page = 1; ; page += 1) {
-    const listed = await admin.auth.admin.listUsers({ page, perPage })
-    expect(listed.error).toBeNull()
-
-    ids.push(
-      ...listed.data.users
-        .filter((user) => user.email === email)
-        .map((user) => user.id),
-    )
-
-    if (listed.data.users.length < perPage) {
-      return ids
-    }
-  }
-}
-
 test.describe.configure({ mode: 'serial' })
+
+test.beforeAll(async () => {
+  account = await createMfaTestAccount({
+    displayName: 'Test Rezeption',
+    kind: 'practice',
+    role: 'rezeption',
+  })
+})
+
+test.afterAll(async () => {
+  await deleteMfaTestAccount(account)
+})
 
 test.beforeEach(async ({ context }) => {
   await logoutEverywhere(context)
+})
+
+test('liefert eine strikte CSP und bindet ihre Nonce an gerenderte Framework-Skripte', async ({ page }) => {
+  const response = await page.goto('/login')
+  const policy = response?.headers()['content-security-policy']
+  const nonce = policy?.match(/script-src 'self' 'nonce-([^']+)' 'strict-dynamic'/)?.[1]
+
+  expect(policy).toContain("default-src 'self'")
+  expect(policy).not.toContain("'unsafe-inline'")
+  expect(policy).toContain("object-src 'none'")
+  expect(policy).toContain("frame-ancestors 'none'")
+  expect(nonce).toBeDefined()
+
+  const renderedNonces = await page
+    .locator('script[nonce]')
+    .evaluateAll((scripts) => scripts.map((script) => script.nonce))
+
+  expect(renderedNonces).toContain(nonce)
 })
 
 test('setzt query-freie Redirects und private no-store auf geschützten Antworten', async ({ page }) => {
@@ -99,7 +105,9 @@ test('entzieht einem zweiten Tab nach Logout beim nächsten Request den Zugriff'
   await login(page)
   const secondTab = await context.newPage()
   await secondTab.goto('/status')
-  await expect(secondTab.getByText('DentPilot Testpraxis', { exact: true })).toBeVisible()
+  await expect(
+    secondTab.getByRole('heading', { name: 'Willkommen, Test Rezeption' }),
+  ).toBeVisible()
 
   await page.getByRole('button', { name: 'Abmelden' }).click()
   await expect.poll(() => new URL(page.url()).pathname).toBe('/login')
@@ -108,40 +116,13 @@ test('entzieht einem zweiten Tab nach Logout beim nächsten Request den Zugriff'
 })
 
 test('zeigt für ein synthetisches Auth-Konto ohne Profil einen sicheren Einrichtungszustand', async ({ page }) => {
-  const email = `e2e-incomplete-${randomUUID()}@dentpilot.example`
-  const password = `E2e!${randomUUID()}Aa1`
-  const admin: SupabaseClient = createClient(
-    required('NEXT_PUBLIC_SUPABASE_URL'),
-    required('SUPABASE_SERVICE_ROLE_KEY'),
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
-  let userId: string | undefined
+  const incompleteAccount = await createMfaTestAccount({ kind: 'unassigned' })
 
   try {
-    const created = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      password,
-    })
-    expect(created.error).toBeNull()
-    userId = created.data.user?.id
-    expect(userId).toBeTruthy()
-
-    await login(page, email, password)
+    await login(page, incompleteAccount)
     await expect(page.getByText('Konto unvollständig eingerichtet')).toBeVisible()
     await expect(page.getByText('Es wurden keine Praxis- oder Patientendaten geladen.')).toBeVisible()
   } finally {
-    if (!userId) {
-      const exactIds = await findExactUserIds(admin, email)
-      expect(exactIds).toHaveLength(1)
-      userId = exactIds[0]
-    }
-
-    if (userId) {
-      const existing = await admin.auth.admin.getUserById(userId)
-      expect(existing.data.user?.email).toBe(email)
-      const deleted = await admin.auth.admin.deleteUser(userId)
-      expect(deleted.error).toBeNull()
-    }
+    await deleteMfaTestAccount(incompleteAccount)
   }
 })

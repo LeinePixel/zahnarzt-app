@@ -1,7 +1,7 @@
 {
-  "name": "rl-coding-startup-kit",
+  "name": "dentpilot",
   "version": "1.0.0",
-  "description": "RL Coding Startup Kit with AI Agent Team System for Claude Code",
+  "description": "Workflow-, CRM- und Automatisierungsanwendung für Zahnarztpraxen",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -20,7 +20,9 @@
     "pretest:e2e:edge-required": "next build",
     "test:e2e:edge-required": "tsx scripts/run-playwright-edge-required.ts",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "npm run test && npm run test:e2e",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build",
+    "verify:full": "npm run lint && npm run typecheck && npm test && npx supabase test db --local && npm run test:e2e:edge-required"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

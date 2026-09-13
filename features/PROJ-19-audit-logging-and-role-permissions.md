@@ -35,6 +35,22 @@ Das Feature verarbeitet weiterhin ausschließlich synthetische Daten. Es öffnet
 
 `portaladmin` ist eine eigene Anbieteridentität und kein vierter `user_role`-Wert. Sie besitzt kein Praxisprofil und keine pauschale Praxisberechtigung.
 
+### Verbindliche PROJ-31-Grenze
+
+Die server-/datenbankseitige Prüfung eines aktuellen AAL2-Sitzungszustands ist
+in T03 implementiert: Geschützte RLS-Lesewege und PROJ-19-RPCs verweigern bei
+fehlenden, widerrufenen, abgelaufenen, gesperrten oder gelöschten Sitzungen
+sowie bei unpassenden Claims. Dies ersetzt weder die bestehende
+Supportfreigabe noch die Grenzen „kein Export“, 90-Tage-Auditlöschung und „kein
+Break-Glass“.
+
+Offen bleiben die TOTP-Einschreibung, die fünfminütige menschliche
+Inaktivitätssperre, eine höchstens fünf Minuten alte Re-Authentisierung für
+sensible Supportaktionen sowie die zugehörigen Betriebs- und
+Abnahmeevidenzen. UI-Zustand oder eine offene Browserseite sind hierfür kein
+Nachweis. PROJ-19 bleibt bis zu diesen Nachweisen `In Review`; das
+Real-Data-Gate bleibt geschlossen.
+
 ### Supportfreigabe
 
 - Ein Praxisadmin kann nur für die eigene Praxis eine Supportfreigabe anlegen oder widerrufen.
@@ -75,6 +91,8 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 - [ ] Angenommen ich bin ein `portaladmin` ohne aktive Supportfreigabe, wenn ich Audit-Ereignisse aufrufe, dann wird der Zugriff neutral verweigert, auditiert und es werden keine Ereignisinhalte ausgeliefert.
 - [ ] Angenommen ich bin ein `portaladmin` und habe eine Freigabe-ID im bestehenden Supportfall erhalten, wenn ich sie mit einer strukturierten Ursache aktiviere, dann wird nur diese Freigabe aktiviert; das Portal liefert keine Liste oder Suche offener Freigaben.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe, wenn ich Audit-Ereignisse der freigegebenen Praxis aufrufe, dann erhalte ich ausschließlich deren datenminimierte Ereignisse und die Einsicht wird selbst protokolliert.
+- [x] Angenommen ich erfülle für eine geschützte PROJ-19-RPC nicht AAL2 oder keine aktuelle, server-/datenbankseitig gebundene Sitzung, dann verweigert die RLS-/RPC-Grenze den Zugriff unabhängig vom UI-Zustand.
+- [ ] Angenommen ich erfülle für eine sensible Supportaktion keine höchstens fünf Minuten alte Re-Authentisierung, dann verweigert die RLS-/RPC-Grenze den Zugriff unabhängig vom UI-Zustand; die Umsetzung und Evidenz bleiben offen.
 - [ ] Angenommen ich bin ein `portaladmin` mit aktiver Freigabe für Praxis A, wenn ich Audit-Ereignisse von Praxis B aufrufe, dann wird der Zugriff neutral verweigert und auditiert.
 - [ ] Angenommen eine Freigabe ist widerrufen oder abgelaufen, wenn ein Portaladmin anschließend Audit-Ereignisse abfragt, dann wird der Zugriff sofort neutral verweigert und auditiert.
 - [ ] Angenommen eine neue Freigabe aktiviert wird, wenn keine Dauer angegeben ist, dann läuft sie acht Stunden nach Aktivierung ab; eine Laufzeit über 24 Stunden wird abgewiesen.
@@ -87,7 +105,7 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 ## Edge Cases
 
 - **Parallelzugriff beim Widerruf:** Widerruf zwischen Autorisierung und Anzeige darf keine Ereignisse ausliefern; die Datenbankoperation entscheidet atomar.
-- **Ablauf während einer Sitzung:** Jede Audit-Abfrage prüft die Ablaufzeit neu; eine offene Browserseite verlängert keine Freigabe.
+- **Ablauf während einer Sitzung:** Jede Audit-Abfrage prüft Ablaufzeit, AAL2 und server-/datenbankseitigen Sitzungszustand neu; eine offene Browserseite verlängert weder Freigabe noch Sitzung.
 - **Doppelte Aktivierung:** Eine Freigabe kann nicht parallel von mehreren Portaladmins aktiviert werden.
 - **Fehlende Anbieteridentität:** Ein Auth-Konto ohne Portaladmin-Zuordnung erhält keinen Fallback-Zugriff.
 - **Unvollständiger Auditkontext:** Fehlen kontrollierte Pflichtwerte, schlägt die Operation sicher fehl statt ein teilweise aussagekräftiges Ereignis zu speichern.
@@ -163,15 +181,18 @@ Inhalte, Bodies, Tokens, Passwörter, Prompts oder IP-Adressen.
 Die Hosted-Cron-Verifikation wurde nicht ausgeführt, weil keine freigegebene,
 nicht geheime administrative Session vorliegt. Hosted-Cron-Commissioning und
 der Nachweis für den Produktions-Scheduler
-`dentpilot-purge-expired-audit-events` bleiben offen. MFA und Re-
-Authentisierung für Portaladmins bleiben ebenfalls offen. Diese Evidenz ist
-ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate bleibt
-geschlossen.
+`dentpilot-purge-expired-audit-events` bleiben offen. Die T03-AAL2- und
+Sitzungszustandsprüfung sowie der lokale PROJ-31-T04-Stand für TOTP,
+Aktivitätsgrenze und Re-Authentisierung sind implementiert. Ein erneuter
+reproduzierbarer Browser-/Hosted-Nachweis, Betriebsfreigabe und die Grenze
+gegenüber gestohlenen, noch gültigen Sitzungstoken bleiben offen. Diese
+Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate
+bleibt geschlossen.
 
 ## Open Questions
 
 - [ ] Die technische Wahl und Betriebsfreigabe des Hosted-Cron-Schedulers für die 90-Tage-Wartungsroutine sind als Produktionsbetriebs-Gate vor Inbetriebnahme im Supabase-Zielprojekt zu prüfen.
-- [ ] MFA und der genaue Re-Authentisierungsmechanismus für Portaladmins werden mit PROJ-31/Auth-Hardening verbindlich umgesetzt; ohne sie bleibt die Verarbeitung echter Daten gesperrt.
+- [ ] TOTP-Einschreibung, fünfminütige Inaktivitätsgrenze und Re-Authentisierung benötigen den reproduzierbaren Browser-/Hosted-Nachweis und die Betriebsfreigabe; ohne diese offenen PROJ-31-Kontrollen bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 
 ## Decision Log

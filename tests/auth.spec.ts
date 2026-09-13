@@ -1,39 +1,41 @@
 import { expect, test, type Page } from '@playwright/test'
-import { existsSync } from 'node:fs'
-
-if (existsSync('.env.seed.local')) {
-  process.loadEnvFile('.env.seed.local')
-}
+import {
+  createMfaTestAccount,
+  currentTotpCode,
+  deleteMfaTestAccount,
+  type MfaTestAccount,
+} from './support/mfa-test-accounts'
 
 const accounts = [
   {
-    email: 'seed-rezeption@dentpilot.example',
     name: 'Test Rezeption',
-    passwordVariable: 'SEED_REZEPTION_PASSWORD',
     role: 'Rezeption',
+    userRole: 'rezeption',
   },
   {
-    email: 'seed-behandler@dentpilot.example',
     name: 'Dr. Test Behandler',
-    passwordVariable: 'SEED_BEHANDLER_PASSWORD',
     role: 'Behandler',
+    userRole: 'behandler',
   },
   {
-    email: 'seed-praxisadmin@dentpilot.example',
     name: 'Test Praxisadministration',
-    passwordVariable: 'SEED_PRAXISADMIN_PASSWORD',
     role: 'Praxisadministration',
+    userRole: 'praxisadmin',
   },
 ] as const
 
-function requiredPassword(variable: (typeof accounts)[number]['passwordVariable']) {
-  const password = process.env[variable]
+const mfaAccounts: Partial<
+  Record<(typeof accounts)[number]['userRole'], MfaTestAccount>
+> = {}
 
-  if (!password) {
-    throw new Error(`Fehlende E2E-Umgebungsvariable: ${variable}`)
+function mfaAccount(role: (typeof accounts)[number]['userRole']) {
+  const account = mfaAccounts[role]
+
+  if (!account) {
+    throw new Error('Das lokale MFA-Testkonto wurde nicht eingerichtet.')
   }
 
-  return password
+  return account
 }
 
 async function submitLogin(page: Page, email: string, password: string) {
@@ -42,12 +44,36 @@ async function submitLogin(page: Page, email: string, password: string) {
   await page.getByRole('button', { name: 'Sicher anmelden' }).click()
 }
 
-async function loginSuccessfully(page: Page, email: string, password: string) {
-  await submitLogin(page, email, password)
+async function loginSuccessfully(page: Page, account: MfaTestAccount) {
+  await submitLogin(page, account.email, account.password)
+  await expect(
+    page.getByRole('heading', { name: 'Sicherheitsprüfung' }),
+  ).toBeVisible()
+  await page.getByLabel('Code aus der Authenticator-App').fill(currentTotpCode(account.totpSecret))
+  await page.getByRole('button', { name: 'Sicherheitsprüfung bestätigen' }).click()
   await expect.poll(() => new URL(page.url()).pathname).toBe('/status')
+  await expect(page.getByRole('button', { name: 'Abmelden' })).toBeVisible()
 }
 
 test.describe.configure({ mode: 'serial' })
+
+test.beforeAll(async () => {
+  for (const account of accounts) {
+    mfaAccounts[account.userRole] = await createMfaTestAccount({
+      displayName: account.name,
+      kind: 'practice',
+      role: account.userRole,
+    })
+  }
+})
+
+test.afterAll(async () => {
+  await Promise.all(
+    Object.values(mfaAccounts)
+      .filter((account): account is MfaTestAccount => Boolean(account))
+      .map(deleteMfaTestAccount),
+  )
+})
 
 test.beforeEach(async ({ context, page }) => {
   await context.clearCookies()
@@ -69,12 +95,12 @@ test('zeigt die deutsche Anmeldung und validiert leere sowie ungültige Eingaben
 
 test('offenbart nicht, ob eine E-Mail-Adresse existiert', async ({ page }) => {
   const account = accounts[0]
-  await submitLogin(page, account.email, 'AbsichtlichFalsch1!')
+  await submitLogin(page, mfaAccount(account.userRole).email, 'AbsichtlichFalsch1!')
   const credentialAlert = page.getByRole('alert').filter({
     hasText: 'E-Mail-Adresse oder Passwort ist nicht korrekt.',
   })
   const existingAccountMessage = await credentialAlert.innerText()
-  await expect(page.getByLabel('E-Mail-Adresse')).toHaveValue(account.email)
+  await expect(page.getByLabel('E-Mail-Adresse')).toHaveValue(mfaAccount(account.userRole).email)
   await expect(page.getByLabel('Passwort')).toHaveValue('')
 
   await page.getByLabel('E-Mail-Adresse').fill('nicht-vorhanden@dentpilot.example')
@@ -92,18 +118,20 @@ test('unterbindet eine zweite Formularübermittlung während der Anmeldung', asy
     }
   })
 
-  await page.getByLabel('E-Mail-Adresse').fill(account.email)
-  await page.getByLabel('Passwort').fill(requiredPassword(account.passwordVariable))
+  await page.getByLabel('E-Mail-Adresse').fill(mfaAccount(account.userRole).email)
+  await page.getByLabel('Passwort').fill(mfaAccount(account.userRole).password)
   const submit = page.getByRole('button', { name: 'Sicher anmelden' })
   await submit.dblclick()
 
-  await expect.poll(() => new URL(page.url()).pathname).toBe('/status')
+  await expect(
+    page.getByRole('heading', { name: 'Sicherheitsprüfung' }),
+  ).toBeVisible()
   expect(loginPosts).toBe(1)
 })
 
 for (const account of accounts) {
   test(`meldet ${account.role} an und zeigt nur den erwarteten Kontokontext`, async ({ page }) => {
-    await loginSuccessfully(page, account.email, requiredPassword(account.passwordVariable))
+    await loginSuccessfully(page, mfaAccount(account.userRole))
 
     await expect.poll(() => new URL(page.url()).pathname).toBe('/status')
     await expect(page.getByRole('heading', { name: `Willkommen, ${account.name}` })).toBeVisible()
@@ -123,7 +151,7 @@ test('schützt direkte Aufrufe, Login-Redirect, Logout und Zurück-Navigation', 
   await expect.poll(() => new URL(page.url()).pathname).toBe('/login')
   expect(new URL(page.url()).search).toBe('')
 
-  await loginSuccessfully(page, account.email, requiredPassword(account.passwordVariable))
+  await loginSuccessfully(page, mfaAccount(account.userRole))
   await page.goto('/login?next=/status')
   await expect.poll(() => new URL(page.url()).pathname).toBe('/status')
   expect(new URL(page.url()).search).toBe('')

@@ -1,9 +1,39 @@
 # Privacy, Security & AI Compliance Architecture
 
-**Stand:** 25.08.2026  
+**Stand:** 09.09.2026
 **Geltung:** verbindliche Querschnittsanforderung für alle Features
 
 > Dieses Dokument übersetzt Datenschutz-, Sicherheits- und KI-Regulierungsanforderungen in Produkt- und Architekturregeln. Es ersetzt keine Rechtsberatung. Rechtsgrundlagen, Verträge, DSFA und regulatorische Einstufungen müssen vor dem Pilotbetrieb fachkundig freigegeben werden.
+
+Der kompakte operative Sicherheitseinstieg für Implementierungsarbeit steht in `SECURITY.md`.
+
+## Aktueller technischer Sicherheitsstand
+
+Dieser Abschnitt beschreibt den belegten Ist-Zustand von PROJ-1, PROJ-19 und dem lokalen T05-Stand von PROJ-31. Alle späteren Abschnitte definieren verbindliche Ziel- und Freigabekriterien; sie sind nicht automatisch bereits umgesetzt.
+
+**Implementiert und automatisiert geprüft:**
+
+- Cookie-basierte Supabase-SSR-Sitzung mit getrennten Clients für Browser, Server und Next.js-Proxy.
+- Serverseitige Identitätsprüfung über kryptografisch verifizierte `getClaims()`-Ergebnisse im Proxy und erneut in der geschützten Seite.
+- `Cache-Control: private, no-store` für Auth-Antworten sowie query-freie Auth-Redirects.
+- Server-seitige Zod-Validierung, neutrale Credential-Fehler und getrennte Behandlung von Rate-Limit- und Dienstfehlern.
+- Minimale Tabellenrechte und RLS für `practice` und `user_profile`, einschließlich negativer Tests für anonyme, fremde und schreibende Browserzugriffe.
+- Physische Trennung öffentlicher App-Konfiguration in `.env.local` von Service-Role-Key und Seed-Passwörtern in `.env.seed.local`.
+- Ausschließlich synthetische Seed- und Testdaten; persistente Auth-Testmedien sind deaktiviert.
+- PROJ-19-Rollen- und Auditgrenze mit getrennten Portaladmin-Identitäten, aktiver praxisgebundener Supportfreigabe, Least-Privilege-RPCs, RLS und 90-Tage-Auditlöschung in der Datenbank.
+- Lokaler PROJ-31-T05-Stand: AAL2- und aktuelle Datenbank-Sitzungsprüfung, TOTP-Einschreibung/-Prüfung, private serverzeitgestempelte Sitzung, Re-Authentisierung für sensible Support-/Audit-RPCs, browserseitige Sperre nach fehlender Aktivität sowie nonce-basierte CSP ohne `unsafe-inline`.
+- Eingecheckte GitHub-Workflows für Kernverifikation sowie Dependency-/Secret-Prüfungen ohne Repository-Secrets.
+
+**Noch nicht implementiert oder nicht betrieblich abgenommen:**
+
+- Hosted-Nachweis und betriebliche Abnahme für MFA, Inaktivitätssperre, Maximalsitzung und Re-Authentisierung (PROJ-31/Auth-Hardening); die Client-Selektion von Eingaben ist kein kryptografischer Anwesenheitsnachweis gegen ein gestohlenes, noch gültiges Sitzungstoken.
+- Weitere Security Header wie HSTS, `X-Content-Type-Options`, Referrer- und Permissions-Policy.
+- GitHub-Aktivierung und Branch-Protection der eingecheckten CI-Workflows sowie der betriebliche Umgang mit Dependency-/Secret-Funden.
+- Lösch- und Aufbewahrungsprozesse, Anbieterakten, DSFA, Incident Response sowie Backup-/Restore-Nachweise.
+- Vercel-Produktionsbetrieb, Monitoring und externe Penetrationstests.
+- Hosted-Cron-Commissioning für die Audit-Löschroutine sowie die Betriebsfreigabe von PROJ-19.
+
+Die nachverfolgte Schulden- und Risikoliste steht in `docs/delivery/known-issues.md`; offene Entscheidungen stehen in `docs/delivery/open-questions.md`.
 
 ## Schutzbedarf und Grundsatz
 
@@ -53,7 +83,9 @@ Verboten sind insbesondere:
 - Produktivdaten in Entwicklungs-, Test- oder Preview-Umgebungen.
 - Datenexporte ohne Zweck, Berechtigung, Audit-Ereignis und Schutz gegen Massenabfluss.
 
-## Sicherheitsarchitektur
+## Verbindliche Ziel- und Mindestarchitektur
+
+Die folgenden Regeln gelten für neue Features und bilden zugleich das Zielbild für das Real-Data-Gate. Wo der aktuelle Stand davon abweicht, ist die Abweichung oben und in `docs/delivery/known-issues.md` festgehalten.
 
 ### Identität und Sitzung
 

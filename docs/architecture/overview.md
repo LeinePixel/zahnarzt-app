@@ -1,60 +1,119 @@
 # Architecture Overview
 
-## Tech Stack (Fakten aus `package.json` und `CLAUDE.md`)
+**Stand:** 09.09.2026
+
+Dieses Dokument trennt die heute ausführbare Architektur ausdrücklich von der geplanten Produktarchitektur. Roadmap-Elemente sind keine implementierten Systembestandteile.
+
+## Aktueller Systemumfang
+
+Implementiert sind PROJ-1 und PROJ-19 sowie der lokale T05-Stand von PROJ-31: eine Next.js-16-Anwendung mit deutscher Anmeldung, geschützter Kontostatus-Seite, Supabase-SSR-Sitzung, Praxis- und Portaladmin-Identitäten, RLS, synthetischer Testdatenbereitstellung sowie einer minimierten Auditansicht mit praxisinitiierter, zeitlich begrenzter Supportfreigabe. Der T05-Stand ergänzt TOTP, einen privaten Sitzungszustand, SSR-Gates, Re-Authentisierung für sensible Supportaktionen und eine nonce-basierte CSP. PROJ-19 und PROJ-31 sind `In Review`; betriebliche Produktions-Gates bleiben offen.
+
+Noch nicht implementiert sind Patienten-, Termin-, CRM-, Kommunikations-, Workflow-, PVS- und KI-Funktionen. Für diese Bereiche existieren Produktplanung und Architekturvorgaben, aber überwiegend noch keine verbindlichen Feature-Specs.
+
+## Technologie
 
 | Bereich | Wahl | Version |
 |---|---|---|
-| Framework | Next.js (App Router) | ^16.3.2 |
+| Framework | Next.js App Router | ^16.3.2 |
 | Sprache | TypeScript | ^5 |
-| UI-Bibliothek | React | ^19.0.0 |
-| Styling | Tailwind CSS | ^3.4.1 |
-| Komponenten | shadcn/ui (kopiert, in `src/components/ui/`) | — |
-| Backend | Supabase (PostgreSQL + Auth + Storage) | `@supabase/supabase-js` ^2.39.3; `@supabase/ssr` ^0.12.5 |
-| Validierung | Zod + react-hook-form | ^4.3.5 / ^7.71.1 |
-| Unit-Tests | Vitest | ^4.1.2 |
-| E2E-Tests | Playwright | ^1.58.2 |
-| Hosting | Vercel | (geplant, noch nicht eingerichtet) |
-| Icons | lucide-react | ^0.562.0 |
+| UI | React, Tailwind CSS, shadcn/ui | ^19.0.0 / ^3.4.1 |
+| Backend | Supabase PostgreSQL und Auth | @supabase/supabase-js ^2.39.3 |
+| SSR-Sitzung | @supabase/ssr | ^0.12.5 |
+| Validierung | Zod, react-hook-form | ^4.3.5 / ^7.71.1 |
+| Tests | Vitest, pgTAP, Playwright | ^4.1.2 / Supabase CLI / ^1.58.2 |
+| Hosting | Vercel | geplant, nicht eingerichtet |
 
-**State-Management:** React `useState` / Context API — keine externe Bibliothek (aus `CLAUDE.md`).
+## Aktuelle Laufzeitarchitektur
 
-## Systemgrenzen — das Fünf-Ebenen-Modell
+~~~text
+Browser
+  │ Cookie-basierte Supabase-Sitzung
+  ▼
+src/proxy.ts
+  │ aktualisiert Cookies, prüft getClaims(), steuert /login, MFA, Re-Auth und geschützte Routen
+  ▼
+Next.js Server Components / Server Actions
+  │ prüfen Claims erneut, validieren Eingaben, laden Kontokontext
+  ▼
+src/lib/supabase/server.ts
+  │ öffentlicher Supabase-Key + Benutzer-Cookie
+  ▼
+Supabase Auth + PostgreSQL
+  │ Tabellenrechte und RLS
+  ▼
+practice / user_profile
+~~~
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ Ebene 1  Bestehende Praxissoftware (Dampsoft)           │
-│          Patientenstammdaten · Behandlungen · Befunde   │
-│          Abrechnung · Basis-Terminverwaltung            │
-│          BLEIBT SOURCE OF TRUTH                         │
-└────────────────────────┬────────────────────────────────┘
-                         │ API (aktuell: Mock-Service)
-┌────────────────────────▼────────────────────────────────┐
-│ Ebene 2  Integrations-Adapter (PROJ-3)                  │
-│          herstellerspezifisch → internes Datenmodell    │
-│          DampsoftAdapter, MockAdapter, …                │
-└────────────────────────┬────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────┐
-│ Ebene 3  Internes Datenmodell (Supabase/PostgreSQL)     │
-│          einheitlich, herstellerunabhängig              │
-└────────────────────────┬────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────┐
-│ Ebene 4  Workflow- und Regel-Engine (PROJ-10)           │
-│          Trigger → Bedingung → Aktion                   │
-└────────────────────────┬────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────┐
-│ Ebene 5  CRM · Analytics · Kommunikation (Oberfläche)   │
-└─────────────────────────────────────────────────────────┘
+Der Proxy ist ein früher Routing- und Sitzungsfilter, aber keine vollständige Autorisierung. Identität wird in geschützten Server-Komponenten erneut geprüft; Datenbankrechte und RLS entscheiden über den Datenzugriff.
 
-Seitlich angebunden:
-  Soniox (Transkription)        → PROJ-14
-  IONOS AI Model Hub (KI)       → PROJ-15
-  Resend (E-Mail-Versand)       → PROJ-12
-```
+## Anwendungsgrenzen
 
-**Warum die Adapter-Schicht:** Die Business-Logik darf nie direkt gegen eine Hersteller-API programmiert werden. Praxissoftware A nennt einen Termin `appointment`, Praxissoftware B `visit` — intern ist beides `Appointment`. So lassen sich weitere Systeme anbinden, ohne die Anwendung umzubauen.
+### Präsentation
+
+- src/app/ enthält Routen, Layout und Seiten.
+- src/components/auth/ enthält Login- und Logout-Oberfläche.
+- src/components/ui/ enthält die vorhandenen shadcn/ui-Bausteine.
+
+### Feature- und Domainlogik
+
+- src/features/auth/actions.ts validiert Login-Eingaben, neutralisiert Anbieterfehler und führt die Anmeldung aus.
+- src/features/auth/current-user.ts verifiziert Claims, lädt den minimalen Kontokontext und führt Logout aus.
+- UI-Code soll diese Funktionen verwenden, statt Authentifizierungslogik zu duplizieren.
+
+### Supabase-Zugriff
+
+- src/lib/supabase/client.ts: Browser-Client.
+- src/lib/supabase/server.ts: Server-Component- und Server-Action-Client.
+- src/lib/supabase/proxy.ts: Request-/Response-Cookie-Synchronisierung und Routing.
+- src/lib/env.ts: ausschließlich öffentliche App-Konfiguration.
+- supabase/seed-env.ts: geheime CLI-Seed-Konfiguration.
+
+Die drei Supabase-Clients bleiben getrennt, weil Browser, Server und Proxy unterschiedliche Cookie-Rechte besitzen.
+
+## Aktuelle Datenhaltung
+
+Die Migration supabase/migrations/20260825170000_proj_1_identity.sql definiert:
+
+- practice als Praxis-/Tenant-Grenze,
+- user_profile als minimale Zuordnung von Auth-Konto, Praxis, Anzeigename und Rolle,
+- user_role mit rezeption, behandler und praxisadmin.
+
+Beide Tabellen haben RLS. Browserrollen besitzen nur selektiven Lesezugriff:
+
+- angemeldete Personen sehen das eigene Profil,
+- angemeldete Personen sehen die zugehörige Praxis,
+- anonyme und fremde Zugriffe werden blockiert,
+- Schreibzugriffe sind Browserrollen entzogen,
+- die geheime service_role ist auf explizite CLI-Verwaltung beschränkt.
+
+PROJ-19 trennt Praxisrollen von `portaladmin`. Praxisrollen erhalten keine Audit-Einsicht; Portaladmins lesen Audit-Metadaten ausschließlich über eine aktive, von der jeweiligen Praxis angelegte Supportfreigabe. RLS, Tabellenrechte und autorisierte RPCs erzwingen diese Grenze.
+
+## Authentifizierungsfluss
+
+1. / leitet nach /login.
+2. Der Proxy aktualisiert die Cookie-Sitzung und verwendet verifizierte getClaims()-Ergebnisse als Routing-Signal.
+3. Die Login-Server-Action validiert E-Mail und Passwort serverseitig mit Zod.
+4. Credential-, Rate-Limit- und Dienstfehler werden ohne Kontenoffenlegung oder technische Anbietertexte klassifiziert.
+5. Eine AAL1-Sitzung durchläuft die TOTP-Einschreibung oder -Prüfung; eine AAL2-Sitzung ohne aktuellen Datenbankzustand wird zur Re-Authentisierung geleitet.
+6. /status verifiziert Claims erneut und lädt über RLS nur das eigene Profil und die eigene Praxis.
+7. Logout beendet die Supabase-Sitzung, invalidiert den App-Layout-Cache und leitet nach /login.
+
+Auth-Antworten erhalten Cache-Control: private, no-store; Redirects enthalten keine übernommenen Query- oder Hash-Werte.
+
+## Seed- und Testgrenze
+
+supabase/seed.ts läuft ausschließlich als CLI-Prozess. Es legt zwei synthetische Praxen und vier Konten einschließlich einer separaten `portaladmin`-Identität idempotent an. Service-Role-Key und Seed-Passwörter werden in .env.seed.local gehalten und vor dem Start des E2E-App-Servers aus dessen Umgebung entfernt.
+
+Die Verifikationsschichten sind:
+
+- ESLint und TypeScript,
+- 90 Vitest-Tests,
+- 108 pgTAP-/RLS-Tests,
+- 17 Playwright-Tests einschließlich Auth-/Security- und Audit-Flows,
+- Chromium sowie Browser-Smokes in Firefox, WebKit und echtem Microsoft Edge,
+- Next.js-Produktions-Build.
+
+Automatisierte PROJ-1- und Cloud-Abnahme wurden am 26.08.2026 dokumentiert. Offen bleiben echter Safari-Smoke, vollständiger Browser-Neustart und kontrollierte Dienstunterbrechung; deshalb bleibt PROJ-1 In Review.
 
 ## Externe Dienste
 
@@ -69,52 +128,50 @@ Seitlich angebunden:
 
 Der Mock-PVS dokumentiert seinen lesenden `/v1`-Vertrag einschließlich neutraler Fehler, Rate Limits und fester Testszenarien in `features/PROJ-2-mock-pvs-service.md`. Für die übrigen Dienste werden Fehler-, Retry- und Rate-Limit-Verhalten jeweils mit der Feature-Spec festgelegt.
 
-## Datenhaltung und Mandantentrennung
+## Deployment und Betrieb
 
-**MVP läuft Single-Tenant** (eine Praxis), das Datenmodell ist aber auf Multi-Tenant vorbereitet:
+Es gibt keine Vercel-Konfiguration. Eingecheckte GitHub-Workflows führen Kernverifikation sowie Dependency-/Secret-Prüfungen aus; ihre GitHub-Aktivierung, Branch-Protection und betriebliche Reaktion auf Funde sind nicht belegt. Verifikation wird zusätzlich lokal über npm run verify beziehungsweise npm run verify:full ausgeführt. Produktionsheader, Monitoring, Backup-/Restore-Nachweise und Incident-Prozesse sind Teil des Real-Data- und Deployment-Gates, nicht aktueller Betriebszustand.
 
-- Eine `practice`-Entität existiert von Beginn an
-- **Jede** Tabelle mit Praxisbezug erhält eine `practice_id`
-- **Row Level Security ist auf jeder Tabelle aktiviert**, auch wenn nur eine Praxis existiert
+## Architekturinvarianten
 
-Der Grund für RLS von Anfang an: Wer sie erst später aktiviert, entdeckt alle dadurch brechenden Abfragen zum spätestmöglichen Zeitpunkt.
+- Praxissoftware bleibt Source of Truth für medizinische und abrechnungsrelevante Daten.
+- Serverseitige Identitätsentscheidungen verwenden verifizierte Claims.
+- Proxy oder UI-Ausblendung ersetzen keine Datenbankautorisierung.
+- Praxisbezogene Tabellen erhalten practice_id, RLS, passende Indizes und negative Isolationstests.
+- Service-Role-Zugriffe bleiben expliziten CLI-Verwaltungsprozessen vorbehalten.
+- Bis zur Freigabe des Real-Data-Gates werden ausschließlich synthetische Daten verarbeitet.
 
-## Authentifizierung
+## Bekannte Schulden und Ausnahmen
 
-Vollständig beschrieben in `features/PROJ-1-supabase-infrastructure-setup.md`, Abschnitt *Tech Design*. Die zentralen Punkte:
+- PROJ-31 ist lokal mit Browser-/Edge-E2E implementiert, aber ohne Hosted-Nachweis und ohne Beweis menschlicher Anwesenheit bei einem gestohlenen, noch gültigen Sitzungstoken.
+- Die nonce-basierte CSP liegt im Proxy; weitere Security Header sind noch nicht implementiert oder betrieblich nachgewiesen.
+- Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
+- Die Anwendung ist im Betrieb noch Single-Tenant, obwohl das Schema die Praxisgrenze vorbereitet.
 
-**Die Sitzung liegt in Cookies, nicht im Browser-Speicher.** `@supabase/ssr` ist seit PROJ-1 Task 2 installiert. Das vorhandene `@supabase/supabase-js` allein würde Sitzungen im Browser-Speicher ablegen, den der Next.js-Server nicht als Cookie-Sitzung verwenden kann.
+Die vollständige Liste steht in docs/delivery/known-issues.md und docs/delivery/open-questions.md.
 
-**Zugriffsschutz über `src/proxy.ts` nach der Next.js-16-Konvention.** Der Proxy aktualisiert Auth-Cookies und trifft Routing-Entscheidungen anhand von `getClaims()`. Geschützte Server-Komponenten prüfen die Identität zusätzlich; Proxy und UI-Ausblendung ersetzen keine Datenbankautorisierung.
+## Geplante Produktarchitektur
 
-**Rollen:** `rezeption`, `behandler`, `praxisadmin`. In PROJ-1 nur gespeichert und angezeigt — die Durchsetzung folgt mit PROJ-19.
+Der folgende Zielaufbau ist beschlossen, aber bis auf Supabase/Identität nicht implementiert:
 
-## Aktueller Implementierungsstand
+~~~text
+Praxissoftware als Source of Truth
+  ▼
+herstellerspezifischer PVS-Adapter (PROJ-3/23)
+  ▼
+internes, praxisgebundenes Datenmodell
+  ▼
+Workflow- und Regel-Engine (PROJ-10)
+  ▼
+CRM, Kommunikation, Analytics und KI-gestützte Vorbereitung
+~~~
 
-**Vorhanden:** Next.js-/shadcn-Grundgerüst, reproduzierbare Tooling-Baseline, validierte und nach Geheimhaltungsbedarf getrennte Supabase-Konfiguration sowie die erste lokale Datenbankmigration.
+Business-Logik soll nie direkt an eine Hersteller-API gekoppelt werden. Ein normalisierter Adapter bildet PVS-spezifische Begriffe und Formate auf das interne Modell ab. KI extrahiert oder bereitet vor; nachvollziehbare Regeln und qualifizierte Menschen entscheiden.
 
-**Datenbankstand:** `practice` und `user_profile` sind mit Constraints, minimalen Tabellenrechten und RLS implementiert. 36 lokale pgTAP-Tests prüfen eigenen, anonymen und fremden Zugriff, blockierte Browser-Schreiboperationen und die expliziten CLI-Verwaltungsrechte. Der lokale Docker-Stack verwendet `55420`–`55429`, weil Windows den Supabase-Standardbereich auf diesem Entwicklungsrechner reserviert.
+## Vertiefende Dokumente
 
-**Seed-Stand:** Der idempotente CLI-Seed ist implementiert und lokal zweimal geprüft. Er erzeugt ausschließlich eine synthetische Praxis sowie drei `.example`-Konten; Passwörter und Service-Key bleiben lokale Laufzeitvariablen.
-
-**Auth-Infrastruktur:** Getrennte `@supabase/ssr`-Clients für Browser, Server und Proxy sind implementiert. `src/proxy.ts` schützt `/status` anhand verifizierter Claims, hält Refresh-Cookies synchron und verhindert Caching der Auth-Antworten. Neun Tests prüfen die Routing- und Cookie-Grenzen.
-
-**Login-Domain:** Die serverseitige Login-Action validiert Eingaben mit Zod, verhindert unterscheidbare Credential-Fehler und gibt weder Passwörter noch technische Anbieterfehler zurück. Rate-Limits und vorübergehende Dienstfehler werden neutral kategorisiert.
-
-**Login-Oberfläche:** Die responsive deutsche Anmeldeseite ist im freigegebenen DentPilot-Design umgesetzt. Sie verwendet ausschließlich lokale Assets und bestehende UI-Komponenten, bewahrt nur die E-Mail nach Fehlern, leert das Passwort und schützt vor Mehrfachübermittlung.
-
-**Geschützter Kontostatus:** Die dynamische Statusseite verifiziert Claims erneut und lädt über RLS ausschließlich das eigene Profil und die zugehörige Praxis. Ein fehlendes Profil wird als eigener Einrichtungszustand behandelt; Logout beendet die Sitzung, invalidiert den App-Cache und leitet nach `/login`.
-
-**Noch nicht vorhanden:** Die browserübergreifende End-to-End-Abnahme und Cloud-Abnahme aus Task 9. Keine eigenen API-Routen sind vorgesehen.
-
-## Datenschutz, Sicherheit und KI-Compliance
-
-Die verbindliche Querschnittsarchitektur steht in `docs/architecture/privacy-security-ai-compliance.md`.
-
-- MVP arbeitet ausschließlich mit **synthetischen Testdaten**. Dies ist eine Entwicklungsgrenze, keine Absenkung des Architekturstandards.
-- Echte oder re-identifizierbare Patienten-/Gesundheitsdaten sind bis zur dokumentierten Erfüllung des Real-Data-Gates untersagt.
-- Vor dem Pilotbetrieb sind unter anderem zwingend: Rechtsgrundlagenprüfung, AV-Verträge/Transfers, DSFA, Rollenrechte und Audit-Log (PROJ-19), Sitzungssperre und MFA (PROJ-31 beziehungsweise Auth-Hardening), Lösch-/Aufbewahrungskonzept, Incident Response und Security-Test.
-- Patientenbezogene Kennzahlen (Termintreue, PZR-Historie, CLV, Kommunikationshistorie) sind **personenbezogene Daten** und entsprechend zu behandeln.
-- Der `SUPABASE_SERVICE_ROLE_KEY` umgeht alle Zugriffsregeln. Er gehört ausschließlich ins Seed-Skript auf der Kommandozeile — niemals in den Browser, niemals ins Repository.
-- Regeln aus `.claude/rules/backend.md` gelten verbindlich: RLS auf jeder Tabelle, Zod-Validierung aller Eingaben, `.limit()` auf allen Listenabfragen, keine Secrets im Quellcode.
-- Für KI-Funktionen gelten dokumentierte AI-Act-Einstufung, Datenminimierung, Human Oversight, Transparenz, Qualitätsgrenzen und eine Prüfung auf Medizinproduktebezug.
+- Datenmodell: docs/architecture/data-model.md
+- Schnittstellenstatus: docs/architecture/api-contracts.md
+- Entscheidungen: docs/architecture/decisions.md
+- Datenschutz, Sicherheit und KI-Gates: docs/architecture/privacy-security-ai-compliance.md
+- Feature-Status: features/INDEX.md

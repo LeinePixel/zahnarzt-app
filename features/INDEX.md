@@ -45,7 +45,7 @@
 | PROJ-28 | Online-Terminbuchung | P2 | Roadmap | PROJ-5 | - | 2026-08-24 |
 | PROJ-29 | Anrufer-Erkennung (CTI-Popup mit Patientenübersicht bei eingehendem Anruf) | P1 | Roadmap | PROJ-4, PROJ-6, PROJ-17, PROJ-19 | - | 2026-08-24 |
 | PROJ-30 | Benutzerverwaltung & Einladungen (Nutzer anlegen, einladen, deaktivieren) | P2 | Roadmap | PROJ-1, PROJ-19 | - | 2026-08-24 |
-| PROJ-31 | Automatische Sitzungssperre nach Inaktivität | P1 | Roadmap | PROJ-1 | - | 2026-08-24 |
+| PROJ-31 | Automatische Sitzungssperre, MFA und Re-Authentisierung | P1 | In Progress | PROJ-1 | [Spec](PROJ-31-session-hardening.md) | 2026-08-24 |
 
 <!-- Add features above this line -->
 
@@ -80,27 +80,28 @@ Hinzugefügt am 24.08.2026. Ziel: Bei eingehendem Anruf öffnet sich in der App 
 
 1. **PROJ-1** Supabase Infrastructure Setup
 2. **PROJ-19** Audit Logging & Rollenrechte *(früh mitbauen, nicht nachträglich)*
-3. **PROJ-2** Mock-PVS-Service
-4. **PROJ-3** Integration-Adapter-Schicht
-5. **PROJ-4** Patienten-Synchronisierung
-6. **PROJ-5** Termin-Synchronisierung
-7. **PROJ-6** Patientenübersicht & Profil
-8. **PROJ-7** Terminübersicht
-9. **PROJ-9** CRM / Nachfassaktionen
-10. **PROJ-11** Kommunikations-Templates-Editor
-11. **PROJ-12** E-Mail-Versand-Integration
-12. **PROJ-10** Regel-Engine
-13. **PROJ-13** Kommunikationsautomatisierung
-14. **PROJ-14** Transkript-Integration
-15. **PROJ-15** KI-Informationsextraktion
-16. **PROJ-16** Automatischer Kostenvoranschlagsentwurf
-17. **PROJ-17** Patientenkennzahlen
-18. **PROJ-8** Patienten-Timeline *(aggregiert Daten aus 6, 7, 9, 13, 14)*
-19. **PROJ-18** Dashboard *(bündelt alles)*
+3. **PROJ-31** Automatische Sitzungssperre, MFA und Re-Authentisierung
+4. **PROJ-2** Mock-PVS-Service
+5. **PROJ-3** Integration-Adapter-Schicht
+6. **PROJ-4** Patienten-Synchronisierung
+7. **PROJ-5** Termin-Synchronisierung
+8. **PROJ-6** Patientenübersicht & Profil
+9. **PROJ-7** Terminübersicht
+10. **PROJ-9** CRM / Nachfassaktionen
+11. **PROJ-11** Kommunikations-Templates-Editor
+12. **PROJ-12** E-Mail-Versand-Integration
+13. **PROJ-10** Regel-Engine
+14. **PROJ-13** Kommunikationsautomatisierung
+15. **PROJ-14** Transkript-Integration
+16. **PROJ-15** KI-Informationsextraktion
+17. **PROJ-16** Automatischer Kostenvoranschlagsentwurf
+18. **PROJ-17** Patientenkennzahlen
+19. **PROJ-8** Patienten-Timeline *(aggregiert Daten aus 6, 7, 9, 13, 14)*
+20. **PROJ-18** Dashboard *(bündelt alles)*
 
-Danach P1 (PROJ-20 bis PROJ-23, PROJ-29, PROJ-31), dann P2 nach Bedarf.
+Danach P1 (PROJ-20 bis PROJ-23, PROJ-29), dann P2 nach Bedarf.
 
-**PROJ-31 (Sitzungssperre) ist zeitkritisch:** muss umgesetzt sein, *bevor* echte Patientendaten ins System kommen (Phase 6, Pilotbetrieb) — unabhängig davon, wie weit die übrigen P1-Features sind.
+**Betriebliche Abnahme vor P31-Umsetzung:** PROJ-1 bleibt bis zu Safari-Smoke, Browser-Neustart und kontrolliertem Dienstausfall `In Review`. PROJ-19 bleibt bis zum Hosted-Cron-Commissioning mit Monitoring `In Review`. Diese Nachweise und PROJ-31 müssen vor echten oder re-identifizierbaren Daten abgeschlossen sein.
 
 ## Verbindliche Compliance-Gates (25.08.2026)
 
