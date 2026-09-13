@@ -1,6 +1,6 @@
 begin;
 
-select plan(41);
+select plan(44);
 
 insert into auth.users (id, email)
 values
@@ -645,5 +645,48 @@ select ok(
 );
 
 reset role;
+delete from private.auth_session_state
+where session_id = '43000000-0000-0000-0000-000000000001';
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub', '41000000-0000-0000-0000-000000000001',
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '43000000-0000-0000-0000-000000000001',
+    'amr', jsonb_build_array(
+      jsonb_build_object(
+        'method', 'totp',
+        'timestamp', extract(epoch from now() - interval '4 minutes 59 seconds')::integer
+      )
+    )
+  )::text,
+  true
+);
+select set_config('request.jwt.claim.sub', '41000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.establish_session_state(),
+  true,
+  'an almost-expired TOTP confirmation can establish initial session state'
+);
+select is(
+  public.establish_session_state(),
+  true,
+  'an almost-expired TOTP confirmation can refresh existing session state'
+);
+
+reset role;
+select ok(
+  (
+    select fresh_totp_at < now() - interval '4 minutes 58 seconds'
+    from private.auth_session_state
+    where session_id = '43000000-0000-0000-0000-000000000001'
+  ),
+  'establishing state does not extend an almost-expired TOTP confirmation'
+);
+
 select * from finish();
 rollback;
