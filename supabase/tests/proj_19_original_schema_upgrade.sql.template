@@ -1,0 +1,533 @@
+begin;
+
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+set local client_min_messages = warning;
+
+create function pg_temp.query_is_true(p_sql text)
+returns boolean
+language plpgsql
+as $$
+declare
+  v_result boolean;
+begin
+  execute p_sql into v_result;
+  return coalesce(v_result, false);
+exception
+  when others then
+    return false;
+end;
+$$;
+
+create function pg_temp.query_text(p_sql text)
+returns text
+language plpgsql
+as $$
+declare
+  v_result text;
+begin
+  execute p_sql into v_result;
+  return v_result;
+exception
+  when others then
+    return null;
+end;
+$$;
+
+-- The local test database starts at the current migration head. Remove every
+-- PROJ-19 object inside this rollback-only transaction so the pre-PROJ-19
+-- baseline is rebuilt only by the immutable historical Git blob below.
+drop trigger if exists user_profile_reject_portal_admin_overlap on public.user_profile;
+drop trigger if exists portal_admin_reject_practice_member_overlap on public.portal_admin;
+
+drop function if exists public.read_audit_events(uuid, timestamptz, integer);
+drop function if exists public.activate_support_access(uuid, public.support_reason);
+drop function if exists public.request_support_access(integer);
+drop function if exists public.request_support_access(interval);
+drop function if exists public.revoke_support_access(uuid);
+drop function if exists public.record_denied_audit_read();
+drop function if exists public.is_portal_admin();
+drop function if exists private.write_audit_event(
+  uuid,
+  uuid,
+  public.audit_actor_type,
+  public.audit_action,
+  public.audit_outcome,
+  text,
+  uuid,
+  uuid
+);
+drop function if exists private.audit_actor_type_for(uuid);
+drop function if exists private.reject_portal_admin_practice_member_overlap();
+drop function if exists private.reject_practice_member_portal_admin_overlap();
+drop function if exists private.purge_expired_audit_events();
+
+drop table public.audit_event;
+drop table public.support_access_grant;
+drop table public.portal_admin;
+
+drop type public.audit_actor_type;
+drop type public.support_reason;
+drop type public.audit_action;
+drop type public.audit_outcome;
+
+drop schema private;
+
+-- This marker is replaced by the SQL object at
+-- 586ebf5:supabase/migrations/20260827090000_proj_19_audit_authorization.sql.
+-- The runner verifies its immutable Git blob ID before it emits the SQL into
+-- this same transaction, before the compatibility bridge and later migrations.
+-- PROJ_19_ORIGINAL_MIGRATION
+
+insert into auth.users (id, email)
+values
+  ('11800000-0000-0000-0000-000000000001', 'proj19-original-praxisadmin@example.invalid'),
+  ('11800000-0000-0000-0000-000000000002', 'proj19-original-rezeption@example.invalid'),
+  ('11800000-0000-0000-0000-000000000003', 'proj19-original-portaladmin@example.invalid'),
+  ('11800000-0000-0000-0000-000000000004', 'proj19-original-unknown@example.invalid');
+
+insert into public.practice (id, name)
+values
+  ('21800000-0000-0000-0000-000000000001', 'PROJ-19 Original Praxis Eins'),
+  ('21800000-0000-0000-0000-000000000002', 'PROJ-19 Original Praxis Zwei');
+
+insert into public.user_profile (user_id, practice_id, display_name, role)
+values
+  (
+    '11800000-0000-0000-0000-000000000001',
+    '21800000-0000-0000-0000-000000000001',
+    'PROJ-19 Original Praxisadmin',
+    'praxisadmin'
+  ),
+  (
+    '11800000-0000-0000-0000-000000000002',
+    '21800000-0000-0000-0000-000000000001',
+    'PROJ-19 Original Rezeption',
+    'rezeption'
+  );
+
+insert into public.portal_admin (user_id)
+values ('11800000-0000-0000-0000-000000000003');
+
+insert into public.support_access_grant (
+  id,
+  practice_id,
+  requested_by,
+  requested_at,
+  expires_at
+)
+values (
+  '31800000-0000-0000-0000-000000000001',
+  '21800000-0000-0000-0000-000000000001',
+  '11800000-0000-0000-0000-000000000001',
+  pg_catalog.now(),
+  pg_catalog.now() + interval '8 hours'
+);
+
+insert into public.support_access_grant (
+  id,
+  practice_id,
+  requested_by,
+  activated_by,
+  requested_at,
+  activated_at,
+  expires_at,
+  support_reason
+)
+values (
+  '31800000-0000-0000-0000-000000000002',
+  '21800000-0000-0000-0000-000000000001',
+  '11800000-0000-0000-0000-000000000001',
+  '11800000-0000-0000-0000-000000000003',
+  pg_catalog.now() - interval '1 hour',
+  pg_catalog.now() - interval '30 minutes',
+  pg_catalog.now() + interval '7 hours',
+  'technical_investigation'
+);
+
+insert into public.audit_event (
+  id,
+  practice_id,
+  actor_id,
+  action,
+  outcome,
+  resource_type,
+  resource_id,
+  correlation_id
+)
+values
+  (
+    '91800000-0000-0000-0000-000000000001',
+    '21800000-0000-0000-0000-000000000001',
+    '11800000-0000-0000-0000-000000000001',
+    'support_access_requested',
+    'allowed',
+    'support_access_grant',
+    '31800000-0000-0000-0000-000000000001',
+    '92800000-0000-0000-0000-000000000001'
+  ),
+  (
+    '91800000-0000-0000-0000-000000000002',
+    '21800000-0000-0000-0000-000000000001',
+    '11800000-0000-0000-0000-000000000003',
+    'support_access_activated',
+    'allowed',
+    'support_access_grant',
+    '31800000-0000-0000-0000-000000000002',
+    '92800000-0000-0000-0000-000000000002'
+  ),
+  (
+    '91800000-0000-0000-0000-000000000003',
+    null,
+    '11800000-0000-0000-0000-000000000004',
+    'audit_read',
+    'denied',
+    'audit_event',
+    null,
+    '92800000-0000-0000-0000-000000000003'
+  );
+
+-- PROJ_19_COMPATIBILITY_BRIDGE
+-- PROJ_19_PORTAL_ADMIN_IDENTITY_CONTEXT
+-- PROJ_19_OPAQUE_ACTIVATION_RESULT
+-- PROJ_19_FORWARD_MIGRATION
+
+-- Reapplying the compatibility bridge and the same newest forward migration
+-- must preserve the authoritative converged state while reasserting functions
+-- and grants.
+-- PROJ_19_COMPATIBILITY_BRIDGE
+-- PROJ_19_FORWARD_MIGRATION
+
+select plan(26);
+
+select has_column(
+  'public',
+  'support_access_grant',
+  'requested_duration_hours',
+  'the original expires-only schema gains bounded duration metadata'
+);
+select has_column(
+  'public',
+  'support_access_grant',
+  'activation_deadline',
+  'the original expires-only schema gains an activation deadline'
+);
+select has_column(
+  'public',
+  'audit_event',
+  'actor_type',
+  'the original audit schema gains controlled actor metadata'
+);
+select ok(
+  (
+    select not attribute.attnotnull
+    from pg_catalog.pg_attribute as attribute
+    join pg_catalog.pg_class as relation on relation.oid = attribute.attrelid
+    join pg_catalog.pg_namespace as namespace on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'public'
+      and relation.relname = 'support_access_grant'
+      and attribute.attname = 'expires_at'
+      and not attribute.attisdropped
+  ),
+  'expires_at becomes nullable for unactivated current grants'
+);
+select results_eq(
+  $$
+    select enum_value.enumlabel::text collate "C"
+    from pg_catalog.pg_enum as enum_value
+    join pg_catalog.pg_type as enum_type on enum_type.oid = enum_value.enumtypid
+    join pg_catalog.pg_namespace as namespace on namespace.oid = enum_type.typnamespace
+    where namespace.nspname = 'public'
+      and enum_type.typname = 'audit_actor_type'
+    order by enum_value.enumsortorder
+  $$,
+  $$
+    values
+      ('practice_member'::text collate "C"),
+      ('portal_admin'::text collate "C"),
+      ('unknown_authenticated'::text collate "C")
+  $$,
+  'the complete controlled actor type is installed'
+);
+select results_eq(
+  $$
+    select id, actor_type::text
+    from public.audit_event
+    where id in (
+      '91800000-0000-0000-0000-000000000001',
+      '91800000-0000-0000-0000-000000000002',
+      '91800000-0000-0000-0000-000000000003'
+    )
+    order by id
+  $$,
+  $$
+    values
+      ('91800000-0000-0000-0000-000000000001'::uuid, 'practice_member'),
+      ('91800000-0000-0000-0000-000000000002'::uuid, 'portal_admin'),
+      ('91800000-0000-0000-0000-000000000003'::uuid, 'unknown_authenticated')
+  $$,
+  'existing original audit rows receive caller-derived actor types'
+);
+select ok(
+  pg_temp.query_is_true(
+    $$
+      select requested_duration_hours = 8
+        and activation_deadline = requested_at + interval '24 hours'
+        and expires_at is null
+        and revoked_at is not null
+      from public.support_access_grant
+      where id = '31800000-0000-0000-0000-000000000001'
+    $$
+  ),
+  'an original pending grant is normalized and revoked fail closed'
+);
+select ok(
+  pg_temp.query_is_true(
+    $$
+      select requested_duration_hours = 8
+        and activation_deadline = requested_at + interval '24 hours'
+        and expires_at = activated_at + interval '8 hours'
+        and revoked_at is not null
+      from public.support_access_grant
+      where id = '31800000-0000-0000-0000-000000000002'
+    $$
+  ),
+  'an original active grant is normalized and revoked instead of extended'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'request_support_access'
+      and pg_catalog.pg_get_function_identity_arguments(procedure.oid) = 'p_requested_duration interval'
+  ),
+  0::bigint,
+  'the original interval overload is removed'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'request_support_access'
+      and pg_catalog.pg_get_function_identity_arguments(procedure.oid) = 'p_requested_duration_hours integer'
+      and pg_catalog.pg_get_function_result(procedure.oid) = 'uuid'
+  ),
+  1::bigint,
+  'the bounded integer-hours request RPC replaces the original overload'
+);
+select is(
+  (
+    select pg_catalog.pg_get_function_result(procedure.oid)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'activate_support_access'
+  ),
+  'jsonb',
+  'activation has the current opaque result shape'
+);
+select is(
+  (
+    select pg_catalog.pg_get_function_result(procedure.oid)
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'revoke_support_access'
+  ),
+  'boolean',
+  'revocation has the current neutral boolean result shape'
+);
+select has_function(
+  'public',
+  'record_denied_audit_read',
+  array[]::text[],
+  'the no-target denial recorder is installed'
+);
+select has_function(
+  'public',
+  'is_portal_admin',
+  array[]::text[],
+  'the current provider identity RPC is installed'
+);
+select ok(
+  (
+    select count(*) = 6
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname in (
+        'record_denied_audit_read',
+        'request_support_access',
+        'activate_support_access',
+        'revoke_support_access',
+        'read_audit_events',
+        'is_portal_admin'
+      )
+      and procedure.prosecdef
+      and procedure.proconfig = array['search_path=""']::text[]
+  ),
+  'all authoritative public RPCs pin an empty search path'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.audit_event', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.support_access_grant', 'SELECT'),
+  'the upgrade does not weaken direct table privileges'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11800000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  (
+    select count(*)
+    from public.read_audit_events(
+      '21800000-0000-0000-0000-000000000001',
+      pg_catalog.now(),
+      50
+    )
+  ),
+  0::bigint,
+  'a portaladmin cannot retain access through a migrated original grant'
+);
+
+reset role;
+set local role service_role;
+
+select is(
+  (
+    select practice_id
+    from public.audit_event
+    where actor_id = '11800000-0000-0000-0000-000000000003'
+      and action = 'audit_read'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  null::uuid,
+  'the blocked legacy support attempt is audited without a target practice'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11800000-0000-0000-0000-000000000004', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select is(
+  public.record_denied_audit_read(),
+  false,
+  'an unknown authenticated identity receives the neutral denial result'
+);
+
+reset role;
+set local role service_role;
+
+select ok(
+  (
+    select practice_id is null and actor_type = 'unknown_authenticated'
+    from public.audit_event
+    where actor_id = '11800000-0000-0000-0000-000000000004'
+      and action = 'audit_read'
+      and outcome = 'denied'
+    order by occurred_at desc, id desc
+    limit 1
+  ),
+  'the unknown denial is durable, controlled, and has no practice target'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11800000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select set_config(
+  'proj_19.original_new_grant_id',
+  coalesce(pg_temp.query_text($$ select public.request_support_access(8)::text $$), ''),
+  true
+);
+select ok(
+  current_setting('proj_19.original_new_grant_id') <> '',
+  'the upgraded schema creates a new bounded support grant'
+);
+select throws_ok(
+  $$ select public.request_support_access(interval '8 hours') $$,
+  '42883',
+  null,
+  'the insecure legacy interval API cannot be called after upgrade'
+);
+
+reset role;
+select set_config('request.jwt.claim.sub', '11800000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+set local role authenticated;
+
+select ok(
+  public.activate_support_access(
+    current_setting('proj_19.original_new_grant_id')::uuid,
+    'technical_investigation'
+  ) ? 'practice_id',
+  'the current opaque activation RPC works for a new bounded grant'
+);
+
+reset role;
+set local role service_role;
+
+select ok(
+  pg_temp.query_is_true(
+    format(
+      $$
+        select expires_at = activated_at + interval '8 hours'
+          and revoked_at is null
+        from public.support_access_grant
+        where id = %L::uuid
+      $$,
+      current_setting('proj_19.original_new_grant_id')
+    )
+  ),
+  'new support behavior derives expiry only from bounded activation metadata'
+);
+select throws_ok(
+  $$
+    insert into public.support_access_grant (
+      practice_id,
+      requested_by,
+      requested_duration_hours,
+      activation_deadline
+    )
+    values (
+      '21800000-0000-0000-0000-000000000001',
+      '11800000-0000-0000-0000-000000000001',
+      25,
+      pg_catalog.now() + interval '24 hours'
+    )
+  $$,
+  '23514',
+  null,
+  'the authoritative table constraint rejects more than 24 hours'
+);
+select ok(
+  (
+    select has_function_privilege('authenticated', procedure.oid, 'EXECUTE')
+      and not has_function_privilege('anon', procedure.oid, 'EXECUTE')
+    from pg_catalog.pg_proc as procedure
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'record_denied_audit_read'
+      and procedure.pronargs = 0
+  ),
+  'only authenticated callers may execute the denial recorder'
+);
+
+select * from finish();
+rollback;

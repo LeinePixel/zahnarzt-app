@@ -1,0 +1,1 @@
+export const E2E_FOREIGN_PRACTICE_ID = '4c25a8d1-3b5f-4f1d-a5a6-8027c7c2e002'
