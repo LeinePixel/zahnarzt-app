@@ -342,3 +342,10 @@ Die getrennten lokalen Bearer-Token verbleiben in der ignorierten Konfiguration 
 ## License
 
 MIT License - feel free to use for your projects!
+
+### PROJ-3: private lokale Adapterkonfiguration
+
+Die Vorlage `.env.integration.local.example` wird ausschließlich für synthetische
+serverseitige Integrationen nach `.env.integration.local` kopiert. Werte bleiben
+privat und werden weder gespeichert noch protokolliert. PROJ-3 stellt keinen
+Runtime-Befehl und keine Browser-API bereit.
