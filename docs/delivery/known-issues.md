@@ -34,3 +34,21 @@ Jeweils mit Begründung im Decision Log (`docs/architecture/decisions.md`).
 | **Telefonanlage unbekannt** | Blockiert PROJ-29. Gleiche Strategie wie beim PVS: Entwicklung gegen einen generischen Webhook. |
 | **Ein einzelner Entwickler** | Kein Ausfallschutz, keine Möglichkeit, Arbeit zu verteilen. Der Umfang jeder Aufgabe muss für eine Person tragbar bleiben. |
 | **Nur 1 von 31 Features spezifiziert** | Der Planungsvorlauf ist dünn. Vor jedem Feature ist eine Spec nötig; wer das überspringt, baut auf Vermutungen. |
+
+## PROJ-3: offene Folgegates
+
+Kein Scheduler und keine Runtime-Ausführungsidentität, keine Status-UI, kein
+Patienten-/Terminimport und keine echte PVS-Anbindung. Die 30-Tage-Löschfunktion
+ist implementiert; ihre betriebliche Ausführung ist nicht eingerichtet.
+Hosted-Betrieb, Deployment und Real-Data-Gate sind nicht freigegeben.
+
+Auf der freigegebenen Basis 3feed77 fehlen AGENTS.md, ARCHITECTURE.md, SECURITY.md
+und DECISIONS.md; operative Nutzeranweisungen und vorhandene vertiefende
+Architekturdokumente gelten weiter. Die fehlenden verify-Skripte wurden aus den
+vorhandenen Lint-, Typecheck-, Test-, Build-, pgTAP- und Edge-Befehlen ergänzt.
+Der pgTAP-Dateipfad wird als Positionsargument verwendet, da CLI 2.115.0 kein
+`--file` unterstützt.
+
+`npm ci` meldete am 14.09.2026 zehn bestehende Dependency-Audit-Funde
+(1 low, 5 moderate, 3 high, 1 critical). Dependency-Upgrades gehören nicht zur
+PROJ-3-Adapterumsetzung; Sicherheitsremediation und Betriebsfreigabe bleiben offen.
