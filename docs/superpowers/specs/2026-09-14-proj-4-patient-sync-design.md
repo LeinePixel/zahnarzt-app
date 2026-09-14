@@ -1,6 +1,6 @@
 # PROJ-4 Patienten-Synchronisierung — Architekturentwurf
 
-**Status:** Umfang freigegeben; vollständiger Entwurf zur Prüfung
+**Status:** Vollständiger Entwurf am 14.09.2026 freigegeben
 **Datum:** 2026-09-14
 **Verbindliche Anforderungen:** [PROJ-4-Spec](../../../features/PROJ-4-patient-synchronization.md)
 
@@ -200,13 +200,13 @@ und Hosted-Rollen sind nicht Teil dieser Arbeit.
 - Abschluss: gezielte Prüfungen, vollständiges `npm run verify:full`,
   Secret-/Log-/Diff-Grenzprüfung, unabhängiger Review und dokumentierte Evidenz.
 
-## Selbstprüfung und nächste Freigabe
+## Selbstprüfung und Umsetzung
 
 Die Anforderungen AC01–AC15 sind den Testgruppen zugeordnet. Geplante Pfade,
 Funktionen, Rollen und Datenstrukturen sind benannt. Es gibt keine produktiven
 Credentials, Quellpayloadspeicherung, Scheduler- oder Terminimplementierung.
 Quellcursor- und Snapshot-Limitierungen sind ausdrücklich ausgewiesen.
 
-Die vollständige Spec und dieser Entwurf werden vor Erstellung des TDD-Plans
-vom Nutzer geprüft. Bis dahin wird kein Featurecode, keine Migration, keine
-Dependency und keine lokale Ausführungsrolle implementiert oder provisioniert.
+Die vollständige Spec und dieser Entwurf sind freigegeben. Der
+[TDD-Umsetzungsplan](../plans/2026-09-14-proj-4-patient-sync.md) liegt vor.
+Featurecode und Datenbankrollen werden erst bei seiner Ausführung implementiert.

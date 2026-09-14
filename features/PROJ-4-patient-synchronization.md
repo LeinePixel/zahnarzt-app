@@ -1,11 +1,11 @@
 # PROJ-4: Patienten-Synchronisierung
 
-## Status: Planned
+## Status: Architected
 
 **Created:** 2026-09-14
 **Last Updated:** 2026-09-14
 **Priority:** P0 (MVP)
-**Freigabe:** Umfang freigegeben; diese vollständige Spec und Architektur warten auf Prüfung.
+**Freigabe:** Vollständige Spec und Architektur am 14.09.2026 vom Nutzer freigegeben.
 
 ## Ziel
 
@@ -37,7 +37,7 @@ erneut zu prüfen; keine Änderungen am separaten PROJ-31-PR.
 - Als Entwickler von PROJ-5 möchte ich Terminänderungen unabhängig lesen können,
   auch wenn der Patientensync bereits denselben gemischten Feed durchlaufen hat.
 
-## Beschlossene und zur Prüfung konkretisierte Entscheidungen
+## Freigegebene Entscheidungen
 
 | ID | Entscheidung |
 |---|---|
@@ -281,4 +281,4 @@ provisionierung, Hosted-Migration, Deployment, Real-Data-Gate-Freigabe und PROJ-
 ## Technischer Entwurf
 
 [Architekturentwurf](../docs/superpowers/specs/2026-09-14-proj-4-patient-sync-design.md).
-Ein detaillierter TDD-Plan folgt nach Freigabe beider Dokumente.
+Der detaillierte [TDD-Umsetzungsplan](../docs/superpowers/plans/2026-09-14-proj-4-patient-sync.md) liegt vor.
