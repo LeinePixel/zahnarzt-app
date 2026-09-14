@@ -56,3 +56,25 @@ Für die echte PVS-Anbindung, sobald sie spezifiziert wird, sind vorgesehen:
 - Konflikterkennung
 
 PROJ-2 liefert dafür gezielt keine Webhooks und keine Sync-Logik. Sein cursor-basierter Änderungsstrom ist ein lokaler Adapter-Testvertrag, keine Vorwegnahme eines echten Herstellerprotokolls.
+
+## PROJ-3: serverseitige Integrationsgrenze
+
+`src/features/integrations/adapter.ts` beschreibt Health, Patienten-, Termin-
+und Änderungsseiten des synthetischen Quellvertrags. `MockPvsAdapter` verwendet
+nur feste `/v1`-Pfade, lokale HTTP-Origins, den privaten Lesezugang, ein
+Drei-Sekunden-Timeout und maximal ein MiB pro Antwort. DentPilot-eigene strikte
+Zod-Schemas validieren alle Ressourcen und Envelopes; Service-Interna werden
+nur in Tests importiert.
+
+Fehler enthalten ausschließlich `configuration_invalid`, `network_unavailable`,
+`rate_limited`, `temporarily_unavailable`, `source_protocol_invalid` oder
+`source_contract_invalid` und einen optionalen Retry-Zeitpunkt. 429/503 verwenden
+nur ganzzahlige Retry-After-Werte von 1 bis 300 Sekunden, sonst 60 Sekunden.
+Es gibt keine automatische Wiederholung und keine neue Browserroute.
+
+`read_integration_sync_status()` nimmt keine Argumente entgegen. PostgreSQL
+ermittelt die Praxis aus `auth.uid()` und gibt nur dem eigenen `praxisadmin`
+sieben technische Statusfelder ohne Cursor zurück. Der server-only Mapper
+prüft zusätzlich die Fähigkeit `integration.status.read` und die Antwortform.
+Private Ergebnis- und Cursorfunktionen besitzen keine Browser-Ausführungsrechte
+und werden von PROJ-3 nicht aus Anwendungscode aufgerufen.

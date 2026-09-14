@@ -96,3 +96,25 @@ Die externen PVS-Kennungen werden erst in PROJ-3 einem Integrationskontext und s
 ## Hinweis zur Datenminimierung
 
 Aus dem Ursprungskonzept §18: **Daten nur importieren, wenn sie tatsächlich für eine Funktion benötigt werden.** Patientenbezogene Kennzahlen (Termintreue, PZR-Historie, Rechnungen, CLV, Behandlungsinformationen, Kommunikationshistorie) sind personenbezogene Daten und erfordern Aufbewahrungsregeln sowie ein Löschkonzept — beides vor dem Pilotbetrieb zu definieren.
+
+## PROJ-3: implementierter technischer Integrationszustand
+
+- `integration`: ID, Praxiszuordnung, Provider `mock_pvs`, Erstellzeit;
+  `(practice_id, provider)` ist eindeutig.
+- `integration_sync_state`: Integrations-ID, `idle|healthy|retry_scheduled|failed`,
+  interner bestätigter Cursor, Versuch/Erfolg/Retry und neutrale Fehlerklasse.
+  Constraints erzwingen konsistente Zustände; ein erfolgreicher Abruf verändert
+  keinen bestätigten Cursor.
+- `integration_sync_event`: ID, Integrations-ID, `succeeded|failed`, erlaubte
+  Fehlerklasse, Versuchs- und Retry-Zeit. Eine private Löschfunktion entfernt
+  Ereignisse nach 30 Tagen; ein Scheduler ist noch nicht eingerichtet.
+
+Alle Tabellen aktivieren RLS und verweigern direkte Rechte für `anon` und
+`authenticated`. Ausschließlich ein kontrollierter RPC liefert dem eigenen
+Praxisadmin cursorfreie Statusdaten. Private SECURITY-DEFINER-Funktionen nutzen
+leeren search_path und haben keine Browser-Ausführungsrechte.
+
+Ausgeschlossen bleiben Patienten/Termine, Quellpayloads, externe Ressourcen-IDs,
+URLs, Headers, Tokens und fachbezogene Zähler. Der CLI-Seed legt nur die
+synthetische Providerzuordnung an. Eine spätere PROJ-4/5-Fachtransaktion muss
+Cursorbestätigung und eine eigene Ausführungsidentität spezifizieren.

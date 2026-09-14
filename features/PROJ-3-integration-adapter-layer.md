@@ -1,9 +1,9 @@
 # PROJ-3: Integration-Adapter-Schicht
 
-## Status: Planned
+## Status: In Review
 
 **Created:** 2026-09-13  
-**Last Updated:** 2026-09-13  
+**Last Updated:** 2026-09-14
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -169,26 +169,26 @@ fachliche Daten fortgeschrieben.
 
 ## Akzeptanzkriterien
 
-- [ ] Bei gültiger lokaler Konfiguration kann der serverseitige Adapter die
+- [x] Bei gültiger lokaler Konfiguration kann der serverseitige Adapter die
   Mock-PVS-Version prüfen und jede spezifizierte `/v1`-Seite in kanonische
   Typen überführen.
-- [ ] Bei fehlender, ungültiger oder nichtlokaler Konfiguration erfolgt kein
+- [x] Bei fehlender, ungültiger oder nichtlokaler Konfiguration erfolgt kein
   Netzwerkaufruf und es wird nur `configuration_invalid` geliefert.
-- [ ] Bei ungültigen Quellressourcen, unerwarteten Antworten oder
+- [x] Bei ungültigen Quellressourcen, unerwarteten Antworten oder
   Antwortgrößen über dem Limit liefert der Adapter eine neutrale Fehlerklasse,
   keinen Quelltext und keine Teilressource.
-- [ ] Bei 429 und 503 wird ein zulässiges `Retry-After` begrenzt in den
+- [x] Bei 429 und 503 wird ein zulässiges `Retry-After` begrenzt in den
   technischen Status übernommen; der Adapter wiederholt den Aufruf nicht
   selbst.
-- [ ] Bei einem erfolgreichen Abruf kann ein technischer Erfolg gespeichert
+- [x] Bei einem erfolgreichen Abruf kann ein technischer Erfolg gespeichert
   werden, ohne Patienten, Termine, URLs, Tokens, Cursor oder Antwortkörper in
   Fehlerereignissen abzulegen.
-- [ ] Ein Praxisadmin kann nur den cursorfreien Status der eigenen Praxis
+- [x] Ein Praxisadmin kann nur den cursorfreien Status der eigenen Praxis
   lesen. Andere Praxisrollen, Portaladmins, fremde Praxisadmins und anonyme
   Aufrufe erhalten keine Statusdaten und keine direkten Tabellenrechte.
-- [ ] Der lokale Seed legt nur die synthetische `mock_pvs`-Zuordnung an; er
+- [x] Der lokale Seed legt nur die synthetische `mock_pvs`-Zuordnung an; er
   enthält keine Integrationszugangsdaten.
-- [ ] Unit-, HTTP- und pgTAP-Negativtests sowie `npm run verify:full` bestehen
+- [x] Unit-, HTTP- und pgTAP-Negativtests sowie `npm run verify:full` bestehen
   mit ausschließlich synthetischer Konfiguration.
 
 ## Teststrategie
@@ -209,8 +209,8 @@ fachliche Daten fortgeschrieben.
 
 Der verbindliche Architekturentwurf steht in
 [`docs/superpowers/specs/2026-09-13-proj-3-integration-adapter-design.md`](../docs/superpowers/specs/2026-09-13-proj-3-integration-adapter-design.md).
-Der detaillierte Implementierungsplan entsteht erst nach Prüfung dieser
-Spezifikation.
+Der freigegebene Implementierungsplan wurde lokal umgesetzt; seine
+Prüfevidenz ist unten dokumentiert.
 
 ## Decision Log
 
@@ -220,3 +220,35 @@ Spezifikation.
 | Persistenter technischer Zustand ohne Fachimport | Folgefeatures benötigen belegbare Quellgesundheit und Retry-Grenzen, besitzen aber noch keine Datenmodelle für Patienten oder Termine. | 2026-09-13 |
 | Keine Runtime-Ausführung in PROJ-3 | Eine sichere Ausführungsidentität und der Scheduler sind eigenständige Architekturentscheidungen und dürfen nicht durch einen Service-Role-Shortcut entstehen. | 2026-09-13 |
 | Cursor bleibt intern und bestätigungspflichtig | Ein Cursor darf niemals den Erfolg einer noch nicht transaktional verarbeiteten Fachänderung behaupten. | 2026-09-13 |
+
+## Lokale Abnahmecheckliste
+
+- [x] Konfiguration und Quellschemas: `src/features/integrations/mock-pvs-config.test.ts`
+- [x] HTTP-Grenzen, Paging, Tombstones und neutrale Fehler: `src/features/integrations/mock-pvs-adapter.test.ts`
+- [x] Cursorfreier serverseitiger Status: Policy- und Statusmapper-Tests
+- [x] Tabellenrechte, Praxisgrenze, Zustandskonsistenz und Retention: `supabase/tests/proj_3_integration_adapter.test.sql`
+- [x] Synthetischer idempotenter Seed: `supabase/seed.test.ts`
+- [x] Repository- und Browserintegration: `npm run verify:full`
+- [ ] Hosted-Betrieb, Scheduler/Ausführungsidentität, Status-UI, Fachimport und echte Anbieteranbindung bleiben separate Folgearbeit.
+- [ ] Real-Data-Gate bleibt geschlossen; Datenschutz-, DSGVO- und EU-AI-Act-Gates sind nicht durch lokale Tests freigegeben.
+
+## Lokale PROJ-3-Prüfevidenz — 14.09.2026
+
+`npm run verify:full` endete mit Exit 0: Lint, Typecheck, 25 Vitest-Dateien /
+233 Tests, Produktionsbuild, vier pgTAP-Dateien / 134 Assertions und
+17 Playwright-Tests einschließlich Microsoft Edge. Zusätzlich liefen separat
+`npm run test:mock-pvs` (84 Tests), `npm run lint`, `npm run typecheck`,
+`npm test`, `npx supabase test db --local` und
+`npm run test:e2e:edge-required` erfolgreich. Die finale Vollprüfung enthält
+die Review-Korrekturen. `git diff --check` und beide Token-Grenzscans sind sauber.
+
+Die fokussierte Evidenz umfasst 20 Konfigurations-/Schema-Tests, 24 HTTP-Tests,
+13 Statusmapper-Tests, fünf Policy-Tests, sieben Seed-Tests und 26 PROJ-3-pgTAP-
+Assertions. Die neuen Tests wurden vor der Implementierung rot ausgeführt.
+Der lokale synthetische Reset und Seed waren erfolgreich.
+
+Ein unabhängiger Review fand zwei Fehler: SQL-NULL-Umgehung der Retry-Constraint
+und falsche Einordnung eines abgebrochenen Antwortstreams. Beide wurden mit
+roten Negativtests reproduziert, korrigiert, grün geprüft und im Review bestätigt.
+Keine neue App-Route, kein Scheduler, kein Fachimport und keine Hosted-Änderung.
+Real-Data-Gate und alle betrieblichen Folgefreigaben bleiben offen.

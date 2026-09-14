@@ -56,7 +56,7 @@
 - Produces `loadMockPvsConfig`, consumed only by `MockPvsAdapter`.
 - Produces the closed `IntegrationFailureCode` union used by Tasks 2–4.
 
-- [ ] **Step 1: Write the failing contract/configuration tests.**
+- [x] **Step 1: Write the failing contract/configuration tests.**
 
 Create `mock-pvs-config.test.ts` with synthetic values. Cover accepted local origins, a trimmed nonempty read token, and every rejected boundary: absent token, `https`, remote hostname, credentials, non-root path, query and fragment. Assert rejection occurs before a `fetch` dependency can be supplied.
 
@@ -78,13 +78,13 @@ expect(() => loadMockPvsConfig({
 
 Add schema tests that reject extra envelope keys, malformed timestamps, a patient with an invalid `phoneE164`, an appointment whose end is not after its start, and an `upsert` event whose resource ID/version differs from the event.
 
-- [ ] **Step 2: Run the new tests and confirm they fail because the modules do not exist.**
+- [x] **Step 2: Run the new tests and confirm they fail because the modules do not exist.**
 
 Run: `npx vitest run src/features/integrations/mock-pvs-config.test.ts`
 
 Expected: FAIL with module-not-found errors for `adapter`, `contracts` or `mock-pvs-config`.
 
-- [ ] **Step 3: Implement the minimal canonical contract and configuration parser.**
+- [x] **Step 3: Implement the minimal canonical contract and configuration parser.**
 
 Create the canonical types and result union in `adapter.ts`. Do not use database or Mock-PVS service imports.
 
@@ -125,7 +125,7 @@ MOCK_PVS_READ_TOKEN=
 
 Add a concise README section stating that the adapter template is private, server-only and has no runtime command or browser API in PROJ-3.
 
-- [ ] **Step 4: Run targeted tests and static checks.**
+- [x] **Step 4: Run targeted tests and static checks.**
 
 Run:
 
@@ -137,7 +137,7 @@ npm run lint
 
 Expected: all commands exit 0.
 
-- [ ] **Step 5: Commit the contract boundary.**
+- [x] **Step 5: Commit the contract boundary.**
 
 ```powershell
 git add .env.integration.local.example README.md src/features/integrations/adapter.ts src/features/integrations/contracts.ts src/features/integrations/mock-pvs-config.ts src/features/integrations/mock-pvs-config.test.ts
@@ -156,7 +156,7 @@ git commit -m "feat(proj-3): add integration adapter contract"
 - Produces `MockPvsAdapter`, the only concrete PROJ-3 `IntegrationAdapter`.
 - Tests may import `createMockPvsServer`, `createScenarioState` and `loadMockPvsConfig` from `services/mock-pvs/`; production files must not.
 
-- [ ] **Step 1: Write failing HTTP boundary tests against the real local Mock-PVS.**
+- [x] **Step 1: Write failing HTTP boundary tests against the real local Mock-PVS.**
 
 Start an in-process server with a random read token and test token as in `services/mock-pvs/router.test.ts`. Instantiate the production adapter with the read token only. Cover:
 
@@ -177,13 +177,13 @@ Add assertions for patient and appointment pages, deterministic change `upsert`s
 
 Activate `invalid-source-data`, `rate-limited` and `temporarily-unavailable` through `/__test` from test code only. Assert respectively `source_contract_invalid`, `rate_limited` with `retryAt` one second after a fixed fake clock, and `temporarily_unavailable` with the same capped retry result. Add a minimal separate local server that returns a redirect, non-JSON and a body over 1 MiB; each must map to `source_protocol_invalid` with no raw text.
 
-- [ ] **Step 2: Run the HTTP tests and confirm they fail because `MockPvsAdapter` is absent.**
+- [x] **Step 2: Run the HTTP tests and confirm they fail because `MockPvsAdapter` is absent.**
 
 Run: `npx vitest run src/features/integrations/mock-pvs-adapter.test.ts`
 
 Expected: FAIL with a missing `mock-pvs-adapter` module or constructor.
 
-- [ ] **Step 3: Implement fixed-path fetching and bounded decoding.**
+- [x] **Step 3: Implement fixed-path fetching and bounded decoding.**
 
 Implement the class with an injected `fetch` function and `now` clock for deterministic tests.
 
@@ -209,7 +209,7 @@ Reject a response if `content-length` exceeds `1_048_576` or streamed bytes exce
 
 Map 429 to `rate_limited`, 503 to `temporarily_unavailable`, transport and timeout errors to `network_unavailable`, and all other HTTP/redirect/body/JSON failures to `source_protocol_invalid`. Parse only an integer `Retry-After` in `1..300` seconds. For 429/503 without that value, set `retryAt` to `now() + 60 seconds`; all other errors use `null`.
 
-- [ ] **Step 4: Run focused adapter verification.**
+- [x] **Step 4: Run focused adapter verification.**
 
 Run:
 
@@ -222,7 +222,7 @@ npm run lint
 
 Expected: every command exits 0. Inspect the test output to confirm neither generated token appears.
 
-- [ ] **Step 5: Commit the concrete adapter.**
+- [x] **Step 5: Commit the concrete adapter.**
 
 ```powershell
 git add src/features/integrations/adapter.ts src/features/integrations/mock-pvs-adapter.ts src/features/integrations/mock-pvs-adapter.test.ts
@@ -242,7 +242,7 @@ git commit -m "feat(proj-3): add local mock pvs adapter"
 - Produces private `private.record_integration_sync_result(...)`, `private.confirm_integration_change_cursor(...)` and `private.purge_expired_integration_sync_events()` for a later, explicitly specified execution identity.
 - Consumes the existing `public.practice`, `public.user_profile` and `public.user_role` boundary; no user-supplied practice ID is accepted by public functions.
 
-- [ ] **Step 1: Write the failing pgTAP and seed tests.**
+- [x] **Step 1: Write the failing pgTAP and seed tests.**
 
 Create a transaction-wrapped pgTAP file with two synthetic practices, one `praxisadmin`, one other practice role and one portaladmin. Set `select plan(...)` to the exact assertion count written in this file.
 
@@ -272,18 +272,18 @@ Also assert that rezeption, portaladmin, anonymous and a foreign praxisadmin rec
 
 Extend `MemorySeedAdminClient` and `SeedAdminClient` with `upsertMockPvsIntegration(practiceId: string)`. First write a failing seed test that two seed runs retain exactly one integration for the synthetic primary practice and store no base URL or token.
 
-- [ ] **Step 2: Run the failing database and seed tests.**
+- [x] **Step 2: Run the failing database and seed tests.**
 
 Run:
 
 ```powershell
 npx vitest run supabase/seed.test.ts
-npx supabase test db --local --file supabase/tests/proj_3_integration_adapter.test.sql
+npx supabase test db --local supabase/tests/proj_3_integration_adapter.test.sql
 ```
 
 Expected: the Vitest test fails on the missing seed method, and pgTAP fails because the migration objects do not exist.
 
-- [ ] **Step 3: Add the smallest database schema and controlled functions.**
+- [x] **Step 3: Add the smallest database schema and controlled functions.**
 
 Create the provider, state and error enums with only the approved values. Create tables with no connection data and an `AFTER INSERT` trigger that creates an `idle` state.
 
@@ -342,7 +342,7 @@ Write the private record and cursor-confirm functions so they accept only a know
 
 Update the seed's typed database model and `SupabaseSeedAdminClient` to upsert `{ practice_id: practice.id, provider: 'mock_pvs' }` after the primary practice exists. The in-memory test client stores only practice IDs. Do not add any environment variable or connection field to seed code.
 
-- [ ] **Step 4: Reset the authorised synthetic local database and run targeted verification.**
+- [x] **Step 4: Reset the authorised synthetic local database and run targeted verification.**
 
 Run:
 
@@ -350,12 +350,12 @@ Run:
 npx supabase db reset --local
 npm run seed
 npx vitest run supabase/seed.test.ts
-npx supabase test db --local --file supabase/tests/proj_3_integration_adapter.test.sql
+npx supabase test db --local supabase/tests/proj_3_integration_adapter.test.sql
 ```
 
 Expected: migration and seed complete only with synthetic data; all new pgTAP assertions pass. If the reset or migration fails, stop and diagnose before changing the schema.
 
-- [ ] **Step 5: Commit the database boundary.**
+- [x] **Step 5: Commit the database boundary.**
 
 ```powershell
 git add supabase/migrations/20260913170000_proj_3_integration_adapter.sql supabase/tests/proj_3_integration_adapter.test.sql supabase/seed.ts supabase/seed.test.ts
@@ -377,7 +377,7 @@ git commit -m "feat(proj-3): persist protected integration status"
 - Consumes `public.read_integration_sync_status()` from Task 3 through an injected RPC client.
 - Produces `readIntegrationSyncStatus(client, actor): Promise<IntegrationSyncStatus | null>` for a later server component; no page or action calls it in PROJ-3.
 
-- [ ] **Step 1: Write failing policy and status-mapper tests.**
+- [x] **Step 1: Write failing policy and status-mapper tests.**
 
 Extend policy tests so only a practice-member `praxisadmin` receives
 `integration.status.read`; rezeption, behandler and portaladmin return false.
@@ -393,7 +393,7 @@ expect(client.rpc).toHaveBeenCalledWith(
 
 Verify it rejects malformed results, provider/error enum values outside the closed contract and database errors by returning `null` without forwarding a database or provider message. For every disallowed actor, assert the RPC client is never called. Assert the returned TypeScript object cannot contain `confirmedChangeCursor`, raw error text or a practice ID.
 
-- [ ] **Step 2: Run tests and confirm the expected failures.**
+- [x] **Step 2: Run tests and confirm the expected failures.**
 
 Run:
 
@@ -403,7 +403,7 @@ npx vitest run src/features/authorization/policy.test.ts src/features/integratio
 
 Expected: FAIL because the capability and mapper module do not exist.
 
-- [ ] **Step 3: Add the narrow capability and server-only mapper.**
+- [x] **Step 3: Add the narrow capability and server-only mapper.**
 
 Add `'integration.status.read'` to the closed `Capability` union and list. Return true only when `actor.kind === 'practice_member' && actor.role === 'praxisadmin'`.
 
@@ -456,7 +456,7 @@ export async function readIntegrationSyncStatus(
 
 Use schemas for a UUID, provider `mock_pvs`, all approved state/error enums and nullable ISO timestamps. Map snake_case RPC fields to the private TypeScript type without exposing cursor, practice ID or provider errors.
 
-- [ ] **Step 4: Run focused server-boundary checks.**
+- [x] **Step 4: Run focused server-boundary checks.**
 
 Run:
 
@@ -468,7 +468,7 @@ npm run lint
 
 Expected: all commands exit 0 and no file under `src/app/` changes.
 
-- [ ] **Step 5: Commit the status-read boundary.**
+- [x] **Step 5: Commit the status-read boundary.**
 
 ```powershell
 git add src/features/authorization/policy.ts src/features/authorization/policy.test.ts src/features/integrations/sync-state.ts src/features/integrations/read-sync-status.ts src/features/integrations/read-sync-status.test.ts
@@ -491,11 +491,11 @@ git commit -m "feat(proj-3): expose guarded integration status"
 - Consumes the exact test counts and commands produced by Tasks 1–4.
 - Produces an evidence-backed `In Review` feature record; it must not claim hosted operation, a real PVS connection, scheduler commissioning or Real-Data-Gate approval.
 
-- [ ] **Step 1: Write the documentation assertions as a final checklist before editing status.**
+- [x] **Step 1: Write the documentation assertions as a final checklist before editing status.**
 
 Create a checklist in the feature spec that maps every acceptance criterion to its executed test: configuration and HTTP boundaries to Vitest, database access/retention to pgTAP, seed idempotence to `supabase/seed.test.ts`, and repository integration to `verify:full`. Leave hosted, scheduler, real provider and Real-Data-Gate entries explicitly open.
 
-- [ ] **Step 2: Execute the required full verification with only synthetic configuration.**
+- [x] **Step 2: Execute the required full verification with only synthetic configuration.**
 
 Run in this order:
 
@@ -512,13 +512,13 @@ git diff --check
 
 Expected: every command exits 0. Record only commands actually run and their observed test totals. If any command fails, apply systematic debugging, fix the failure in the responsible task, then repeat the affected command and the final full run.
 
-- [ ] **Step 3: Update durable documentation from verified evidence.**
+- [x] **Step 3: Update durable documentation from verified evidence.**
 
 Set PROJ-3 to `In Review` only after all commands in Step 2 pass. Mark only proven acceptance criteria `[x]`; append the exact local evidence date, commands and totals to the feature spec and acceptance document.
 
 Update API contracts to name the server-only Mock-PVS adapter and its closed error boundary. Update the data model with the three technical integration entities, their field exclusions, RLS and 30-day event retention. In known issues, keep the explicit follow-ups: no scheduler/runtime identity, no status UI, no source-data import and no real PVS access. Keep the design document's status as locally implemented and `In Review` only when this evidence exists.
 
-- [ ] **Step 4: Run documentation and secret-boundary checks.**
+- [x] **Step 4: Run documentation and secret-boundary checks.**
 
 Run:
 
@@ -531,7 +531,7 @@ git status --short
 
 Expected: `git diff --check` exits 0; both `rg` commands return no matches; status lists only intended PROJ-3 files.
 
-- [ ] **Step 5: Commit the verified review state.**
+- [x] **Step 5: Commit the verified review state.**
 
 ```powershell
 git add features/INDEX.md features/PROJ-3-integration-adapter-layer.md docs/superpowers/specs/2026-09-13-proj-3-integration-adapter-design.md README.md docs/architecture/api-contracts.md docs/architecture/data-model.md docs/delivery/acceptance-tests.md docs/delivery/known-issues.md
@@ -544,3 +544,14 @@ git commit -m "docs(proj-3): record adapter verification"
 - **Scope:** The plan contains no automatic execution, UI, patient/appointment persistence, real manufacturer connection, browser configuration or service-role application runtime.
 - **Type consistency:** `IntegrationAdapter`, `AdapterResult`, `IntegrationFailureCode`, `MockPvsConfig` and `IntegrationSyncStatus` are each introduced before a later task consumes them. Public status RPC input remains `{}` throughout; practice scope is always derived in PostgreSQL.
 - **No placeholders:** Migration name, file paths, enums, RPC name, tests, commands, commits and follow-up boundaries are explicit.
+
+## Umsetzungsevidenz — 14.09.2026
+
+Alle fünf Aufgaben wurden inline test-first umgesetzt. Die lokale Vollprüfung
+bestand mit 233 Vitest-Tests, 134 pgTAP-Assertions und 17 Browsertests inklusive
+Edge. Zwei unabhängige Review-Befunde wurden rot reproduziert und korrigiert.
+`verify`/`verify:full` mussten auf dieser Basis aus vorhandenen Einzelbefehlen
+zusammengesetzt werden. Für pgTAP gilt das Dateipfad-Positionsargument der
+installierten CLI. Die Root-Dokumente aus der ursprünglichen Übergabe fehlen
+auf 3feed77; maßgeblich blieben die Nutzeranweisungen und vorhandenen Specs.
+Push, PR, Merge, Hosted-Konfiguration und Deployment wurden nicht ausgeführt.

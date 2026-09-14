@@ -349,3 +349,10 @@ Die Vorlage `.env.integration.local.example` wird ausschließlich für synthetis
 serverseitige Integrationen nach `.env.integration.local` kopiert. Werte bleiben
 privat und werden weder gespeichert noch protokolliert. PROJ-3 stellt keinen
 Runtime-Befehl und keine Browser-API bereit.
+
+### PROJ-3 lokale Verifikation
+
+`npm run verify` führt Lint, Typecheck, Vitest und Produktionsbuild aus.
+`npm run verify:full` ergänzt lokale pgTAP-Prüfungen und den erforderlichen
+Browser-/Edge-Lauf. Die vollständige Evidenz für PROJ-3 steht in der Feature-Spec.
+Es wird ausschließlich lokale synthetische Konfiguration verwendet.

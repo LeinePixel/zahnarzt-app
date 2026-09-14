@@ -159,3 +159,24 @@ Das Seed-Skript legt an: zwei synthetische Testpraxen und vier Demo-Konten
 **Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die vier `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
 
 Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/assets/dentpilot-ux1-prototype.html`) enthält ebenfalls ausschließlich erfundene Beispieldaten.
+
+## Lokale PROJ-3-Prüfevidenz — 14.09.2026
+
+`npm run verify:full` endete mit Exit 0: Lint, Typecheck, 25 Vitest-Dateien /
+233 Tests, Produktionsbuild, vier pgTAP-Dateien / 134 Assertions und
+17 Playwright-Tests einschließlich Microsoft Edge. Zusätzlich liefen separat
+`npm run test:mock-pvs` (84 Tests), `npm run lint`, `npm run typecheck`,
+`npm test`, `npx supabase test db --local` und
+`npm run test:e2e:edge-required` erfolgreich. Die finale Vollprüfung enthält
+die Review-Korrekturen. `git diff --check` und beide Token-Grenzscans sind sauber.
+
+Die fokussierte Evidenz umfasst 20 Konfigurations-/Schema-Tests, 24 HTTP-Tests,
+13 Statusmapper-Tests, fünf Policy-Tests, sieben Seed-Tests und 26 PROJ-3-pgTAP-
+Assertions. Die neuen Tests wurden vor der Implementierung rot ausgeführt.
+Der lokale synthetische Reset und Seed waren erfolgreich.
+
+Ein unabhängiger Review fand zwei Fehler: SQL-NULL-Umgehung der Retry-Constraint
+und falsche Einordnung eines abgebrochenen Antwortstreams. Beide wurden mit
+roten Negativtests reproduziert, korrigiert, grün geprüft und im Review bestätigt.
+Keine neue App-Route, kein Scheduler, kein Fachimport und keine Hosted-Änderung.
+Real-Data-Gate und alle betrieblichen Folgefreigaben bleiben offen.
