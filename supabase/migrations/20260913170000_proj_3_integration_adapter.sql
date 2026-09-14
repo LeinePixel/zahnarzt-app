@@ -21,7 +21,7 @@ create table public.integration_sync_state (
   (status='idle' and last_error_code is null and next_attempt_at is null and last_attempt_at is null and last_success_at is null) or
   (status='healthy' and last_error_code is null and next_attempt_at is null and last_attempt_at is not null and last_success_at is not null) or
   (status='failed' and last_error_code is not null and next_attempt_at is null and last_attempt_at is not null) or
-  (status='retry_scheduled' and last_error_code in ('rate_limited','temporarily_unavailable','network_unavailable') and next_attempt_at is not null and last_attempt_at is not null and next_attempt_at>last_attempt_at and next_attempt_at<=last_attempt_at+interval '5 minutes')
+  (status='retry_scheduled' and last_error_code is not null and last_error_code in ('rate_limited','temporarily_unavailable','network_unavailable') and next_attempt_at is not null and last_attempt_at is not null and next_attempt_at>last_attempt_at and next_attempt_at<=last_attempt_at+interval '5 minutes')
  )
 );
 create table public.integration_sync_event (

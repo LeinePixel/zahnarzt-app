@@ -2,18 +2,19 @@ import 'server-only'
 import { z } from 'zod'
 import type { AdapterResult, AppointmentInput, IntegrationAdapter, IntegrationFailureCode, PageInput } from './adapter'
 import { appointmentPageSchema, changePageSchema, healthSchema, patientPageSchema, timestampSchema } from './contracts'
-import { loadMockPvsConfig, type MockPvsConfig } from './mock-pvs-config'
+import { validateMockPvsConfig, type MockPvsConfig } from './mock-pvs-config'
 
 const pageInputSchema = z.strictObject({ cursor: z.string().max(128).optional(), limit: z.number().int().min(1).max(100).optional() })
 const appointmentInputSchema = pageInputSchema.extend({ patientId: z.string().min(1).max(100).optional(), from: timestampSchema.optional(), to: timestampSchema.optional() }).refine(input => !input.from || !input.to || Date.parse(input.from) < Date.parse(input.to))
 const MAX_BODY_BYTES = 1_048_576
 class ProtocolError extends Error {}
+class TransportError extends Error {}
 function failure(code: IntegrationFailureCode, retryAt: Date | null = null): AdapterResult<never> { return { ok: false, error: { code, retryAt } } }
 
 export class MockPvsAdapter implements IntegrationAdapter {
   private readonly config: MockPvsConfig | null
   constructor(config: MockPvsConfig, private readonly dependencies: { fetch?: typeof fetch; now?: () => Date } = {}) {
-    try { this.config = loadMockPvsConfig({ MOCK_PVS_BASE_URL: config.baseUrl.href, MOCK_PVS_READ_TOKEN: config.readToken }) } catch { this.config = null }
+    try { this.config = validateMockPvsConfig(config.baseUrl.href, config.readToken) } catch { this.config = null }
   }
   async checkHealth(): Promise<AdapterResult<void>> {
     const result = await this.get('/v1/health', {}, healthSchema)
@@ -55,7 +56,7 @@ export class MockPvsAdapter implements IntegrationAdapter {
       let size = 0
       try {
         while (true) {
-          const chunk = await reader.read()
+          const chunk = await reader.read().catch(() => { throw new TransportError() })
           if (chunk.done) break
           size += chunk.value.byteLength
           if (size > MAX_BODY_BYTES) { await reader.cancel(); throw new ProtocolError() }
@@ -68,7 +69,7 @@ export class MockPvsAdapter implements IntegrationAdapter {
       const parsed = schema.safeParse(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)))
       return parsed.success ? { ok: true, value: parsed.data } : failure('source_contract_invalid')
     } catch (error) {
-      return failure(error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError') ? 'network_unavailable' : 'source_protocol_invalid')
+      return failure(error instanceof TransportError || (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) ? 'network_unavailable' : 'source_protocol_invalid')
     }
   }
 }

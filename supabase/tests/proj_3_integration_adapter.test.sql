@@ -1,5 +1,5 @@
 begin;
-select plan(25);
+select plan(26);
 select has_table('public', 'integration', 'integration exists');
 select has_table('public', 'integration_sync_state', 'state exists');
 select has_table('public', 'integration_sync_event', 'event exists');
@@ -42,6 +42,7 @@ reset role;
 select lives_ok($$select private.record_integration_sync_result('33000000-0000-0000-0000-000000000001','succeeded',null,null)$$,'technical success is recorded');
 select is((select status::text from public.integration_sync_state where integration_id='33000000-0000-0000-0000-000000000001'),'healthy','success makes state healthy');
 select is((select confirmed_change_cursor from public.integration_sync_state where integration_id='33000000-0000-0000-0000-000000000001'),null::text,'success never confirms cursor');
+select throws_ok($$update public.integration_sync_state set status='retry_scheduled',last_error_code=null,next_attempt_at=last_attempt_at+interval '1 minute' where integration_id='33000000-0000-0000-0000-000000000001'$$,'23514',null,'retry state requires a non-null approved error');
 set local role service_role;
 insert into public.integration_sync_event(integration_id,outcome,attempted_at) values ('33000000-0000-0000-0000-000000000001','succeeded',now()-interval '31 days'),('33000000-0000-0000-0000-000000000001','succeeded',now()-interval '29 days');
 reset role;

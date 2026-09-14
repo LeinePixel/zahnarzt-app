@@ -93,3 +93,12 @@ it('maps transport failures and invalid constructor configuration neutrally', as
   expect(await new MockPvsAdapter({ baseUrl: new URL('https://example.invalid'), readToken }, { fetch: fetcher }).checkHealth()).toEqual({ ok: false, error: { code: 'configuration_invalid', retryAt: null } })
   expect(fetcher).not.toHaveBeenCalled()
 })
+it('maps a disconnected response body to network_unavailable', async () => {
+  await new Promise<void>(resolve => server.close(() => resolve()))
+  await listen(createServer((request, response) => {
+    response.writeHead(200, { 'content-type': 'application/json' })
+    response.write('{"data":[')
+    setTimeout(() => response.destroy(), 20)
+  }))
+  expect(await adapter().listPatients({})).toEqual({ ok: false, error: { code: 'network_unavailable', retryAt: null } })
+})
