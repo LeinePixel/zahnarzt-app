@@ -1,7 +1,7 @@
 # PROJ-3 Integration-Adapter-Schicht — Architekturentwurf
 
 **Status:** Lokal implementiert, In Review (14.09.2026)
-**Datum:** 2026-09-13  
+**Datum:** 2026-09-13
 **Verbindliche Feature-Spezifikation:**
 [`features/PROJ-3-integration-adapter-layer.md`](../../../features/PROJ-3-integration-adapter-layer.md)
 
