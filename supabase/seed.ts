@@ -28,6 +28,7 @@ export type SeedProfileInput = {
 }
 
 export interface SeedAdminClient {
+  upsertMockPvsIntegration(practiceId: string): Promise<void>
   createPractice(
     name: string,
     id?: string,
@@ -107,6 +108,7 @@ export async function runSeed(
   const practice =
     existingPractice ?? (await client.createPractice(PRACTICE_NAME))
   const practiceStatus = existingPractice ? 'vorhanden' : 'erstellt'
+  await client.upsertMockPvsIntegration(practice.id)
   const existingForeignPractice = await client.findPracticeByName(
     FOREIGN_PRACTICE_NAME,
   )
@@ -172,6 +174,12 @@ type SeedDatabase = {
   public: {
     Functions: { [_ in never]: never }
     Tables: {
+      integration: {
+        Insert: { id?: string; practice_id: string; provider: 'mock_pvs'; created_at?: string }
+        Relationships: []
+        Row: { id: string; practice_id: string; provider: 'mock_pvs'; created_at: string }
+        Update: { id?: string; practice_id?: string; provider?: 'mock_pvs'; created_at?: string }
+      }
       practice: {
         Insert: { created_at?: string; id?: string; name: string }
         Relationships: []
@@ -219,6 +227,14 @@ function seedOperationError(operation: string) {
 
 export class SupabaseSeedAdminClient implements SeedAdminClient {
   constructor(private readonly client: SupabaseClient<SeedDatabase>) {}
+
+  async upsertMockPvsIntegration(practiceId: string) {
+    const { error } = await this.client.from('integration').upsert(
+      { practice_id: practiceId, provider: 'mock_pvs' },
+      { onConflict: 'practice_id,provider', ignoreDuplicates: true },
+    )
+    if (error) throw seedOperationError('Synthetische Integration konnte nicht angelegt werden')
+  }
 
   async findPracticeByName(name: string) {
     const { data, error } = await this.client
