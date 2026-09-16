@@ -78,3 +78,12 @@ sieben technische Statusfelder ohne Cursor zurück. Der server-only Mapper
 prüft zusätzlich die Fähigkeit `integration.status.read` und die Antwortform.
 Private Ergebnis- und Cursorfunktionen besitzen keine Browser-Ausführungsrechte
 und werden von PROJ-3 nicht aus Anwendungscode aufgerufen.
+
+## PROJ-4: lokaler Patienten-Synchronisationsvertrag
+
+Der lokale CLI-Consumer verwendet den PROJ-3-Adapter, `limit=100`, maximal 100
+Seiten, zehn MiB projizierten Batch und eine 60-Sekunden-Frist. Er speichert nur
+die freigegebene Patientenprojektion. Gemischte Terminereignisse verschieben den
+privaten Patientencheckpoint, erzeugen aber keine Terminzeilen. Drei private
+PostgreSQL-Entry-Points leiten Integration und Praxis ausschließlich aus
+`session_user` ab; Browserrollen erhalten keine Ausführungsrechte.

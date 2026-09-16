@@ -1,6 +1,6 @@
 # PROJ-4 Patienten-Synchronisierung — Architekturentwurf
 
-**Status:** Vollständiger Entwurf am 14.09.2026 freigegeben
+**Status:** Lokal implementiert und am 16.09.2026 vollständig verifiziert; In Review
 **Datum:** 2026-09-14
 **Verbindliche Anforderungen:** [PROJ-4-Spec](../../../features/PROJ-4-patient-synchronization.md)
 

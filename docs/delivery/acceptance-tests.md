@@ -160,6 +160,20 @@ Das Seed-Skript legt an: zwei synthetische Testpraxen und vier Demo-Konten
 
 Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/assets/dentpilot-ux1-prototype.html`) enthält ebenfalls ausschließlich erfundene Beispieldaten.
 
+## PROJ-4 – lokale Patienten-Synchronisierung (2026-09-16)
+
+- `npm run verify:full`: erfolgreich.
+- Vitest: 32 Dateien und 286 Tests im finalen vollständigen Lauf.
+- pgTAP: 5 Dateien und 152 Assertions.
+- Eingeschränkte PostgreSQL-LOGIN-Suite: 5 Tests einschließlich Konkurrenz,
+  Mapping-Entzug, NULL-/ISO-Negativfällen und Delete-Versionsmarke.
+- Echter CLI-Kindprozess: 26 synthetische Patienten, Exit 0 und ausschließlich
+  die festgelegte neutrale Ausgabe.
+- Playwright: 17 Flows einschließlich Microsoft Edge.
+
+Die Evidenz ist lokal und synthetisch. Sie ist keine Freigabe für echte Daten,
+Hosting, produktive Rollen, Scheduler oder Deployment.
+
 ## Lokale PROJ-3-Prüfevidenz — 14.09.2026
 
 `npm run verify:full` endete mit Exit 0: Lint, Typecheck, 25 Vitest-Dateien /

@@ -356,3 +356,20 @@ Runtime-Befehl und keine Browser-API bereit.
 `npm run verify:full` ergänzt lokale pgTAP-Prüfungen und den erforderlichen
 Browser-/Edge-Lauf. Die vollständige Evidenz für PROJ-3 steht in der Feature-Spec.
 Es wird ausschließlich lokale synthetische Konfiguration verwendet.
+
+### PROJ-4 lokaler Patientensync
+
+PROJ-4 importiert ausschließlich synthetische Patienten über einen expliziten
+lokalen CLI-Lauf. Die Runtime verwendet eine je Integration eingeschränkte
+PostgreSQL-Loginrolle und weder Service-Role-Key noch Browserzugriff.
+
+```powershell
+Copy-Item .env.patient-sync-admin.local.example .env.patient-sync-admin.local
+npm run patient-sync:provision-local
+# erzeugte private Datei lokal mit Mock-PVS-Werten vervollständigen
+npm run patient-sync
+npm run verify:full
+```
+
+Provisionierung, Laufzeitdateien und Zugangsdaten bleiben ignoriert und lokal.
+Der Real-Data-Gate bleibt geschlossen.

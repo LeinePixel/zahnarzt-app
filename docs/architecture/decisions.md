@@ -90,6 +90,13 @@ Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Sie
 | Audit-Ereignisse werden nach 90 Tagen automatisch gelöscht | Bestätigte MVP-Produktentscheidung; die Rechts- und Aufbewahrungsprüfung vor echten Daten bleibt offen. | 2026-08-26 |
 | Kein Break-Glass-Zugang im MVP | Es gibt keine klinisch kritischen Abläufe; ein Notfallzugang benötigt später eine eigene Risikoentscheidung. | 2026-08-26 |
 
+### PROJ-4: Patienten-Synchronisierung
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Expliziter lokaler CLI-Lauf mit je Integration eingeschränkter PostgreSQL-Loginrolle | Verhindert Service-Role-Zugriff im Runtime-Prozess und hält Scheduler, Browser und Hosting außerhalb des freigegebenen synthetischen Scopes. | 2026-09-14 |
+| Eigener Patientencheckpoint und atomarer Fachcommit | Der gemischte Feed bleibt für PROJ-5 unabhängig lesbar; Patienten, Versionen, Checkpoint und technischer Erfolg werden gemeinsam bestätigt. | 2026-09-14 |
+
 ---
 
 ## Offene Präferenzen

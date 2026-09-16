@@ -174,7 +174,7 @@ private.record_patient_sync_failure(public.integration_sync_error_code, timestam
 
 The five commit arguments are expected cursor, expected initial-completion flag, snapshot, mutations and candidate cursor. The repository-owned `expected.integrationId` is checked against the acquired checkpoint locally; it is not a target-selector argument in SQL.
 
-- [ ] **Step 1: Write failing SQL assertions.**
+- [x] **Step 1: Write failing SQL assertions.**
 
 Use `begin; select plan(N); ... select * from finish(); rollback;`, with N computed from the exact written assertions. Do not leave a guessed count. Create two synthetic practices/integrations and transaction-local restricted roles. Test identity changes with original superuser `SET SESSION AUTHORIZATION` and explicitly reset it; actual password logins are additionally tested in Task 4.
 
@@ -189,7 +189,7 @@ select ok(not has_function_privilege('authenticated','private.commit_patient_syn
 
 Write named cases: own acquisition, repeated acquisition, foreign composite FK, unmapped identity, initial idle checkpoint, missing/reentrant lock, successful initial batch, duplicate/up/down/same-version cases, late same-version conflict after earlier mutation, Delete-known/Delete-unknown, old upsert after Delete, shared family phone, endcursor/CAS, role revocation, no global cursor modification, neutral failing-row exclusion and failure event field exclusions. Assert all four tables' RLS, privileges for anon/authenticated/runtime, all role attributes and every SECURITY-DEFINER search_path.
 
-- [ ] **Step 2: Run red pgTAP.**
+- [x] **Step 2: Run red pgTAP.**
 
 ```powershell
 npx supabase test db --local supabase/tests/proj_4_patient_sync.test.sql
@@ -197,7 +197,7 @@ npx supabase test db --local supabase/tests/proj_4_patient_sync.test.sql
 
 Expected: new objects missing. Use positional path, not unsupported `--file`.
 
-- [ ] **Step 3: Create schema and privileged-function foundations.**
+- [x] **Step 3: Create schema and privileged-function foundations.**
 
 ```sql
 alter table public.integration add constraint integration_id_practice_unique unique(id,practice_id);
@@ -227,7 +227,7 @@ private.apply_patient_sync_mutation(uuid, uuid, jsonb) returns void
 
 Identity requires mapped `session_user`, login role membership and all restricted attributes. Lock key is the two-integer namespace `(20260914, hashtext(integration_id::text))`. Detect own held lock by `pg_locks.locktype='advisory'`, `pid=pg_backend_pid()`, `classid=20260914`, `objid=(hashtext(id::text)::bit(32)::bigint)::oid`, `objsubid=2`, granted=true. Hash collisions may serialize unrelated integrations but must never grant cross-integration data scope; identity determines rows.
 
-- [ ] **Step 4: Implement acquisition and mutation rules.**
+- [x] **Step 4: Implement acquisition and mutation rules.**
 
 Acquire verifies identity and future retry time before the nonblocking advisory-lock attempt, checks own already-held lock first, then returns the private checkpoint. Failure after acquiring releases the lock. Do not use `pg_try_advisory_lock` to test ownership: it is reentrant.
 
@@ -246,7 +246,7 @@ end if;
 
 The helper's SQLSTATE `P4001` is internal only and never carries a payload/message from the source. Repeated upserts leave the internal UUID stable. Never infer deletes from absence.
 
-- [ ] **Step 5: Implement the overall commit and failure writer.**
+- [x] **Step 5: Implement the overall commit and failure writer.**
 
 Inside the commit function, recheck/lock identity mapping and lock ownership, then lock/check the checkpoint. Require boolean and cursor length/null semantics; expected initial-completion and cursor use null-safe comparison. A completed initial import rejects any nonempty snapshot. Validate total JSON byte size and maximum 10,000 resources/events before writes.
 
@@ -267,7 +267,7 @@ end;
 
 Authorization/CAS/lock failure returns `execution_denied` before mutation. Distinguish source-projection validation errors as `source_contract_invalid` via the same internal SQLSTATE. An empty source feed leaves candidate equal to prior cursor; SQL must not implicitly null it. Reuse `private.record_integration_sync_result` internally for success/failure only. The failure writer rechecks current identity and held lock and accepts only six provider codes/retry values. Sensitive constraint details are caught; SQL/parameter/error-statement logging must be disabled for the runtime role and its function path. Use administrative role settings to disable logging where PostgreSQL requires elevated SET privileges; do not grant SET privileges to runtime.
 
-- [ ] **Step 6: Apply the authorized local migration and run green SQL.**
+- [x] **Step 6: Apply the authorized local migration and run green SQL.**
 
 ```powershell
 npx supabase db reset --local
@@ -278,7 +278,7 @@ npx supabase test db --local
 
 Require migration/seed/tests exit 0 against local synthetic stack. The reset does not authorize any linked/hosted operation. Diagnose failures before another schema edit/reset.
 
-- [ ] **Step 7: Review and commit SQL boundary.**
+- [x] **Step 7: Review and commit SQL boundary.**
 
 ```powershell
 git add supabase/migrations/20260914170000_proj_4_patient_sync.sql supabase/tests/proj_4_patient_sync.test.sql
@@ -374,7 +374,7 @@ All checks must pass before commit. Review no partial mutation, unchanged global
 
 **Produces:** `PostgresPatientSyncRepository(databaseUrl: string) implements PatientSyncRepository`; a test-only `createLocalDatabaseFixture()` returning `{ runtimeUrlA, runtimeUrlB, admin, close }` with random role/password fixtures.
 
-- [ ] **Step 1: Write red repository/identity tests.**
+- [x] **Step 1: Write red repository/identity tests.**
 
 ```ts
 const repositoryA = new PostgresPatientSyncRepository(fixture.runtimeUrlA)
@@ -387,7 +387,7 @@ expect(acquiredA.ok && acquiredB.ok && acquiredA.checkpoint.integrationId !== ac
 
 Connection unit tests assert actual neutral result mapping, parameter shapes and rollback/close behavior. Real DB tests assert different `session_user` values, denied direct SELECT/generic functions, unmapped login, invalid role attributes, CAS failure, repeated lock acquisition, same-integration competing login, mapping revocation during HTTP, physical disconnect/reacquire, SQL late-conflict rollback and logging settings. Never assert passwords/URLs via literal `toEqual` values that can print them.
 
-- [ ] **Step 2: Run red tests and install only required dependencies.**
+- [x] **Step 2: Run red tests and install only required dependencies.**
 
 ```powershell
 npx vitest run src/features/patients/postgres-sync-repository.test.ts
@@ -397,7 +397,7 @@ npm install --save-dev @types/pg
 
 Expected first command fails for missing repository. `pg` is explicitly required by approved design. Do not upgrade unrelated dependencies. Record installation/audit results without closing existing security gates.
 
-- [ ] **Step 3: Implement single-client repository and parameterized SQL.**
+- [x] **Step 3: Implement single-client repository and parameterized SQL.**
 
 ```ts
 const client = new Client({ connectionString: databaseUrl, connectionTimeoutMillis: 3000, statement_timeout: 5000 })
@@ -415,7 +415,7 @@ Strictly validate acquisition/result JSON before use. Store the acquired integra
 
 `close()` unlocks only the acquired integration's namespace/key, then always ends the client; failure to unlock still closes the session. Close is idempotent and bounded by remaining deadline/physical disconnect. Retain no connection pool.
 
-- [ ] **Step 4: Implement isolated test fixtures and execute real logins.**
+- [x] **Step 4: Implement isolated test fixtures and execute real logins.**
 
 The test helper reads admin URL only from ignored `.env.patient-sync-admin.local`, requires local PostgreSQL origin, and rejects hosted databases. It creates fresh synthetic practices/integrations and random `dentpilot_sync_test_*` logins using safe identifier quoting and generated hex passwords, grants only the group and inserts approved mappings. No secrets in command arguments/logs. Cleanup disconnects runtime clients before dropping fixtures/roles; it must not reset or delete another integration.
 
@@ -440,7 +440,7 @@ npm run typecheck
 npm run lint
 ```
 
-- [ ] **Step 5: Review and commit real persistence.**
+- [x] **Step 5: Review and commit real persistence.**
 
 ```powershell
 git add package.json package-lock.json vitest.config.mts vitest.patient-sync.config.mts src/features/patients/postgres-sync-repository.ts src/features/patients/postgres-sync-repository.test.ts src/features/patients/postgres-sync-repository.db.test.ts src/features/patients/test/local-database.ts
@@ -457,7 +457,7 @@ Review true LOGIN evidence, no reused admin connection, deadline cleanup and com
 
 **Produces:** Explicit `patient-sync` and `patient-sync:provision-local` commands and `test:patient-sync:process` acceptance command.
 
-- [ ] **Step 1: Write red CLI/provisioning tests.**
+- [x] **Step 1: Write red CLI/provisioning tests.**
 
 ```ts
 const result = await runCli({ environment: invalidEnvironment, log: line => lines.push(line) })
@@ -469,7 +469,7 @@ expect(fetchFactory).not.toHaveBeenCalled()
 
 Define injectable `runCli({ environment, log, createRepository?, createAdapter? }): Promise<0|1|2>` in runtime script so invalid config is testable before factories. Tests cover exact messages/exits, busy and retry, refused config, rejected connection/commit, no raw stdout/stderr and no privileged environment inheritance. Provision tests reject hosted URLs, missing synthetic confirmation, foreign practice/integration pair and privileged runtime role attributes.
 
-- [ ] **Step 2: Execute red tests.**
+- [x] **Step 2: Execute red tests.**
 
 ```powershell
 npx vitest run scripts/run-patient-sync.test.ts scripts/provision-patient-sync-local.test.ts
@@ -477,13 +477,13 @@ npx vitest run scripts/run-patient-sync.test.ts scripts/provision-patient-sync-l
 
 Expected absent entrypoint modules. Guard main execution with `pathToFileURL(process.argv[1])` as existing seed script does.
 
-- [ ] **Step 3: Implement separate administrative provisioning.**
+- [x] **Step 3: Implement separate administrative provisioning.**
 
 Admin template contains `PATIENT_SYNC_SYNTHETIC_ONLY=1`, `PATIENT_SYNC_ADMIN_DATABASE_URL=` and `PATIENT_SYNC_PROVISION_INTEGRATION_ID=`. Provisioner validates local connection and known synthetic integration before making changes. Generate a restricted random login and password; safely quote identifiers, use parameterized mapping insert and a transaction for role/mapping creation. Set runtime logging off administratively. It does not grant table privileges or generic writers and does not alter app users.
 
 Never overwrite an existing runtime env file or print its secrets. Produce private DB URL configuration in a uniquely named ignored `.env.patient-sync.<random>.local` file with the four runtime variables and blank Mock read configuration. If file creation fails, roll back provisioning or remove only the just-created role/mapping. After the operator adds local Mock values, that file may be copied to `.env.patient-sync.local`; existing credentials are preserved. Explain which role belongs to which integration using local file instructions, without logging passwords/URLs. Do not create production or hosted logins.
 
-- [ ] **Step 4: Compose bounded CLI and deadline-aware adapter.**
+- [x] **Step 4: Compose bounded CLI and deadline-aware adapter.**
 
 ```ts
 const config = loadPatientSyncConfig(environment)
@@ -511,7 +511,7 @@ Add scripts:
 
 The dedicated process suite uses the explicit acceptance config from Task 4. This isolates administrative fixtures from ordinary unit tests without hiding required full acceptance.
 
-- [ ] **Step 5: Execute real CLI process acceptance.**
+- [x] **Step 5: Execute real CLI process acceptance.**
 
 Start a real local Mock-PVS and provisioned runtime target with test-only admin helper. Spawn Node with server conditions and `--import=tsx`; explicit env allowlist keeps only required OS runtime values and the four private runtime variables. Do not spread `process.env` into the child. Capture stdout/stderr without secrets in test snapshots, assert neutral output and exits. Supply intentional forbidden values only in rejection tests and assert they are never emitted. Test 26-patient initial import, repeat, known conflict, busy, retry and absent/malformed config; admin observes rows after process exit. Generated credentials remain test-memory/private files and are cleaned up.
 
@@ -523,7 +523,7 @@ npm run typecheck
 npm run lint
 ```
 
-- [ ] **Step 6: Review and commit CLI boundary.**
+- [x] **Step 6: Review and commit CLI boundary.**
 
 ```powershell
 git add scripts/run-patient-sync.ts scripts/run-patient-sync.test.ts scripts/run-patient-sync.process.test.ts scripts/provision-patient-sync-local.ts scripts/provision-patient-sync-local.test.ts .env.patient-sync-admin.local.example package.json vitest.config.mts
@@ -540,7 +540,7 @@ Review no seeded service-role in runtime, no secrets in output/argv, neutral exi
 
 **Produces:** Locally implemented `In Review` with exact evidence; no operational/real-data approval claim.
 
-- [ ] **Step 1: Create evidence checklist before marking acceptance.**
+- [x] **Step 1: Create evidence checklist before marking acceptance.**
 
 | Criteria | Required evidence |
 |---|---|
@@ -554,7 +554,7 @@ Review no seeded service-role in runtime, no secrets in output/argv, neutral exi
 
 Keep separate unchecked operational follow-ups for real provider bootstrap/cursors, productive retention, scheduler, UI, hosted provisioning and Real-Data-Gate.
 
-- [ ] **Step 2: Run all required checks.**
+- [x] **Step 2: Run all required checks.**
 
 ```powershell
 npm run test:mock-pvs
@@ -571,15 +571,15 @@ git diff --check
 
 Require every command exit 0 with local synthetic test configuration. Check dedicated DB/process test output confirms those files actually ran. Do not count prior PROJ-3 totals as new evidence. If a failure occurs, use systematic debugging, reproduce red, fix responsible task, rerun affected check then final full workflow.
 
-- [ ] **Step 3: Obtain independent bounded review and resolve findings.**
+- [x] **Step 3: Obtain independent bounded review and resolve findings.**
 
 Use requesting-code-review and receiving-code-review skills; reviewer checks current changes against this plan and the approved spec. This necessary independent review justifies a subagent; do not delegate implementation by default. Review especially identity changes during HTTP, all null-sensitive SQL constraints, rollback after a late mutation, uncertain COMMIT acknowledgements, runtime environment and logging privilege settings. Reproduce valid findings in red tests before fixes, then repeat affected/full checks.
 
-- [ ] **Step 4: Update documentation from successful results.**
+- [x] **Step 4: Update documentation from successful results.**
 
 Set feature/index/design to locally implemented `In Review` only after green checks and closed actionable review findings. Mark ACs only with executed evidence. Append exact date, file/test/assertion totals and run commands to feature and acceptance doc. Document private schema, minimal fields/version markers, restricted runtime provisioning, expected Mock invalidation and no runtime browser-read capability. Append selective decisions without changing old decision rows. Known issues retain productive gates and pre-existing dependency-audit findings; do not claim security remediation merely from tests.
 
-- [ ] **Step 5: Verify final scope and secret boundaries.**
+- [x] **Step 5: Verify final scope and secret boundaries.**
 
 ```powershell
 git diff --check
@@ -591,7 +591,7 @@ git status --short
 
 First rg must have no imports in product. Second rg may match only forbidden-variable-name validation in `sync-config.ts`, never reads/connection use of privileged values. Review generated env files are ignored, no source patient payload/debug output and no `src/app` changes. Compare final complete branch diff against verified PROJ-3 basis, not only unstaged files.
 
-- [ ] **Step 6: Commit and report local result.**
+- [x] **Step 6: Commit and report local result.**
 
 ```powershell
 git add features/INDEX.md features/PROJ-4-patient-synchronization.md docs/superpowers/specs/2026-09-14-proj-4-patient-sync-design.md docs/superpowers/plans/2026-09-14-proj-4-patient-sync.md README.md docs/architecture/api-contracts.md docs/architecture/data-model.md docs/architecture/decisions.md docs/delivery/acceptance-tests.md docs/delivery/known-issues.md

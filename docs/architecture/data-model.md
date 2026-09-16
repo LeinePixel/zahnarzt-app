@@ -118,3 +118,11 @@ Ausgeschlossen bleiben Patienten/Termine, Quellpayloads, externe Ressourcen-IDs,
 URLs, Headers, Tokens und fachbezogene Zähler. Der CLI-Seed legt nur die
 synthetische Providerzuordnung an. Eine spätere PROJ-4/5-Fachtransaktion muss
 Cursorbestätigung und eine eigene Ausführungsidentität spezifizieren.
+
+## PROJ-4: implementierte Patientenprojektion
+
+`public.patient` enthält interne UUID, Praxis/Integration, Quell-ID und -Version,
+Name, Geburtsdatum, E.164-Telefonnummer sowie Quell- und lokale Zeitpunkte. E-Mail,
+medizinische Inhalte und Rohpayloads fehlen. `private.patient_source_version`
+bewahrt minimale Delete-Versionen; `private.patient_sync_checkpoint` hält einen
+vom PROJ-3-Gesamtcursor getrennten Patientenfortschritt. Alle Tabellen nutzen RLS.

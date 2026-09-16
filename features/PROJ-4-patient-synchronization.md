@@ -1,9 +1,9 @@
 # PROJ-4: Patienten-Synchronisierung
 
-## Status: Architected
+## Status: In Review
 
 **Created:** 2026-09-14
-**Last Updated:** 2026-09-14
+**Last Updated:** 2026-09-16
 **Priority:** P0 (MVP)
 **Freigabe:** Vollständige Spec und Architektur am 14.09.2026 vom Nutzer freigegeben.
 
@@ -243,33 +243,33 @@ auf synthetische Entwicklung begrenzt und kein Freigabenachweis für echte Daten
 
 ## Akzeptanzkriterien
 
-- [ ] AC01: Zwei initiale Patientenseiten werden vollständig projiziert; der
+- [x] AC01: Zwei initiale Patientenseiten werden vollständig projiziert; der
   Initialimport wird erst nach erfolgreichem Gesamtcommit bestätigt.
-- [ ] AC02: Ein zweiter Lauf erzeugt keine Duplikate und startet keinen zweiten Vollimport.
-- [ ] AC03: Neuere Versionen aktualisieren, ältere verändern nichts, gleiche
+- [x] AC02: Ein zweiter Lauf erzeugt keine Duplikate und startet keinen zweiten Vollimport.
+- [x] AC03: Neuere Versionen aktualisieren, ältere verändern nichts, gleiche
   widersprüchliche Versionen rollen den gesamten Lauf zurück.
-- [ ] AC04: Delete entfernt Attribute und schützt über die Versionsmarke gegen alte Upserts.
-- [ ] AC05: Fehler auf einer späteren Quellseite und ein SQL-Fehler verändern weder
+- [x] AC04: Delete entfernt Attribute und schützt über die Versionsmarke gegen alte Upserts.
+- [x] AC05: Fehler auf einer späteren Quellseite und ein SQL-Fehler verändern weder
   Patientendaten noch den bestätigten Checkpoint oder Initialabschluss.
-- [ ] AC06: Endcursor wird aus dem letzten Ereignis bestimmt; leere Terminalseite
+- [x] AC06: Endcursor wird aus dem letzten Ereignis bestimmt; leere Terminalseite
   bewahrt den bisherigen Cursor. Opaque Cursor werden nicht interpretiert.
-- [ ] AC07: Ein gemischter Feed verändert nur Patienten; PROJ-3-Gesamtcursor bleibt
+- [x] AC07: Ein gemischter Feed verändert nur Patienten; PROJ-3-Gesamtcursor bleibt
   unverändert, ein unabhängiger künftiger Terminconsumer kann den Feed vollständig lesen.
-- [ ] AC08: Gleichzeitiger zweiter Lauf wird ohne Netzwerkabruf abgewiesen; Crash
+- [x] AC08: Gleichzeitiger zweiter Lauf wird ohne Netzwerkabruf abgewiesen; Crash
   gibt den Sessionlock frei, veralteter oder ungesperrter Commit wird verweigert.
-- [ ] AC09: Zwei tatsächlich angemeldete DB-Ausführer können nur ihre eigene
+- [x] AC09: Zwei tatsächlich angemeldete DB-Ausführer können nur ihre eigene
   Integration verarbeiten; fehlende/entzogene Zuordnung und privilegierte CLI-Konfiguration scheitern.
-- [ ] AC10: Alle Tabellen nutzen RLS; Browser-/Portalrollen können weder direkt
+- [x] AC10: Alle Tabellen nutzen RLS; Browser-/Portalrollen können weder direkt
   Patienten lesen/schreiben noch Sync-Writer ausführen, auch nicht mit Supportfreigabe.
-- [ ] AC11: Konfiguration, Frist, Seiten-/Byte-Grenzen und zyklische Paging-Antworten
+- [x] AC11: Konfiguration, Frist, Seiten-/Byte-Grenzen und zyklische Paging-Antworten
   werden geprüft; Logs und technische Ereignisse bleiben frei von Fachinhalten und Secrets.
-- [ ] AC12: 429/503/Netzwerkfälle ergeben neutralen technischen Retry-Status ohne
+- [x] AC12: 429/503/Netzwerkfälle ergeben neutralen technischen Retry-Status ohne
   versteckte Wiederholung; Aufruf vor Retry-Zeitpunkt wird ohne Netzwerkabruf beendet.
-- [ ] AC13: Nach Quellneustart/Szenariowechsel wird ein ungültiger Cursor neutral
+- [x] AC13: Nach Quellneustart/Szenariowechsel wird ein ungültiger Cursor neutral
   verweigert; kein automatisches Löschen, Cursorreset oder Rebootstrap.
-- [ ] AC14: CLI-Prozess läuft mit begrenzten lokalen Zugangsdaten und liefert die
+- [x] AC14: CLI-Prozess läuft mit begrenzten lokalen Zugangsdaten und liefert die
   festgelegten Exitcodes; kein Service-Role-Key gelangt in seine Umgebung.
-- [ ] AC15: Gezielte Unit-, HTTP-, pgTAP-, Rollen-/Prozessprüfungen und `verify:full`
+- [x] AC15: Gezielte Unit-, HTTP-, pgTAP-, Rollen-/Prozessprüfungen und `verify:full`
   bestehen; ausschließlich tatsächlich ausgeführte Evidenz wird dokumentiert.
 
 ## Out of Scope
