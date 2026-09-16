@@ -238,4 +238,5 @@ Hosted-Migration, Deployment, Real-Data-Gate-Freigabe und PROJ-31.
 ## Technischer Entwurf
 
 [Architekturentwurf](../docs/superpowers/specs/2026-09-16-proj-5-appointment-sync-design.md).
-Der detaillierte TDD-Umsetzungsplan wird nach der abschließenden Dokumentprüfung erstellt.
+Der detaillierte [TDD-Umsetzungsplan](../docs/superpowers/plans/2026-09-16-proj-5-appointment-sync.md)
+liegt zur Freigabe vor.

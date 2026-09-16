@@ -193,6 +193,6 @@ Tabellen, Rollen, Funktionen und Grenzen sind benannt. Der Entwurf enthält kein
 UI, Browserrechte, Scheduler, Practitioner-Entität, allgemeine Sync-Abstraktion,
 echte Anbieteranbindung, Hosted-Migration, Deployment oder Real-Data-Freigabe.
 
-Spec und Architektur sind fachlich freigegeben. Der nächste Schritt ist ein
-separater, detaillierter TDD-Umsetzungsplan; Featurecode wird erst nach dessen
-Freigabe geschrieben.
+Spec und Architektur sind fachlich freigegeben. Der detaillierte
+[TDD-Umsetzungsplan](../plans/2026-09-16-proj-5-appointment-sync.md) liegt zur
+Freigabe vor; Featurecode wird erst nach dessen Freigabe geschrieben.
