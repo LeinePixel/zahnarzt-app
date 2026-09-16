@@ -300,7 +300,7 @@ runPatientSync(adapter: IntegrationAdapter, repository: PatientSyncRepository,
   dependencies?: { now?: () => number; signal?: AbortSignal }): Promise<PatientSyncResult>
 ```
 
-- [ ] **Step 1: Write red orchestration tests with behavior assertions.**
+- [x] **Step 1: Write red orchestration tests with behavior assertions.**
 
 Use a test-only stateful repository that atomically commits the supplied batch and exposes its confirmed checkpoint for assertions; failure must leave it unchanged. Adapter stubs return real typed pages, not unverifiable call-count-only results.
 
@@ -316,7 +316,7 @@ expect(repository.patients.every(patient => !('email' in patient))).toBe(true)
 
 Also cover later-page provider failure, record-failure failure, refused commit, initial vs delta, terminal empty page, busy/retry-before-source, duplicate cursor/empty continuation, exactly 100 pages vs 101, byte limit, overall deadline, last appointment event and cleanup after acquire rejection. Test raw thrown errors return only neutral closed results.
 
-- [ ] **Step 2: Confirm red module.**
+- [x] **Step 2: Confirm red module.**
 
 ```powershell
 npx vitest run src/features/patients/sync-patients.test.ts
@@ -324,7 +324,7 @@ npx vitest run src/features/patients/sync-patients.test.ts
 
 Expected: `sync-patients` absent.
 
-- [ ] **Step 3: Implement collection and exactly one commit.**
+- [x] **Step 3: Implement collection and exactly one commit.**
 
 Initialize deadline once and maintain combined page count and projected UTF-8 byte count across snapshot/mutations. Count only projected persisted fields, including mutation envelopes and checkpoint parameters in the final serialized SQL batch; reject a final oversized batch before commit. Count pages before requesting the next page so page 101 is never fetched.
 
@@ -337,7 +337,7 @@ let candidateCursor = acquired.checkpoint.confirmedChangeCursor
 
 Use separate visited sets for patients/changes, include each stream's starting cursor, and check repeated continuation values before another request. Fully validate both streams before calling commit. Reserve five seconds before commit, and refuse a commit when the remaining deadline cannot cover it. Map projection exceptions to `source_contract_invalid`, malformed paging/limits to `source_protocol_invalid`, deadline to `network_unavailable`, persistence errors to `persistence_unavailable`. Source failures are recorded only through the restricted repository; failed recording does not create a success claim. `finally` always closes the repository.
 
-- [ ] **Step 4: Add HTTP tests against unchanged scenarios.**
+- [x] **Step 4: Add HTTP tests against unchanged scenarios.**
 
 Start real `createMockPvsServer` in Node test environment with random tokens as existing router tests do. Tests alone activate `/__test`. Each scenario has a fresh repository/integration; do not switch scenarios in an existing successful cursor test except the explicit invalidation test.
 
@@ -353,7 +353,7 @@ expect(freshRepository.confirmed.confirmedChangeCursor).toBe(confirmed)
 
 Cover baseline paging, changes, deletions, invalid-source-data, 429/503 and restart invalidation. An independent read of `listChanges({})` after patient processing demonstrates untouched appointment feed; do not implement a fake production appointment importer.
 
-- [ ] **Step 5: Verify, review and commit orchestration.**
+- [x] **Step 5: Verify, review and commit orchestration.**
 
 ```powershell
 npx vitest run src/features/patients/source-projection.test.ts src/features/patients/sync-config.test.ts src/features/patients/sync-patients.test.ts src/features/patients/sync-patients.http.test.ts
