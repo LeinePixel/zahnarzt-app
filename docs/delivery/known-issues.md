@@ -52,3 +52,11 @@ Der pgTAP-Dateipfad wird als Positionsargument verwendet, da CLI 2.115.0 kein
 `npm ci` meldete am 14.09.2026 zehn bestehende Dependency-Audit-Funde
 (1 low, 5 moderate, 3 high, 1 critical). Dependency-Upgrades gehören nicht zur
 PROJ-3-Adapterumsetzung; Sicherheitsremediation und Betriebsfreigabe bleiben offen.
+
+## PROJ-4: offene Folgegates
+
+Der lokale Patientensync ist ausschließlich mit synthetischen Daten verifiziert.
+Herstellervertrag und Bootstrap-Wasserzeichen, produktive Rollenprovisionierung,
+Aufbewahrung und Backup-Löschung der Versionsmarken, Scheduler, UI, Hosting,
+Deployment und Real-Data-Gate bleiben offen. Der Mock-PVS-Cursor wird bei Neustart
+oder Szenariowechsel absichtlich ungültig; es gibt keinen automatischen Rebootstrap.
