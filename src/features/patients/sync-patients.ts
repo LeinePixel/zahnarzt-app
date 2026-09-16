@@ -50,10 +50,21 @@ export async function runPatientSync(
     const acquired = await repository.acquire(signal)
     if (!acquired.ok) return acquired
 
+    const health = await adapter.checkHealth()
+    if (!health.ok) {
+      await safelyRecordFailure(repository, health.error.code, health.error.retryAt, signal)
+      return { ok: false, code: health.error.code }
+    }
+
     const snapshot: PatientProjection[] = []
     const mutations: PatientMutation[] = []
     let candidateCursor = acquired.checkpoint.confirmedChangeCursor
     let pageCount = 0
+    let projectedBytes = Buffer.byteLength(JSON.stringify({ expected: acquired.checkpoint, snapshot: [], mutations: [], candidateCursor }), 'utf8')
+    const addProjectedBytes = (value: unknown) => {
+      projectedBytes += Buffer.byteLength(JSON.stringify(value), 'utf8') + 1
+      if (projectedBytes > MAX_BATCH_BYTES) throw new SourceProtocolError()
+    }
 
     const requestPage = async <T>(request: () => Promise<{ ok: true; value: Page<T> } | { ok: false; error: { code: IntegrationFailureCode; retryAt: Date | null } }>) => {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
@@ -66,6 +77,7 @@ export async function runPatientSync(
         return null
       }
       assertPage(response.value)
+      if (response.value.data.length === 0 && response.value.nextCursor !== null) throw new SourceProtocolError()
       return response.value
     }
 
@@ -75,7 +87,11 @@ export async function runPatientSync(
       do {
         const page = await requestPage<SourcePatient>(() => adapter.listPatients({ cursor, limit: PAGE_LIMIT }))
         if (!page) return result
-        for (const source of page.data) snapshot.push(projectPatient(source))
+        for (const source of page.data) {
+          const projected = projectPatient(source)
+          addProjectedBytes(projected)
+          snapshot.push(projected)
+        }
         if (page.nextCursor === null) break
         if (visited.has(page.nextCursor)) throw new SourceProtocolError()
         visited.add(page.nextCursor)
@@ -90,7 +106,7 @@ export async function runPatientSync(
       if (!page) return result
       for (const event of page.data) {
         const mutation = projectPatientChange(event)
-        if (mutation) mutations.push(mutation)
+        if (mutation) { addProjectedBytes(mutation); mutations.push(mutation) }
         candidateCursor = event.cursor
       }
       if (page.nextCursor === null) break

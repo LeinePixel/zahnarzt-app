@@ -41,6 +41,20 @@ export class PostgresPatientSyncRepository implements PatientSyncRepository {
   private closed = false
   private acquired?: PatientCheckpoint
 
+  private async withAbort<T>(signal: AbortSignal, operation: () => Promise<T>): Promise<T> {
+    if (signal.aborted) throw new Error('aborted')
+    let rejectAbort: ((reason?: unknown) => void) | undefined
+    const aborted = new Promise<never>((_, reject) => { rejectAbort = reject })
+    const onAbort = () => {
+      this.closed = true
+      void this.client.end().catch(() => undefined)
+      rejectAbort?.(new Error('aborted'))
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+    try { return await Promise.race([operation(), aborted]) }
+    finally { signal.removeEventListener('abort', onAbort) }
+  }
+
   constructor(databaseUrl: string, dependencies: { client?: QueryClient } = {}) {
     this.client = dependencies.client ?? new Client({
       connectionString: databaseUrl,
@@ -53,7 +67,7 @@ export class PostgresPatientSyncRepository implements PatientSyncRepository {
     if (this.closed) throw new Error('closed')
     if (!this.connected) {
       if (signal.aborted) throw new Error('aborted')
-      await this.client.connect()
+      await this.withAbort(signal, () => this.client.connect())
       this.connected = true
     }
   }
@@ -61,7 +75,7 @@ export class PostgresPatientSyncRepository implements PatientSyncRepository {
   async acquire(signal: AbortSignal): Promise<PatientSyncAcquisition> {
     try {
       await this.ensureConnected(signal)
-      const response = await this.client.query('select private.acquire_patient_sync() as result')
+      const response = await this.withAbort(signal, () => this.client.query('select private.acquire_patient_sync() as result'))
       const result = acquisitionSchema.parse(response.rows[0]?.result)
       if (result.ok) this.acquired = result.checkpoint
       return result
@@ -77,19 +91,19 @@ export class PostgresPatientSyncRepository implements PatientSyncRepository {
     let transactionStarted = false
     try {
       await this.ensureConnected(signal)
-      await this.client.query('begin')
+      await this.withAbort(signal, () => this.client.query('begin'))
       transactionStarted = true
-      const response = await this.client.query(
+      const response = await this.withAbort(signal, () => this.client.query(
         'select private.commit_patient_sync($1::text,$2::boolean,$3::jsonb,$4::jsonb,$5::text) as result',
         [input.expected.confirmedChangeCursor, input.expected.initialImportCompleted,
           JSON.stringify(input.snapshot), JSON.stringify(input.mutations), input.candidateCursor],
-      )
+      ))
       const result = resultSchema.parse(response.rows[0]?.result)
       if (!result.ok) {
-        await this.client.query('rollback')
+        await this.withAbort(signal, () => this.client.query('rollback'))
         return result
       }
-      await this.client.query('commit')
+      await this.withAbort(signal, () => this.client.query('commit'))
       return result
     } catch {
       if (transactionStarted) {
@@ -105,10 +119,10 @@ export class PostgresPatientSyncRepository implements PatientSyncRepository {
   ): Promise<boolean> {
     try {
       await this.ensureConnected(signal)
-      const response = await this.client.query(
+      const response = await this.withAbort(signal, () => this.client.query(
         'select private.record_patient_sync_failure($1::public.integration_sync_error_code,$2::timestamptz) as recorded',
         [input.code, input.retryAt],
-      )
+      ))
       return response.rows[0]?.recorded === true
     } catch { return false }
   }

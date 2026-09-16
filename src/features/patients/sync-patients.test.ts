@@ -72,16 +72,32 @@ describe('bounded patient synchronization', () => {
 
   it('records a later-page provider failure without committing', async () => {
     const repo = repository()
-    const source = adapter([{ data: [], nextCursor: 'next' }], [])
-    vi.mocked(source.listPatients).mockResolvedValueOnce({ ok: true, value: { data: [], nextCursor: 'next' } }).mockResolvedValueOnce({ ok: false, error: { code: 'rate_limited', retryAt: null } })
+    const source = adapter([{ data: [patient], nextCursor: 'next' }], [])
+    vi.mocked(source.listPatients).mockResolvedValueOnce({ ok: true, value: { data: [patient], nextCursor: 'next' } }).mockResolvedValueOnce({ ok: false, error: { code: 'rate_limited', retryAt: null } })
     expect(await runPatientSync(source, repo)).toEqual({ ok: false, code: 'rate_limited' })
     expect(repo.failures).toEqual(['rate_limited'])
     expect(repo.commits).toHaveLength(0)
   })
 
+  it('stops after a failing health check', async () => {
+    const repo = repository()
+    const source = adapter([], [])
+    vi.mocked(source.checkHealth).mockResolvedValue({ ok: false, error: { code: 'temporarily_unavailable', retryAt: null } })
+    expect(await runPatientSync(source, repo)).toEqual({ ok: false, code: 'temporarily_unavailable' })
+    expect(source.listPatients).not.toHaveBeenCalled()
+    expect(repo.failures).toEqual(['temporarily_unavailable'])
+  })
+
+  it('rejects an empty page with a continuation cursor', async () => {
+    const repo = repository()
+    const source = adapter([{ data: [], nextCursor: 'unexpected-next' }], [])
+    expect(await runPatientSync(source, repo)).toEqual({ ok: false, code: 'source_protocol_invalid' })
+    expect(source.listPatients).toHaveBeenCalledOnce()
+  })
+
   it('rejects a repeated continuation cursor before another request', async () => {
     const repo = repository()
-    const source = adapter([{ data: [], nextCursor: 'same' }, { data: [], nextCursor: 'same' }], [])
+    const source = adapter([{ data: [patient], nextCursor: 'same' }, { data: [patient], nextCursor: 'same' }], [])
     expect(await runPatientSync(source, repo)).toEqual({ ok: false, code: 'source_protocol_invalid' })
     expect(source.listPatients).toHaveBeenCalledTimes(2)
     expect(repo.commits).toHaveLength(0)
@@ -111,7 +127,7 @@ describe('bounded patient synchronization', () => {
 
   it('allows exactly 100 combined pages and never requests page 101', async () => {
     const pages = (count: number) => Array.from({ length: count }, (_, index) => ({
-      data: [], nextCursor: index === count - 1 ? null : `patient-page-${index + 1}`,
+      data: [patient], nextCursor: index === count - 1 ? null : `patient-page-${index + 1}`,
     }))
     const allowedRepo = repository()
     expect(await runPatientSync(adapter(pages(99), [{ data: [], nextCursor: null }]), allowedRepo)).toEqual({ ok: true })

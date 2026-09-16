@@ -60,4 +60,15 @@ describe('postgres patient sync transaction', () => {
     expect(await repository.commit({ expected: { ...checkpoint, integrationId: crypto.randomUUID() }, snapshot: [], mutations: [], candidateCursor: null }, new AbortController().signal)).toEqual({ ok: false, code: 'execution_denied' })
     expect(client.query).toHaveBeenCalledTimes(1)
   })
+
+  it('physically ends a connection when acquisition is aborted', async () => {
+    const client = fakeClient([])
+    client.connect.mockImplementation(async () => await new Promise<never>(() => undefined))
+    const repository = new PostgresPatientSyncRepository('unused', { client })
+    const controller = new AbortController()
+    const acquisition = repository.acquire(controller.signal)
+    controller.abort()
+    await expect(acquisition).resolves.toEqual({ ok: false, code: 'persistence_unavailable' })
+    expect(client.end).toHaveBeenCalledOnce()
+  })
 })

@@ -119,25 +119,31 @@ declare
   v_operation text; v_source_id text; v_version integer; v_patient jsonb;
   v_stored private.patient_source_version%rowtype; v_existing public.patient%rowtype;
 begin
-  if jsonb_typeof(p_mutation) <> 'object' then raise exception 'Invalid mutation' using errcode = 'P4001'; end if;
+  if jsonb_typeof(p_mutation) is distinct from 'object' then raise exception 'Invalid mutation' using errcode = 'P4001'; end if;
   v_operation := p_mutation->>'operation';
   if v_operation = 'upsert' then
     if (select array_agg(key order by key) from jsonb_object_keys(p_mutation) key) <> array['operation','patient'] then raise exception 'Invalid mutation' using errcode='P4001'; end if;
     v_patient := p_mutation->'patient';
-    if jsonb_typeof(v_patient) <> 'object'
+    if jsonb_typeof(v_patient) is distinct from 'object'
       or (select array_agg(key order by key) from jsonb_object_keys(v_patient) key) <> array['birthDate','firstName','lastName','phoneE164','sourceCreatedAt','sourceId','sourceUpdatedAt','sourceVersion']
     then raise exception 'Invalid mutation' using errcode='P4001'; end if;
     v_source_id := v_patient->>'sourceId';
-    if jsonb_typeof(v_patient->'sourceVersion') <> 'number' then raise exception 'Invalid mutation' using errcode='P4001'; end if;
+    if jsonb_typeof(v_patient->'sourceVersion') is distinct from 'number' or not (v_patient->>'sourceVersion' ~ '^[1-9][0-9]*$') then raise exception 'Invalid mutation' using errcode='P4001'; end if;
     v_version := (v_patient->>'sourceVersion')::integer;
     if v_source_id is null or length(v_source_id) not between 1 and 100 or v_version < 1
+      or jsonb_typeof(v_patient->'firstName') is distinct from 'string' or jsonb_typeof(v_patient->'lastName') is distinct from 'string'
+      or jsonb_typeof(v_patient->'birthDate') is distinct from 'string' or not (v_patient->>'birthDate' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      or jsonb_typeof(v_patient->'phoneE164') is distinct from 'string'
+      or jsonb_typeof(v_patient->'sourceCreatedAt') is distinct from 'string' or not (v_patient->>'sourceCreatedAt' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$')
+      or jsonb_typeof(v_patient->'sourceUpdatedAt') is distinct from 'string' or not (v_patient->>'sourceUpdatedAt' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$')
       or length(v_patient->>'firstName') not between 1 and 200 or length(v_patient->>'lastName') not between 1 and 200
       or not (v_patient->>'phoneE164' ~ '^\+[1-9][0-9]{1,14}$')
     then raise exception 'Invalid mutation' using errcode='P4001'; end if;
     perform (v_patient->>'birthDate')::date, (v_patient->>'sourceCreatedAt')::timestamptz, (v_patient->>'sourceUpdatedAt')::timestamptz;
   elsif v_operation = 'delete' then
     if (select array_agg(key order by key) from jsonb_object_keys(p_mutation) key) <> array['operation','sourceId','sourceVersion']
-      or jsonb_typeof(p_mutation->'sourceVersion') <> 'number'
+      or jsonb_typeof(p_mutation->'sourceVersion') is distinct from 'number'
+      or not (p_mutation->>'sourceVersion' ~ '^[1-9][0-9]*$')
     then raise exception 'Invalid mutation' using errcode='P4001'; end if;
     v_source_id := p_mutation->>'sourceId'; v_version := (p_mutation->>'sourceVersion')::integer;
     if v_source_id is null or length(v_source_id) not between 1 and 100 or v_version < 1 then raise exception 'Invalid mutation' using errcode='P4001'; end if;
@@ -177,7 +183,11 @@ create function private.acquire_patient_sync() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare v_integration uuid; v_practice uuid; v_checkpoint private.patient_sync_checkpoint%rowtype; v_next timestamptz;
 begin
-  select integration_id,practice_id into v_integration,v_practice from private.patient_sync_identity();
+  select e.integration_id,e.practice_id into v_integration,v_practice
+  from private.patient_sync_executor e join pg_catalog.pg_roles r on r.rolname=session_user
+  where e.database_role=session_user::name and pg_catalog.pg_has_role(session_user,'dentpilot_patient_sync_executor','member')
+    and r.rolcanlogin and not r.rolsuper and not r.rolbypassrls and not r.rolcreatedb and not r.rolcreaterole and not r.rolreplication
+  for update of e;
   if v_integration is null then return jsonb_build_object('ok',false,'code','execution_denied'); end if;
   select next_attempt_at into v_next from public.integration_sync_state where integration_id=v_integration;
   if v_next is not null and v_next>clock_timestamp() then return jsonb_build_object('ok',false,'code','retry_not_due'); end if;
@@ -197,13 +207,17 @@ create function private.commit_patient_sync(p_expected_cursor text,p_expected_in
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_integration uuid; v_practice uuid; v_checkpoint private.patient_sync_checkpoint%rowtype; v_item jsonb;
 begin
-  select integration_id,practice_id into v_integration,v_practice from private.patient_sync_identity();
+  select e.integration_id,e.practice_id into v_integration,v_practice
+  from private.patient_sync_executor e join pg_catalog.pg_roles r on r.rolname=session_user
+  where e.database_role=session_user::name and pg_catalog.pg_has_role(session_user,'dentpilot_patient_sync_executor','member')
+    and r.rolcanlogin and not r.rolsuper and not r.rolbypassrls and not r.rolcreatedb and not r.rolcreaterole and not r.rolreplication
+  for update of e;
   if v_integration is null or p_expected_initial is null or not private.patient_sync_has_lock(v_integration) then return jsonb_build_object('ok',false,'code','execution_denied'); end if;
   select * into v_checkpoint from private.patient_sync_checkpoint where integration_id=v_integration for update;
   if not found or v_checkpoint.initial_import_completed is distinct from p_expected_initial or v_checkpoint.confirmed_change_cursor is distinct from p_expected_cursor then return jsonb_build_object('ok',false,'code','execution_denied'); end if;
   if (p_expected_cursor is not null and length(p_expected_cursor) not between 1 and 128) or (p_candidate_cursor is not null and length(p_candidate_cursor) not between 1 and 128) then return jsonb_build_object('ok',false,'code','source_contract_invalid'); end if;
   begin
-    if jsonb_typeof(p_snapshot)<>'array' or jsonb_typeof(p_mutations)<>'array' or pg_column_size(p_snapshot)+pg_column_size(p_mutations)>10485760 or jsonb_array_length(p_snapshot)+jsonb_array_length(p_mutations)>10000 or (p_expected_initial and jsonb_array_length(p_snapshot)>0) then raise exception 'Invalid batch' using errcode='P4001'; end if;
+    if jsonb_typeof(p_snapshot) is distinct from 'array' or jsonb_typeof(p_mutations) is distinct from 'array' or pg_column_size(p_snapshot)+pg_column_size(p_mutations)>10485760 or jsonb_array_length(p_snapshot)+jsonb_array_length(p_mutations)>10000 or (p_expected_initial and jsonb_array_length(p_snapshot)>0) then raise exception 'Invalid batch' using errcode='P4001'; end if;
     for v_item in select value from jsonb_array_elements(p_snapshot) loop
       perform private.apply_patient_sync_mutation(v_integration,v_practice,jsonb_build_object('operation','upsert','patient',v_item));
     end loop;
@@ -224,7 +238,11 @@ create function private.record_patient_sync_failure(p_error public.integration_s
 returns boolean language plpgsql security definer set search_path = '' as $$
 declare v_integration uuid; v_practice uuid;
 begin
-  select integration_id,practice_id into v_integration,v_practice from private.patient_sync_identity();
+  select e.integration_id,e.practice_id into v_integration,v_practice
+  from private.patient_sync_executor e join pg_catalog.pg_roles r on r.rolname=session_user
+  where e.database_role=session_user::name and pg_catalog.pg_has_role(session_user,'dentpilot_patient_sync_executor','member')
+    and r.rolcanlogin and not r.rolsuper and not r.rolbypassrls and not r.rolcreatedb and not r.rolcreaterole and not r.rolreplication
+  for update of e;
   if v_integration is null or not private.patient_sync_has_lock(v_integration) then return false; end if;
   perform private.record_integration_sync_result(v_integration,'failed',p_error,p_retry_at);
   return true;

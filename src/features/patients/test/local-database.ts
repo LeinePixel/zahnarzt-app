@@ -28,6 +28,10 @@ export async function createLocalDatabaseFixture() {
   await admin.query("insert into public.integration(id,practice_id,provider) values($1,$2,'mock_pvs')", [integrationId, practiceId])
   await admin.query(`create role ${quoteIdentifier(role)} login password '${escapedPassword}' nosuperuser nobypassrls nocreatedb nocreaterole noreplication`)
   await admin.query(`grant dentpilot_patient_sync_executor to ${quoteIdentifier(role)}`)
+  await admin.query(`alter role ${quoteIdentifier(role)} set log_statement = 'none'`)
+  await admin.query(`alter role ${quoteIdentifier(role)} set log_min_error_statement = 'panic'`)
+  await admin.query(`alter role ${quoteIdentifier(role)} set log_parameter_max_length = 0`)
+  await admin.query(`alter role ${quoteIdentifier(role)} set log_parameter_max_length_on_error = 0`)
   await admin.query('insert into private.patient_sync_executor(database_role,integration_id,practice_id) values($1,$2,$3)', [role, integrationId, practiceId])
   const url = new URL(adminUrl())
   url.username = role; url.password = password
