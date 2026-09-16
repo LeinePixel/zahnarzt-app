@@ -69,7 +69,7 @@ Read the user-provided AGENTS instructions, `features/INDEX.md`, both approved P
 
 **Produces:** `PatientProjection`, `PatientMutation`, `projectPatient`, `projectPatientChange`, `PatientSyncRepository`, `PatientSyncResult`, `loadPatientSyncConfig`.
 
-- [ ] **Step 1: Write red projection and config tests.**
+- [x] **Step 1: Write red projection and config tests.**
 
 ```ts
 const source = {
@@ -88,7 +88,7 @@ expect(() => loadPatientSyncConfig({ PATIENT_SYNC_SYNTHETIC_ONLY: '0' })).toThro
 
 Also assert missing/invalid dates, names over 200 characters, empty/overlong ID, invalid phone, exact projection keys, resource-free patient Delete and `null` for an appointment change. Config table covers absent confirmation/token/DB URL, hosted host, absent port, non-PostgreSQL protocol, query/hash, empty database/password, privileged username and forbidden service-role/admin/test-token/seed variables. Do not print full config values in failure assertions; compare predicates for secrets.
 
-- [ ] **Step 2: Verify expected red modules.**
+- [x] **Step 2: Verify expected red modules.**
 
 ```powershell
 npx vitest run src/features/patients/source-projection.test.ts src/features/patients/sync-config.test.ts
@@ -96,7 +96,7 @@ npx vitest run src/features/patients/source-projection.test.ts src/features/pati
 
 Expected: missing projection/config modules. Confirm this before implementation.
 
-- [ ] **Step 3: Define schemas, parser and the complete ports.**
+- [x] **Step 3: Define schemas, parser and the complete ports.**
 
 ```ts
 export type PatientProjection = {
@@ -141,7 +141,7 @@ MOCK_PVS_BASE_URL=http://127.0.0.1:
 MOCK_PVS_READ_TOKEN=
 ```
 
-- [ ] **Step 4: Verify and review Task 1.**
+- [x] **Step 4: Verify and review Task 1.**
 
 ```powershell
 npx vitest run src/features/patients/source-projection.test.ts src/features/patients/sync-config.test.ts
@@ -151,7 +151,7 @@ npm run lint
 
 Require all exit 0; review exact fields, no direct clients and no app-route changes.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```powershell
 git add src/features/patients/source-projection.ts src/features/patients/source-projection.test.ts src/features/patients/sync-config.ts src/features/patients/sync-config.test.ts src/features/patients/sync-repository.ts .env.patient-sync.local.example
