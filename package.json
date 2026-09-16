@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "verify": "npm run lint && npm run typecheck && npm test && npm run build",
-    "verify:full": "npm run verify && supabase test db --local && npm run test:e2e:edge-required",
+    "verify:full": "npm run verify && supabase test db --local && npm run test:patient-sync:db && npm run test:patient-sync:process && npm run test:e2e:edge-required",
     "dev": "next dev",
     "mock-pvs": "tsx --env-file=.env.mock-pvs.local services/mock-pvs/server.ts",
     "test:mock-pvs": "vitest run services/mock-pvs",
@@ -23,7 +23,10 @@
     "test:e2e:edge-required": "tsx scripts/run-playwright-edge-required.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:all": "npm run test && npm run test:e2e",
-    "test:patient-sync:db": "vitest run --config vitest.patient-sync.config.mts src/features/patients/postgres-sync-repository.db.test.ts"
+    "test:patient-sync:db": "vitest run --config vitest.patient-sync.config.mts src/features/patients/postgres-sync-repository.db.test.ts",
+    "patient-sync": "node --conditions=react-server --import=tsx --env-file=.env.patient-sync.local scripts/run-patient-sync.ts",
+    "patient-sync:provision-local": "node --import=tsx --env-file=.env.patient-sync-admin.local scripts/provision-patient-sync-local.ts",
+    "test:patient-sync:process": "vitest run --config vitest.patient-sync.config.mts scripts/run-patient-sync.process.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
