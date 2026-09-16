@@ -22,7 +22,8 @@
     "pretest:e2e:edge-required": "next build",
     "test:e2e:edge-required": "tsx scripts/run-playwright-edge-required.ts",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "npm run test && npm run test:e2e",
+    "test:patient-sync:db": "vitest run --config vitest.patient-sync.config.mts src/features/patients/postgres-sync-repository.db.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -54,6 +55,7 @@
     "lucide-react": "^0.562.0",
     "next": "^16.3.2",
     "next-themes": "^0.4.6",
+    "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.71.1",
@@ -67,6 +69,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
