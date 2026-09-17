@@ -184,7 +184,7 @@ Expected: all commands exit 0; the diff contains only explicit appointment field
 - Consumes: Task 1 JSON field names, existing `public.integration`, `public.patient`, PROJ-3 technical state writers and PROJ-4 lock namespace.
 - Produces: `private.acquire_appointment_sync()`, `private.commit_appointment_sync(text,boolean,jsonb,jsonb,text)` and `private.record_appointment_sync_failure(public.integration_sync_error_code,timestamptz)`.
 
-- [ ] **Step 1: Write red pgTAP assertions for schema, authorization and atomic behavior.**
+- [x] **Step 1: Write red pgTAP assertions for schema, authorization and atomic behavior.**
 
 ```sql
 begin;
@@ -201,7 +201,7 @@ rollback;
 
 Use `no_plan()` so pgTAP derives the exact assertion count from the completed file. Add named assertions for table columns/checks/indexes; RLS; role attributes; function `search_path`; own/unmapped/revoked identity; retry; first/reentrant/shared lock; snapshot commit; stable internal UUID; old/equal/new versions; known/unknown delete; resurrection only at higher version; late conflict rollback; checkpoint CAS; empty cursor behavior; unchanged patient/global checkpoints; direct privilege denial; and technical event field minimization. Create two practices/integrations and patients, including a same-source patient in another integration, to prove missing/deleted/foreign references roll back every earlier appointment mutation.
 
-- [ ] **Step 2: Run the new SQL suite and confirm missing-object failures.**
+- [x] **Step 2: Run the new SQL suite and confirm missing-object failures.**
 
 ```powershell
 npx supabase test db --local supabase/tests/proj_5_appointment_sync.test.sql
@@ -209,7 +209,7 @@ npx supabase test db --local supabase/tests/proj_5_appointment_sync.test.sql
 
 Expected: FAIL because `public.appointment` and the three entry points do not exist.
 
-- [ ] **Step 3: Create the four tables, role, RLS and private helpers.**
+- [x] **Step 3: Create the four tables, role, RLS and private helpers.**
 
 ```sql
 create type public.appointment_status as enum ('confirmed','cancelled','no_show','rescheduled','completed');
@@ -245,7 +245,7 @@ private.apply_appointment_sync_mutation(uuid, uuid, jsonb) returns void
 
 The lock helper checks this session's exact PROJ-4 key `(20260914, hashtext(id::text))` in `pg_locks`. Identity requires mapped `session_user`, LOGIN membership and all restricted role attributes.
 
-- [ ] **Step 4: Implement acquisition, version rules and patient resolution.**
+- [x] **Step 4: Implement acquisition, version rules and patient resolution.**
 
 ```sql
 -- acquire order: identity -> retry due -> own-lock check -> pg_try_advisory_lock
@@ -262,7 +262,7 @@ end if;
 
 Validate exact JSON keys and types before casts. Same delete repeats; older versions do nothing; same upsert compares every projected field including resolved patient, timestamps, status and practitioner; any same-version difference or delete/upsert contradiction raises internal SQLSTATE `P4001`; higher delete removes the appointment and writes a minimal deleted marker; higher upsert writes the appointment and a live marker. Never infer deletion from snapshot absence. Do not put source values in exception messages.
 
-- [ ] **Step 5: Implement atomic commit, failure status and grants.**
+- [x] **Step 5: Implement atomic commit, failure status and grants.**
 
 ```sql
 create function private.commit_appointment_sync(
@@ -298,7 +298,7 @@ $$;
 
 The surrounding declarations and pre-loop validation construct `v_validated_items` only after enforcing strict arrays, a 10 MiB serialized input limit, at most 10,000 combined items, cursor bounds and the completed-snapshot rule. The checkpoint assignment uses the validated candidate and preserves the previous cursor when the feed was empty. After the update, call the existing private technical success writer before returning. Authorization, stale checkpoint or absent lock returns `execution_denied` before mutation. The failure writer accepts only the six PROJ-3 provider codes and valid retry timestamps, rechecks identity/lock, and calls the existing private technical writer without changing any checkpoint. Revoke all helper/entry-point defaults, then grant only the three publicized entry points and private-schema USAGE to the appointment group. Set five-second statement limit and disabled statement/parameter logging for runtime roles through permitted administrative settings.
 
-- [ ] **Step 6: Run SQL verification and commit.**
+- [x] **Step 6: Run SQL verification and commit.**
 
 ```powershell
 npx supabase test db --local supabase/tests/proj_5_appointment_sync.test.sql
