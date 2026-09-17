@@ -399,7 +399,7 @@ Expected: focused tests, types and lint pass; only one commit call occurs per su
 - Consumes: Task 1 repository types and Task 2 SQL functions.
 - Produces: `PostgresAppointmentSyncRepository` and `npm run test:appointment-sync:db`.
 
-- [ ] **Step 1: Write red repository unit tests.**
+- [x] **Step 1: Write red repository unit tests.**
 
 ```ts
 const repository = new PostgresAppointmentSyncRepository(databaseUrl, { client })
@@ -415,7 +415,7 @@ expect(client.query).toHaveBeenCalledWith(
 
 Cover connection timeout 3000 ms, statement timeout 5000 ms, strict response parsing, acquired integration mismatch, BEGIN/COMMIT, rollback on neutral SQL failure, rollback on query exception, abort closing the client, failure writer, close without connection, and shared advisory unlock using the acquired integration ID.
 
-- [ ] **Step 2: Run the repository unit test and confirm missing implementation.**
+- [x] **Step 2: Run the repository unit test and confirm missing implementation.**
 
 ```powershell
 npx vitest run src/features/appointments/postgres-sync-repository.test.ts
@@ -423,7 +423,7 @@ npx vitest run src/features/appointments/postgres-sync-repository.test.ts
 
 Expected: FAIL because `PostgresAppointmentSyncRepository` does not exist.
 
-- [ ] **Step 3: Implement the one-session repository.**
+- [x] **Step 3: Implement the one-session repository.**
 
 ```ts
 export class PostgresAppointmentSyncRepository implements AppointmentSyncRepository {
@@ -437,7 +437,7 @@ export class PostgresAppointmentSyncRepository implements AppointmentSyncReposit
 
 Mirror the reviewed PROJ-4 transaction/session mechanics, but call only appointment functions. Validate every JSON result with strict Zod schemas. The constructor configures `connectionTimeoutMillis: 3000` and `statement_timeout: 5000`. `close()` unlocks `(20260914, hashtext(acquired.integrationId))` and ends the same client. Never expose SQL exceptions or bound values.
 
-- [ ] **Step 4: Write real local LOGIN and concurrency tests.**
+- [x] **Step 4: Write real local LOGIN and concurrency tests.**
 
 ```ts
 const appointmentLogin = await provisionAppointmentSyncLogin(admin, integration)
@@ -450,7 +450,7 @@ expect(await appointmentRepo.acquire(signal)).toEqual({ ok: false, code: 'sync_b
 
 The test helper uses a unique random `dentpilot_appointment_sync_*` LOGIN, restricted attributes, group grant and mapping row; cleanup removes mapping, membership and role in `finally`. Test real password sessions rather than only `SET ROLE`: own success, second integration isolation, direct table denial, denied patient functions, revoked mapping/membership, patient deletion before commit, executor remap during HTTP, late invalid appointment rollback, session crash releasing the lock, patient-lock blocks appointment, appointment-lock blocks patient, and successful restart after release. Assert patient/global checkpoints remain unchanged.
 
-- [ ] **Step 5: Add the dedicated config and package command, then run checks.**
+- [x] **Step 5: Add the dedicated config and package command, then run checks.**
 
 ```json
 {
