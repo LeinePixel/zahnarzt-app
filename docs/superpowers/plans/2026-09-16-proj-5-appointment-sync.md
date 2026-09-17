@@ -321,7 +321,7 @@ Expected: focused and full pgTAP suites pass; no patient/global checkpoint mutat
 - Consumes: `IntegrationAdapter`, Task 1 projection functions and `AppointmentSyncRepository`.
 - Produces: `runAppointmentSync(adapter, repository, dependencies?) => Promise<AppointmentSyncResult>`.
 
-- [ ] **Step 1: Write failing orchestrator tests with a recording repository.**
+- [x] **Step 1: Write failing orchestrator tests with a recording repository.**
 
 ```ts
 const result = await runAppointmentSync(adapter, repository)
@@ -336,7 +336,7 @@ expect(repository.commits[0]).toMatchObject({
 
 Add cases for initial and subsequent runs, multi-page snapshot/feed, patient events ignored while advancing the candidate cursor, empty feed preserving the old cursor, snapshot skipped after completion, second-page provider failure without commit, projection failure, repeated cursor, empty page with continuation, 101st combined page, 10 MiB overflow, deadline/abort, five-second commit reserve, busy/retry before health/HTTP, record-failure behavior and `close()` on every exit.
 
-- [ ] **Step 2: Run the unit test and verify missing orchestrator failure.**
+- [x] **Step 2: Run the unit test and verify missing orchestrator failure.**
 
 ```powershell
 npx vitest run src/features/appointments/sync-appointments.test.ts
@@ -344,7 +344,7 @@ npx vitest run src/features/appointments/sync-appointments.test.ts
 
 Expected: FAIL because `runAppointmentSync` is not implemented.
 
-- [ ] **Step 3: Implement the bounded collection and one-commit flow.**
+- [x] **Step 3: Implement the bounded collection and one-commit flow.**
 
 ```ts
 const PAGE_LIMIT = 100
@@ -362,7 +362,7 @@ export async function runAppointmentSync(
 
 Follow the established PROJ-4 ordering: acquire; health; optional complete `listAppointments` snapshot; complete `listChanges`; pre-commit size/deadline check; one repository commit; close in `finally`. Count snapshot and change pages together. Track visited continuation cursors independently for snapshot/feed. Set `candidateCursor` for every event, but append only appointment mutations. Map `AppointmentProjectionError` to `source_contract_invalid`, page/limit/cycle errors to `source_protocol_invalid`, and unexpected abort/network errors to `network_unavailable`. Failure recording is best-effort and never changes the returned code.
 
-- [ ] **Step 4: Add real Mock-PVS HTTP coverage.**
+- [x] **Step 4: Add real Mock-PVS HTTP coverage.**
 
 ```ts
 expect(await runAppointmentSync(new MockPvsAdapter({ baseUrl, readToken }), repository))
@@ -373,7 +373,7 @@ expect(repository.commits[0].snapshot.every(item => item.patientSourceId.startsW
 
 Use the existing Mock process helpers and test controls only in tests. Cover baseline pagination, changed appointment, tombstone, invalid appointment interval, 429, 503 and invalid cursor after scenario/reset restart. Use isolated recording repositories and verify no commit/checkpoint candidate is accepted on failure.
 
-- [ ] **Step 5: Run focused checks and commit.**
+- [x] **Step 5: Run focused checks and commit.**
 
 ```powershell
 npx vitest run src/features/appointments/sync-appointments.test.ts src/features/appointments/sync-appointments.http.test.ts
