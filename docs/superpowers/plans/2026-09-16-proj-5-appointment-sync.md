@@ -79,7 +79,7 @@ Read the active AGENTS instructions, both approved PROJ-5 documents, PROJ-3 adap
 - Consumes: `SourceAppointment`, `SourceChangeEvent`, `IntegrationFailureCode`, `MockPvsConfig` and `loadMockPvsConfig` from `src/features/integrations`.
 - Produces: `AppointmentProjection`, `AppointmentMutation`, `projectAppointment`, `projectAppointmentChange`, `AppointmentSyncRepository`, `AppointmentSyncResult` and `loadAppointmentSyncConfig`.
 
-- [ ] **Step 1: Write failing projection and configuration tests.**
+- [x] **Step 1: Write failing projection and configuration tests.**
 
 ```ts
 const source = {
@@ -101,7 +101,7 @@ expect(() => loadAppointmentSyncConfig({ APPOINTMENT_SYNC_SYNTHETIC_ONLY: '0' })
 
 Cover all five statuses; empty/overlong source, patient and practitioner IDs; invalid versions/timestamps; `endsAt <= startsAt`; unknown keys; exact projection keys; appointment upsert/delete; resource-free delete; and `null` for patient events. Configuration tests cover missing confirmation, token and URLs; hosted host; absent port; query/hash; empty DB/password; username outside `^dentpilot_appointment_sync_[a-z0-9_]+$`; and every forbidden service-role, seed-password, admin URL and Mock test-token variable. Assertions must never print complete secret values.
 
-- [ ] **Step 2: Run the tests and confirm they fail because the new modules do not exist.**
+- [x] **Step 2: Run the tests and confirm they fail because the new modules do not exist.**
 
 ```powershell
 npx vitest run src/features/appointments/source-projection.test.ts src/features/appointments/sync-config.test.ts
@@ -109,7 +109,7 @@ npx vitest run src/features/appointments/source-projection.test.ts src/features/
 
 Expected: FAIL with unresolved `source-projection` and `sync-config` modules.
 
-- [ ] **Step 3: Implement strict projection schemas and closed repository types.**
+- [x] **Step 3: Implement strict projection schemas and closed repository types.**
 
 ```ts
 export type AppointmentProjection = {
@@ -144,7 +144,7 @@ export interface AppointmentSyncRepository {
 
 Use strict Zod objects and explicit field construction; never spread source data. Parse the existing PROJ-3 schemas first, then enforce 1–100 character source/patient/practitioner IDs. Export `appointmentProjectionSchema` and `appointmentMutationSchema`. Errors are exactly `AppointmentProjectionError('Terminquelle ist ungültig.')` and `AppointmentSyncConfigError('Terminsync-Konfiguration ist ungültig.')`.
 
-- [ ] **Step 4: Implement the local configuration and value-free template.**
+- [x] **Step 4: Implement the local configuration and value-free template.**
 
 ```ts
 export type AppointmentSyncConfig = { databaseUrl: string; mockPvs: MockPvsConfig }
@@ -162,7 +162,7 @@ MOCK_PVS_BASE_URL=http://127.0.0.1:
 MOCK_PVS_READ_TOKEN=
 ```
 
-- [ ] **Step 5: Run focused checks and commit.**
+- [x] **Step 5: Run focused checks and commit.**
 
 ```powershell
 npx vitest run src/features/appointments/source-projection.test.ts src/features/appointments/sync-config.test.ts
