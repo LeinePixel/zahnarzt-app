@@ -488,7 +488,7 @@ Expected: unit and actual-login suites pass; both lock directions are observed b
 - Consumes: `loadAppointmentSyncConfig`, `MockPvsAdapter`, `PostgresAppointmentSyncRepository`, `runAppointmentSync` and Task 2 role/mapping.
 - Produces: `npm run appointment-sync`, `npm run appointment-sync:provision-local` and `npm run test:appointment-sync:process`.
 
-- [ ] **Step 1: Write red composition and provisioning tests.**
+- [x] **Step 1: Write red composition and provisioning tests.**
 
 ```ts
 expect(messageFor({ ok: true })).toEqual({ text: 'Terminsync abgeschlossen.', exitCode: 0 })
@@ -498,7 +498,7 @@ expect(messageFor({ ok: false, code: 'source_contract_invalid' })).toEqual({ tex
 
 Assert every result maps to exactly one constant German line without counts, IDs, host, cursor, SQL or error text. Provisioning tests accept only local admin URLs and identifiers from explicit arguments/environment; generate a strong password when absent; quote identifiers safely; create restricted LOGIN, grant only the appointment group and insert one mapping. Repeated invocation for an already-mapped role must fail neutrally rather than change scope. Runtime code must never import provisioning code.
 
-- [ ] **Step 2: Run red script tests.**
+- [x] **Step 2: Run red script tests.**
 
 ```powershell
 npx vitest run scripts/run-appointment-sync.test.ts scripts/provision-appointment-sync-local.test.ts
@@ -506,7 +506,7 @@ npx vitest run scripts/run-appointment-sync.test.ts scripts/provision-appointmen
 
 Expected: FAIL because the scripts do not exist.
 
-- [ ] **Step 3: Implement composition, neutral output and admin-only provisioning.**
+- [x] **Step 3: Implement composition, neutral output and admin-only provisioning.**
 
 ```ts
 export async function executeAppointmentSync(
@@ -520,7 +520,7 @@ export async function executeAppointmentSync(
 
 The top-level script catches configuration/unknown errors and writes one neutral line. Do not log caught objects. Provision through a separate `.env.appointment-sync-admin.local` process containing only local admin DB URL, target integration ID, target role and optional generated/output password handling described by its CLI help. The committed example has empty values and no password. Use bound values for mapping rows and validated/quoted role identifiers for DDL.
 
-- [ ] **Step 4: Add real child-process acceptance.**
+- [x] **Step 4: Add real child-process acceptance.**
 
 ```ts
 const child = spawn(process.execPath, [
@@ -530,7 +530,7 @@ const child = spawn(process.execPath, [
 
 Start the existing synthetic Mock on an ephemeral loopback port, provision a fresh restricted appointment login through test-only admin code, and spawn the real CLI with a sanitized allowlist environment. Prove exit 0 and exact success line; database appointment count and patient links; second-run idempotence; changed appointment; tombstone; missing-patient rollback/checkpoint preservation; busy exit 2 while a patient session holds the shared lock; 429/503 failure; invalid cursor; and configuration rejection before network. Terminate helpers with `child.kill('SIGTERM')` and await `close`; do not use `taskkill`.
 
-- [ ] **Step 5: Add commands, run checks and commit.**
+- [x] **Step 5: Add commands, run checks and commit.**
 
 ```json
 {
