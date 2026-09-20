@@ -20,7 +20,7 @@ export type ProxyCookieMethods = {
 type ProxyAuthClient = {
   auth: {
     getClaims: () => Promise<{
-      data: { claims: { sub?: string } } | null
+      data: { claims: { aal?: string; sub?: string } } | null
       error: unknown
     }>
   }
@@ -126,17 +126,24 @@ export async function updateSession(
     typeof data?.claims.sub === 'string' &&
     data.claims.sub.length > 0
   const pathname = request.nextUrl.pathname
+  const isMfaRoute = pathname.startsWith('/auth/mfa')
   let response: NextResponse
 
   if (
     !isAuthenticated &&
-    (pathname.startsWith('/status') || pathname.startsWith('/portal'))
+    (pathname.startsWith('/status') || pathname.startsWith('/portal') || isMfaRoute)
   ) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.search = ''
     loginUrl.hash = ''
     response = NextResponse.redirect(loginUrl)
+  } else if (isAuthenticated && data?.claims.aal !== 'aal2' && !isMfaRoute) {
+    const mfaUrl = request.nextUrl.clone()
+    mfaUrl.pathname = '/auth/mfa'
+    mfaUrl.search = ''
+    mfaUrl.hash = ''
+    response = NextResponse.redirect(mfaUrl)
   } else if (isAuthenticated && pathname === '/login') {
     const statusUrl = request.nextUrl.clone()
     statusUrl.pathname = '/status'

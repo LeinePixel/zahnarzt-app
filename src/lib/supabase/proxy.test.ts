@@ -11,7 +11,7 @@ import {
 } from './proxy'
 
 type ClaimsResult = {
-  data: { claims: { sub?: string } } | null
+  data: { claims: { aal?: string; sub?: string } } | null
   error: Error | null
 }
 
@@ -62,7 +62,7 @@ describe('updateSession', () => {
   it('redirects an authenticated user away from login', async () => {
     const request = new NextRequest('https://app.example/login')
     const authenticated = authFactory({
-      data: { claims: { sub: 'synthetic-user-id' } },
+      data: { claims: { sub: 'synthetic-user-id', aal: 'aal2' } },
       error: null,
     })
 
@@ -70,6 +70,19 @@ describe('updateSession', () => {
 
     expect(response.status).toBe(307)
     expect(response.headers.get('location')).toBe('https://app.example/status')
+  })
+
+  it('routes an AAL1 identity only to the MFA bootstrap', async () => {
+    const request = new NextRequest('https://app.example/status?sensitive=never')
+    const aal1 = authFactory({
+      data: { claims: { sub: 'synthetic-user-id', aal: 'aal1' } },
+      error: null,
+    })
+
+    const response = await updateSession(request, aal1)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://app.example/auth/mfa')
   })
 
   it('treats failed claim verification as anonymous', async () => {
@@ -91,7 +104,7 @@ describe('updateSession', () => {
     let incomingCookieValue: string | undefined
     const authenticated = authFactory(
       {
-        data: { claims: { sub: 'synthetic-user-id' } },
+        data: { claims: { sub: 'synthetic-user-id', aal: 'aal2' } },
         error: null,
       },
       (cookies) => {
@@ -137,7 +150,7 @@ describe('updateSession', () => {
   it('sets a nonce-based CSP and browser security headers on protected responses', async () => {
     const request = new NextRequest('https://app.example/status')
     const authenticated = authFactory({
-      data: { claims: { sub: 'synthetic-user-id' } },
+        data: { claims: { sub: 'synthetic-user-id', aal: 'aal2' } },
       error: null,
     })
 
