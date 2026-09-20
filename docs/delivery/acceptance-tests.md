@@ -5,6 +5,18 @@ Schließkriterien SEC-01 bis SEC-09 stehen in T00–T12 des
 [Security-Umsetzungsplans](../superpowers/plans/2026-09-07-security-remediation.md).
 Ein grüner historischer oder Sync-Lauf erfüllt diese Kriterien nicht automatisch.
 
+## Security T00 – Dependency-Evidenz (2026-09-20)
+
+- `npm ci`: 644 Pakete reproduzierbar installiert.
+- `npm audit --json`: 0 Advisories.
+- Sichere Patchstände: Next.js/eslint-config-next 16.3.5, sharp 0.35.4,
+  js-yaml 4.3.2 und Vitest/UI 4.1.11.
+- Lint und Typecheck bestanden; Vitest bestand mit 40 Dateien/364 Tests und der
+  Produktionsbuild mit Next.js 16.3.5.
+
+Diese Evidenz schließt T00. Sie schließt weder T02 noch SEC-01 bis SEC-08 und
+erteilt keine Hosted-, Deployment- oder Real-Data-Freigabe.
+
 ## PROJ-2 — lokaler Mock-PVS, Evidenz vom 10.09.2026
 
 Der Mock-PVS läuft als separater lokaler TypeScript-/Node-HTTP-Prozess. Er verarbeitet ausschließlich versionierte, deterministische synthetische Fixtures und besitzt weder eine Supabase-Verbindung noch eine Next.js-Route oder Browseranbindung. Lese- und Teststeuerung verwenden getrennte lokale Bearer-Token; die Teststeuerung akzeptiert nur feste Szenarien und keine frei übermittelten Ressourcen.

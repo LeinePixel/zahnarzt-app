@@ -10,7 +10,11 @@
 
 **Spec:** [Anforderungs-/Entscheidungsentwurf](../specs/2026-09-07-security-remediation-design.md), [Audit](../../architecture/2026-09-06-security-audit.md), [PROJ-1](../../../features/PROJ-1-supabase-infrastructure-setup.md), [PROJ-19](../../../features/PROJ-19-audit-logging-and-role-permissions.md).
 
-**Stand:** 07.09.2026. T00 ist technisch umgesetzt und mit `npm audit` ohne Befund geprüft. T01 ist mit der PROJ-31-Spec begonnen; T02 enthält die versionierten Verify-/Dependency-Audit-Workflows; T05 enthält CSP, Header und sichere Produktionscookies. Alle übrigen Implementierungs- und Betriebsnachweise bleiben offen. Dieser Plan erteilt keine Cloud-, Kosten- oder Echtdatenfreigabe.
+**Stand:** 20.09.2026. T00 wurde gegen den aktuellen Advisory-Stand erneut
+abgeschlossen. T01, T02 und T05 sind nach Bestandsabgleich teilweise umgesetzt;
+ihre unten beschriebenen fachlichen, CI- beziehungsweise Betriebsnachweise bleiben
+offen. Alle übrigen Implementierungs- und Betriebsnachweise bleiben ebenfalls
+offen. Dieser Plan erteilt keine Cloud-, Kosten- oder Echtdatenfreigabe.
 
 ## Global Constraints
 
@@ -38,14 +42,14 @@
 
 **Ablauf:** T00 sofort nach Implementierungsauftrag; T01 und T02 können unabhängig vorbereitet werden. T03 → T04; T05 nach D10; T06 nach D05/D06; T07 nach Freigabe der PROJ-19-Erweiterung; T08 nach D07. T09 nach T08 und D08; T10 nach D09 und T08. T11 kann dokumentarisch parallel beginnen. T12 erst nach allen nötigen technischen und betrieblichen Nachweisen. Betreibername, Budget und Rechtsentscheidungen werden nicht durch den Agenten erfunden.
 
-## T00: Vier Paketbefunde gezielt beseitigen
+## T00: Paketbefunde gezielt beseitigen
 
 **Files:** Modify `package.json` nur soweit kompatible Elternupdates nötig, `package-lock.json`; Evidence `docs/delivery/acceptance-tests.md` und `docs/delivery/known-issues.md`.
 
-**Eingang:** SEC-09, aktueller Lockfile-Stand. **Ausgang:** installierter und gelockter Abhängigkeitsbaum ohne die fünf gemeldeten Advisories in vier Paketen.
+**Eingang:** SEC-09, aktueller Lockfile-Stand. **Ausgang:** installierter und gelockter Abhängigkeitsbaum ohne gemeldete Advisories.
 
-- [ ] Baseline und aktuellen Advisory-Stand lesen; die Zustimmung zum npm-Abgleich ist bereits vorhanden. Keine erneute Freigabe für denselben unverändernden Abgleich anfragen.
-- [ ] Kompatible Updates versuchen, ohne `--force` oder neue Anbieter:
+- [x] Baseline und aktuellen Advisory-Stand lesen; die Zustimmung zum npm-Abgleich ist bereits vorhanden. Keine erneute Freigabe für denselben unverändernden Abgleich anfragen.
+- [x] Kompatible Updates versuchen, ohne `--force` oder neue Anbieter:
 
 ```powershell
 npm ls @humanfs/node browserslist fflate postcss-selector-parser --all
@@ -54,9 +58,16 @@ npm update @humanfs/node browserslist fflate postcss-selector-parser
 npm ls @humanfs/node browserslist fflate postcss-selector-parser --all
 ```
 
-- [ ] Mindestens die im Audit geprüften Patchstände erreichen: `@humanfs/node` 0.16.8, Browserslist 4.28.7, fflate 0.8.3, postcss-selector-parser 6.1.3 im 6er-Zweig. Zum Ausführungszeitpunkt erneut gegen aktuelle Advisories prüfen. Bei Elternrestriktionen nur betroffene Eltern kompatibel aktualisieren und Diff begründen.
-- [ ] `npm ci`, `npm audit --json`, `npm run verify` ausführen. Erwartung: gemeldete Advisories entfernt, reproduzierbare Installation, keine Regression. Neue unabhängige Befunde getrennt bewerten.
-- [ ] Paketpfade, tatsächlich installierte Versionen, Befehle/Exitcodes dokumentieren; gezielten Dependency-Commit reviewen.
+- [x] Mindestens die im Audit geprüften Patchstände erreichen: `@humanfs/node` 0.16.8, Browserslist 4.28.7, fflate 0.8.3, postcss-selector-parser 6.1.3 im 6er-Zweig. Zum Ausführungszeitpunkt erneut gegen aktuelle Advisories prüfen. Bei Elternrestriktionen nur betroffene Eltern kompatibel aktualisieren und Diff begründen.
+- [x] `npm ci`, `npm audit --json`, `npm run verify` ausführen. Erwartung: gemeldete Advisories entfernt, reproduzierbare Installation, keine Regression. Neue unabhängige Befunde getrennt bewerten.
+- [x] Paketpfade, tatsächlich installierte Versionen, Befehle/Exitcodes dokumentieren; gezielten Dependency-Commit reviewen.
+
+**Evidenz 20.09.2026:** `next` 16.3.5, `eslint-config-next` 16.3.5,
+`sharp` 0.35.4, `js-yaml` 4.3.2 sowie `vitest`/`@vitest/ui` 4.1.11.
+Die bereits geforderten vier Mindeststände sind ebenfalls erfüllt. `npm ci` und
+`npm audit --json` meldeten 0 Advisories. Lint und Typecheck bestanden; der nach
+einem einmaligen Worker-Start-Timeout wiederholte vollständige Vitest-Lauf bestand
+mit 40 Dateien/364 Tests, anschließend bestand der Next.js-Produktionsbuild.
 
 ## T01: PROJ-31 und PROJ-19-Erweiterungen spezifikationsreif machen
 

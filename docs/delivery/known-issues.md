@@ -49,9 +49,10 @@ vorhandenen Lint-, Typecheck-, Test-, Build-, pgTAP- und Edge-Befehlen ergänzt.
 Der pgTAP-Dateipfad wird als Positionsargument verwendet, da CLI 2.115.0 kein
 `--file` unterstützt.
 
-`npm ci` meldete am 14.09.2026 zehn bestehende Dependency-Audit-Funde
-(1 low, 5 moderate, 3 high, 1 critical). Dependency-Upgrades gehören nicht zur
-PROJ-3-Adapterumsetzung; Sicherheitsremediation und Betriebsfreigabe bleiben offen.
+Die am 14.09.2026 dokumentierten und die am 20.09.2026 neu gemeldeten
+Dependency-Advisories wurden in T00 mit kompatiblen Patchupdates geschlossen.
+`npm ci` und `npm audit --json` meldeten am 20.09.2026 0 Advisories. Künftige
+Advisories und die noch unvollständige Security-CI aus T02 bleiben offen.
 
 ## PROJ-4: offene Folgegates
 
