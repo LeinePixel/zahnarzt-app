@@ -87,6 +87,54 @@ Aus dem Ursprungskonzept §27 als Kern-Entitäten benannt. **Feldstrukturen, Bez
 
 ---
 
+## Externe Mock-PVS-Quelle (PROJ-2)
+
+PROJ-2 definiert bewusst **keine** DentPilot-Tabelle, Migration oder Supabase-RLS-Policy. Der eigenständige Mock-PVS-Service hält nur flüchtige, synthetische Quellfixtures für Patienten und Termine. Sein Vertrag steht in [`features/PROJ-2-mock-pvs-service.md`](../../features/PROJ-2-mock-pvs-service.md).
+
+Die externen PVS-Kennungen werden erst in PROJ-3 einem Integrationskontext und später in PROJ-4 beziehungsweise PROJ-5 internen, praxisgebundenen Tabellen zugeordnet. Das Mock-PVS darf nicht als Vorgriff auf dieses interne Datenmodell gelesen werden.
+
+---
+
 ## Hinweis zur Datenminimierung
 
 Aus dem Ursprungskonzept §18: **Daten nur importieren, wenn sie tatsächlich für eine Funktion benötigt werden.** Patientenbezogene Kennzahlen (Termintreue, PZR-Historie, Rechnungen, CLV, Behandlungsinformationen, Kommunikationshistorie) sind personenbezogene Daten und erfordern Aufbewahrungsregeln sowie ein Löschkonzept — beides vor dem Pilotbetrieb zu definieren.
+
+## PROJ-3: implementierter technischer Integrationszustand
+
+- `integration`: ID, Praxiszuordnung, Provider `mock_pvs`, Erstellzeit;
+  `(practice_id, provider)` ist eindeutig.
+- `integration_sync_state`: Integrations-ID, `idle|healthy|retry_scheduled|failed`,
+  interner bestätigter Cursor, Versuch/Erfolg/Retry und neutrale Fehlerklasse.
+  Constraints erzwingen konsistente Zustände; ein erfolgreicher Abruf verändert
+  keinen bestätigten Cursor.
+- `integration_sync_event`: ID, Integrations-ID, `succeeded|failed`, erlaubte
+  Fehlerklasse, Versuchs- und Retry-Zeit. Eine private Löschfunktion entfernt
+  Ereignisse nach 30 Tagen; ein Scheduler ist noch nicht eingerichtet.
+
+Alle Tabellen aktivieren RLS und verweigern direkte Rechte für `anon` und
+`authenticated`. Ausschließlich ein kontrollierter RPC liefert dem eigenen
+Praxisadmin cursorfreie Statusdaten. Private SECURITY-DEFINER-Funktionen nutzen
+leeren search_path und haben keine Browser-Ausführungsrechte.
+
+Ausgeschlossen bleiben Patienten/Termine, Quellpayloads, externe Ressourcen-IDs,
+URLs, Headers, Tokens und fachbezogene Zähler. Der CLI-Seed legt nur die
+synthetische Providerzuordnung an. Eine spätere PROJ-4/5-Fachtransaktion muss
+Cursorbestätigung und eine eigene Ausführungsidentität spezifizieren.
+
+## PROJ-4: implementierte Patientenprojektion
+
+`public.patient` enthält interne UUID, Praxis/Integration, Quell-ID und -Version,
+Name, Geburtsdatum, E.164-Telefonnummer sowie Quell- und lokale Zeitpunkte. E-Mail,
+medizinische Inhalte und Rohpayloads fehlen. `private.patient_source_version`
+bewahrt minimale Delete-Versionen; `private.patient_sync_checkpoint` hält einen
+vom PROJ-3-Gesamtcursor getrennten Patientenfortschritt. Alle Tabellen nutzen RLS.
+
+## PROJ-5: implementierte Terminprojektion
+
+`public.appointment` enthält interne UUID, Praxis/Integration, undurchsichtige
+Quell-ID und -Version, internen Patienten-FK, Zeitraum, geschlossenen Status,
+undurchsichtige Practitioner-Quellreferenz sowie Quell- und lokale Zeitpunkte.
+Der zusammengesetzte Patienten-FK erzwingt dieselbe Praxis und Integration.
+`private.appointment_source_version` bewahrt minimale Delete-Versionen;
+`private.appointment_sync_checkpoint` hält einen vom Patienten- und technischen
+Cursor getrennten Terminfortschritt. Browserrollen besitzen keine Tabellenrechte.

@@ -2,6 +2,7 @@ export type Capability =
   | 'support_access.request'
   | 'support_access.revoke'
   | 'audit.read'
+  | 'integration.status.read'
 
 export type ActorContext =
   | {
@@ -16,6 +17,7 @@ const capabilities: readonly Capability[] = [
   'support_access.request',
   'support_access.revoke',
   'audit.read',
+  'integration.status.read',
 ]
 
 const practiceRoles = ['rezeption', 'behandler', 'praxisadmin'] as const
@@ -106,6 +108,7 @@ export function mayUseCapability(
   switch (capability) {
     case 'support_access.request':
     case 'support_access.revoke':
+    case 'integration.status.read':
       return actor.kind === 'practice_member' && actor.role === 'praxisadmin'
     case 'audit.read':
       return actor.kind === 'portal_admin'

@@ -2,6 +2,11 @@
 
 **Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](docs/superpowers/plans/2026-09-07-security-remediation.md). Alle neun Auditbefunde bleiben bis zu ihrer belegten Korrektur offen; bestehende Architektur und historische Abnahmen bleiben erhalten.
 
+**Lokale Integrationsbasis 20.09.2026:** PROJ-2 bis PROJ-5 sind mit ausschließlich
+synthetischen Daten implementiert und `In Review`. Mock-PVS, Adapter sowie getrennte
+Patienten- und Terminconsumer sind lokal verifiziert; Hosting, Scheduler, UI,
+echter Provider und Real-Data-Gate bleiben offen.
+
 DentPilot ist eine deutschsprachige Workflow-, CRM- und Automatisierungsanwendung für Zahnarztpraxen. Die bestehende Praxissoftware bleibt führend für Patienten-, Behandlungs-, Abrechnungs- und Termindaten; DentPilot ergänzt praxisübergreifende Abläufe, Kommunikation, Auswertung und später KI-gestützte Vorbereitung.
 
 ## Aktueller Stand

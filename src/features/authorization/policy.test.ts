@@ -33,6 +33,10 @@ const portalAdmin: ActorContext = {
 }
 
 describe('mayUseCapability', () => {
+  it('allows only practice admins to read integration status', () => {
+    expect(mayUseCapability(praxisadmin, 'integration.status.read')).toBe(true)
+    for (const actor of [rezeption, behandler, portalAdmin]) expect(mayUseCapability(actor, 'integration.status.read')).toBe(false)
+  })
   it('allows only practice admins to request and revoke support access', () => {
     expect(mayUseCapability(praxisadmin, 'support_access.request')).toBe(true)
     expect(mayUseCapability(praxisadmin, 'support_access.revoke')).toBe(true)

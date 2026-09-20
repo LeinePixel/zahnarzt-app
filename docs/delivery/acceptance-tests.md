@@ -1,6 +1,21 @@
 # Acceptance Tests
 
-**Neue Abnahmeplanung 07.09.2026:** Die folgenden Testergebnisse sind historische Evidenz. Die zusätzlichen Fälle und Schließkriterien SEC-01 bis SEC-09 stehen in T00–T12 des [Security-Umsetzungsplans](../superpowers/plans/2026-09-07-security-remediation.md). Insbesondere MFA, Token-Replay, RPC-Quoten, Freigabeliste, Referenzlöschung, Restore und Alarm benötigen neue Nachweise. Ein grüner Altlauf erfüllt diese Kriterien nicht.
+**Security-Abnahmeplanung 07.09.2026:** Die zusätzlichen Fälle und
+Schließkriterien SEC-01 bis SEC-09 stehen in T00–T12 des
+[Security-Umsetzungsplans](../superpowers/plans/2026-09-07-security-remediation.md).
+Ein grüner historischer oder Sync-Lauf erfüllt diese Kriterien nicht automatisch.
+
+## PROJ-2 — lokaler Mock-PVS, Evidenz vom 10.09.2026
+
+Der Mock-PVS läuft als separater lokaler TypeScript-/Node-HTTP-Prozess. Er verarbeitet ausschließlich versionierte, deterministische synthetische Fixtures und besitzt weder eine Supabase-Verbindung noch eine Next.js-Route oder Browseranbindung. Lese- und Teststeuerung verwenden getrennte lokale Bearer-Token; die Teststeuerung akzeptiert nur feste Szenarien und keine frei übermittelten Ressourcen.
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| `npm run test:mock-pvs` | 5 Testdateien, 84 Tests bestanden: Konfiguration, Verträge, Cursor/Pagination, HTTP-Grenze, Szenarien und Prozess-Smoke-Test |
+| `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` | bestanden: Lint, Typecheck, 16 Vitest-Testdateien mit 142 Tests und Produktions-Build |
+| `npx supabase test db --local`, `npm run test:e2e:edge-required` | bestanden: 2 pgTAP-Dateien mit 36 Tests sowie 15 Browserfälle in Chromium, Firefox, WebKit und Microsoft Edge |
+
+Die Nachweise decken neutrale 401/404/422/500-Antworten, 429/503 mit `Retry-After`, Upserts mit vollständiger Ressource, ressourcenlose Tombstones, szenariogebundene opaque Cursor und den Reset auf `baseline` ab. Der Dienst ist lokal und unhosted; er ersetzt keinen echten PVS-Zugang, keine Anbieterprüfung und kein Real-Data-Gate.
 
 ## Teststand — Fakten (26.08.2026)
 
@@ -32,10 +47,28 @@ PROJ-1 verwendet drei Schichten: Vitest für Domain/UI, Supabase CLI/pgTAP für 
 
 ---
 
-## Abnahme PROJ-19 — Evidenz vom 06.09.2026
+## Abnahme PROJ-19 — isolierter Review-Stand vom 13.09.2026
 
-Die PROJ-19-Nachweise verwenden ausschließlich synthetische Daten.
-Die frische Verifikation auf dem aktuellen HEAD ergab:
+Die erneute Verifikation erfolgte nur mit lokalen, synthetischen Daten. Der
+lokale Supabase-Stack wurde aus den versionierten Migrationen neu aufgebaut.
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| `npm run lint` | bestanden (Exit 0) |
+| `npm run typecheck` | bestanden (Exit 0) |
+| `npm test` | 22 Testdateien, 174 Tests bestanden |
+| `npx supabase test db --local` | 3 Dateien, 108 pgTAP-Tests bestanden |
+| Lokale Auth-Probe | ein synthetisches, provisioniertes Konto erhielt eine Sitzung; Self-Sign-up wurde mit HTTP 422 ohne Benutzer oder Sitzung abgewiesen |
+| `npm run test:e2e:edge-required` | Produktions-Build und 17/17 Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Microsoft Edge 2), einschließlich Audit-Zugriff |
+
+Die unabhängige Standards- und Spezifikationsprüfung fand keinen lokal
+blockierenden Befund. Die Hosted-Cron-Verifikation, MFA/Re-Authentisierung und
+das Real-Data-Gate bleiben offen.
+
+### Historische Evidenz vom 05.09.2026
+
+Die PROJ-19-Nachweise verwenden ausschließlich lokale, synthetische Daten.
+Die frische Verifikation auf dem damaligen HEAD ergab:
 
 | Nachweis | Ergebnis |
 | --- | --- |
@@ -57,18 +90,10 @@ Schutz (`search_path`), Least-Privilege-Grants und RLS, Fremdpraxis-, Ablauf-
 und Widerrufsgrenzen sowie Datenminimierung und Geheimnisbehandlung. Es gibt
 keine neuen Critical- oder Important-Befunde.
 
-**Hosted-Abnahme (06.09.2026):** Der erneuerte Supabase-Link lieferte für alle
-sechs versionierten Migrationen identische lokale und gehostete IDs. Der
-anschließende `db push --linked` spielte den bis dahin leeren Zielstand ein;
-die PROJ-19-Migration konfiguriert dabei den täglichen
-`dentpilot-purge-expired-audit-events`-Job um 03:17 Uhr. Der synthetische Seed
-aktualisierte die drei Praxisrollen und legte die getrennte Portaladmin-Identität
-an. Der vollständige Cloud-Browserlauf schloss anschließend mit 17/17 ab,
-einschließlich Chromium, Firefox, WebKit und Edge.
-
-Die laufende Überwachung des Schedulers und ein Nachweis mindestens eines
-produktiv ausgeführten Löschlaufs bleiben offen. MFA/Re-Authentisierung und die
-weiteren Datenschutz-/Compliance-Gates bleiben ebenfalls offen; PROJ-19 öffnet
+Die Hosted-Cron-Abfrage für `dentpilot-purge-expired-audit-events` blieb
+ausdrücklich ausstehend: Es liegt keine freigegebene, nicht geheime
+administrative Session vor. Hosted-Cron-Commissioning, MFA/Re-Authentisierung
+und die weiteren Datenschutz-/Compliance-Gates bleiben offen; PROJ-19 öffnet
 das Real-Data-Gate nicht.
 
 ---
@@ -77,11 +102,7 @@ das Real-Data-Gate nicht.
 
 Die verbindlichen Akzeptanzkriterien stehen in `features/PROJ-1-supabase-infrastructure-setup.md` (20 Stück im Format Angenommen/Wenn/Dann).
 
-**Cloud-Abnahme:** Das EU-Projekt ist verknüpft und enthält die vollständige
-Migrationskette von PROJ-1 und PROJ-19. Der synthetische Seed aktualisierte die
-drei Praxisrollen und legte die getrennte Portaladmin-Identität an; es existieren
-damit vier synthetische Demo-Konten. Der Cloud-Browserlauf vom 06.09.2026
-bestand 17/17 Prüfungen.
+**Cloud-Abnahme:** EU-Projekt verknüpft, Migration `20260825170000_proj_1_identity.sql` eingespielt und der synthetische Seed zweimal ausgeführt. Lauf 1 erstellte genau drei Konten, Lauf 2 aktualisierte dieselben drei Konten.
 
 **Automatisiert belegt:** Validierung (einschließlich Unit-Beleg, dass ungültige Eingaben keine Supabase-Auth-Anfrage auslösen), neutrale Credential-Fehler, Doppelübermittlung, drei Rollen, Statusdaten, direkter Schutz, query-freie Redirects, Logout, Zurück-Navigation, zweiter Tab, `private/no-store` auch auf dem anonymen Redirect, kein Supabase-Token in Local Storage und ein temporäres Konto ohne Profil. Das temporäre Konto wird über exakte E-Mail und Nutzer-ID reconciled und gezielt gelöscht; Passwörter, Tokens, HTML-Reports, Screenshots, Videos und Traces werden nicht persistiert.
 
@@ -143,3 +164,57 @@ Das Seed-Skript legt an: zwei synthetische Testpraxen und vier Demo-Konten
 **Die konkreten Passwörter sind absichtlich nicht festgelegt** und gehören weder in dieses Dokument noch in das Repository. Sie werden lokal über die vier `SEED_*_PASSWORD`-Variablen gesetzt. Da es sich um synthetische Testkonten handelt, dürfen sie nicht in eine Umgebung mit echten oder re-identifizierbaren Patientendaten übernommen werden.
 
 Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/assets/dentpilot-ux1-prototype.html`) enthält ebenfalls ausschließlich erfundene Beispieldaten.
+
+## PROJ-4 – lokale Patienten-Synchronisierung (2026-09-16)
+
+- `npm run verify:full`: erfolgreich.
+- Vitest: 32 Dateien und 286 Tests im finalen vollständigen Lauf.
+- pgTAP: 5 Dateien und 152 Assertions.
+- Eingeschränkte PostgreSQL-LOGIN-Suite: 5 Tests einschließlich Konkurrenz,
+  Mapping-Entzug, NULL-/ISO-Negativfällen und Delete-Versionsmarke.
+- Echter CLI-Kindprozess: 26 synthetische Patienten, Exit 0 und ausschließlich
+  die festgelegte neutrale Ausgabe.
+- Playwright: 17 Flows einschließlich Microsoft Edge.
+
+Die Evidenz ist lokal und synthetisch. Sie ist keine Freigabe für echte Daten,
+Hosting, produktive Rollen, Scheduler oder Deployment.
+
+## PROJ-5 – lokale Termin-Synchronisierung (2026-09-20)
+
+- `npm run verify:full`: erfolgreich nach Abschluss der Reviewkorrekturen.
+- Vitest: 39 Dateien und 361 Tests; Mock-PVS separat: 5 Dateien und 84 Tests.
+- pgTAP: 6 Dateien und 174 Assertions; eingeschränkte PostgreSQL-LOGIN-Suites:
+  5 Patienten- und 9 Termintests.
+- CLI-Kindprozesse: 1 Patienten- und 3 Termintests; Edge-Browser: 17 Flows.
+- Die Termin-DB-Suite deckt Patientenauflösung, vollständigen Rollback,
+  Versionskonflikt, Delete und höhere Wiederbelebung, Checkpoint-CAS, beide
+  Lockrichtungen, Mapping-Entzug und wiederholbare lokale Provisionierung ab.
+- Die Prozesssuite belegt initialen Import, Idempotenz, Missing-Patient-Rollback
+  und Busy-Exit 2 mit bereinigter Runtime-Umgebung.
+- Ein unabhängiger Review prüfte Scope, Berechtigungen, Transaktionen,
+  COMMIT-Unsicherheit und Secret-Grenzen; alle konkreten Findings wurden behoben.
+
+Die Evidenz gilt ausschließlich lokal und mit synthetischen Daten. Echter
+Providervertrag, Hosting, produktive Rollen, Scheduler, UI, Deployment und
+Real-Data-Gate bleiben offen.
+
+## Lokale PROJ-3-Prüfevidenz — 14.09.2026
+
+`npm run verify:full` endete mit Exit 0: Lint, Typecheck, 25 Vitest-Dateien /
+233 Tests, Produktionsbuild, vier pgTAP-Dateien / 134 Assertions und
+17 Playwright-Tests einschließlich Microsoft Edge. Zusätzlich liefen separat
+`npm run test:mock-pvs` (84 Tests), `npm run lint`, `npm run typecheck`,
+`npm test`, `npx supabase test db --local` und
+`npm run test:e2e:edge-required` erfolgreich. Die finale Vollprüfung enthält
+die Review-Korrekturen. `git diff --check` und beide Token-Grenzscans sind sauber.
+
+Die fokussierte Evidenz umfasst 20 Konfigurations-/Schema-Tests, 24 HTTP-Tests,
+13 Statusmapper-Tests, fünf Policy-Tests, sieben Seed-Tests und 26 PROJ-3-pgTAP-
+Assertions. Die neuen Tests wurden vor der Implementierung rot ausgeführt.
+Der lokale synthetische Reset und Seed waren erfolgreich.
+
+Ein unabhängiger Review fand zwei Fehler: SQL-NULL-Umgehung der Retry-Constraint
+und falsche Einordnung eines abgebrochenen Antwortstreams. Beide wurden mit
+roten Negativtests reproduziert, korrigiert, grün geprüft und im Review bestätigt.
+Keine neue App-Route, kein Scheduler, kein Fachimport und keine Hosted-Änderung.
+Real-Data-Gate und alle betrieblichen Folgefreigaben bleiben offen.

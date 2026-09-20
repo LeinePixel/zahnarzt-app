@@ -18,6 +18,11 @@ class MemorySeedAdminClient implements SeedAdminClient {
   profiles = new Map<string, SeedProfileInput>()
   portalAdmins = new Set<string>()
   users = new Map<string, StoredUser>()
+  integrations = new Set<string>()
+
+  async upsertMockPvsIntegration(practiceId: string) {
+    this.integrations.add(practiceId)
+  }
 
   async findPracticeByName(name: string) {
     return this.practices.find((practice) => practice.name === name) ?? null
@@ -80,6 +85,13 @@ function makePasswords() {
 }
 
 describe('runSeed', () => {
+  it('seeds exactly one synthetic integration without connection values across two runs', async () => {
+    const client = new MemorySeedAdminClient()
+    const passwords = makePasswords()
+    await runSeed(client, { passwords })
+    await runSeed(client, { passwords })
+    expect([...client.integrations]).toEqual(['practice-1'])
+  })
   it('reuses the same synthetic practices on subsequent runs', async () => {
     const client = new MemorySeedAdminClient()
     const passwords = makePasswords()

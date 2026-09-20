@@ -1,45 +1,30 @@
 # API Contracts
 
-**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). Der [Anforderungsentwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) beschreibt geplante Ergänzungen; heutige Runtime-/RPC-/Datenverträge bleiben bis zur Implementierung unverändert. MFA/Re-Authentisierung und weitere Echtbetriebs-Gates sind weiterhin offen.
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien
+stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md).
+MFA/Re-Authentisierung und weitere Echtbetriebs-Gates bleiben offen.
 
-## Status: Server Actions und PROJ-19-RPC-Verträge implementiert
+## Status: ein externer Mock-PVS-Vertrag spezifiziert
 
-Es existieren keine eigenen Next.js-API-Routen unter `src/app/api/`. PROJ-1 verwendet Server Actions; PROJ-19 ergänzt Server Actions und zweckgebundene Supabase-RPCs.
+**Es existiert keine interne API-Route im Projekt** (`git ls-files src/app/api/` liefert nichts). PROJ-2 definiert jedoch einen versionierten Vertrag für einen eigenständigen, lokalen Mock-PVS-Service. Er ist keine Next.js-Route und liefert nur synthetische Daten.
 
 Das ist kein Versäumnis, sondern folgt aus zwei Entscheidungen:
 
 **1. PROJ-1 braucht bewusst keine API-Routen.** Anmelden und Abmelden laufen über Next.js Server Actions direkt gegen Supabase. Eine zusätzliche API-Schicht würde nur durchreichen und nichts beitragen. Siehe `decisions.md`.
 
-**2. PROJ-19 besitzt eine verbindliche Spec und implementierte RPC-Verträge.** Die übrigen Roadmap-Features erhalten ihre Verträge mit der jeweiligen Spezifikation.
-
-## Implementierte PROJ-19-Schnittstellen
-
-Verbindliche Rollen, Laufzeiten und Auditregeln: [PROJ-19-Spec](../../features/PROJ-19-audit-logging-and-role-permissions.md). Die aktuellen SQL-Signaturen und Autorisierungsprüfungen stehen in der [Forward-Migration](../../supabase/migrations/20260902203000_proj_19_forward_security_hardening.sql); die serverseitige Validierung und Rückgabeprüfung in [support-access.ts](../../src/features/audit/support-access.ts) und [read-events.ts](../../src/features/audit/read-events.ts).
-
-| RPC | Eingabe | Rückgabe / verweigertes Ergebnis |
-|---|---|---|
-| `is_portal_admin` | keine | Boolean für die eigene Anbieteridentität |
-| `request_support_access` | `p_requested_duration_hours`: ganze Stunden, Standard 8, Bereich 1–24 | undurchsichtige Freigabe-UUID / `null` |
-| `activate_support_access` | `p_grant_id`: UUID; `p_reason`: `technical_investigation` oder `account_support` | Objekt mit `practice_id` und `expires_at` / `null` |
-| `revoke_support_access` | `p_grant_id`: UUID | `true` / `false` |
-| `read_audit_events` | `p_practice_id`: UUID; `p_before`: Zeitpunkt; `p_limit`: 1–100 | begrenzte Ereigniszeilen / keine Zeilen |
-| `record_denied_audit_read` | keine | `false`; protokolliert den verweigerten Leseversuch |
-
-Die Server-Schicht prüft Claims und Fähigkeiten, validiert Eingaben und behandelt neutrale Verweigerungen ohne Existenz- oder Berechtigungsdetails. PostgreSQL prüft Identität, Praxis, Freigabe und Ablauf erneut und schreibt das Audit in derselben Transaktion. Audit-Schreibfehler lassen die geschützte Operation fehlschlagen. Siehe [ADR-0002](../adr/0002-denied-support-attempts-return-neutral-results.md).
-
-Praxisadmins legen Freigaben über `/status` an und widerrufen sie dort. Portaladmins aktivieren eine erhaltene ID über `/portal/audit`; es gibt keine Praxis- oder Freigabesuche. Siehe [ADR-0003](../adr/0003-support-grants-are-activated-by-opaque-id.md).
+**2. Alle übrigen Features haben keine Spec.** Ihre Verträge entstehen mit der jeweiligen Spezifikation.
 
 ---
 
-## Absehbare Schnittstellen — noch ohne Vertrag
+## Absehbare Schnittstellen
 
-Aus den Feature-Beschreibungen in `features/INDEX.md` und den zugehörigen Notizen. **Alle Formate sind offen** und nicht mit dem Nutzer abgestimmt.
+Aus den Feature-Beschreibungen in `features/INDEX.md` und den zugehörigen Spezifikationen. Nicht ausdrücklich dokumentierte Formate bleiben offen.
 
 ### Eingehend (DentPilot empfängt)
 
 | Schnittstelle | Feature | Bekannt | Offen |
 |---|---|---|---|
-| **Mock-PVS-API** | PROJ-2, PROJ-3 | Wird als eigenständiger Dienst gebaut, den der Adapter genauso anspricht wie später die echte Dampsoft-API. Soll Dampsoft-ähnliche Datenstrukturen liefern. | Endpunkte, Datenformat, Authentifizierung, Paginierung — alles offen |
+| **Mock-PVS-API** | PROJ-2, PROJ-3 | Eigenständiger lokaler REST-/JSON-Dienst mit Bearer-Token, `/v1`-Ressourcen für Patienten, Termine und cursor-basierten Änderungsstrom; ausschließlich synthetische Fixtures. | Adapter-Normalisierung, Praxiszuordnung, Retry/Backoff, Sync-Status und Konfliktbehandlung entstehen mit PROJ-3. |
 | **Soniox-Transkripte** | PROJ-14 | MVP verarbeitet **fertige Text-Zusammenfassungen**, kein Rohtranskript. Zuordnung über Patienten-ID und Termin-ID. | Abrufverfahren (Webhook oder Polling), Datenformat, Fehlerbehandlung |
 | **Anruf-Ereignis** | PROJ-29 | Entwurf sieht ein normalisiertes Ereignis vor: Rufnummer, Zeitpunkt, Richtung. Bewusst herstellerneutral, damit die echte Telefonanlage später ein Adapter-Austausch ist. | Konkrete Anlage unbekannt — siehe open-questions.md |
 
@@ -67,11 +52,53 @@ Aus `.claude/rules/backend.md` — gelten ohne Ausnahme:
 
 ## Sync-Anforderungen (aus dem Ursprungskonzept §22)
 
-Für die PVS-Anbindung, sobald sie spezifiziert wird, sind vorgesehen:
+Für die echte PVS-Anbindung, sobald sie spezifiziert wird, sind vorgesehen:
 - Webhook bevorzugt; falls nicht verfügbar, Polling (Richtwert alle fünf Minuten)
 - Sync-Status sichtbar
 - Fehlerprotokoll
 - Retry-Mechanismus
 - Konflikterkennung
 
-Diese Anforderungen sind notiert, aber **nicht als Vertrag ausgearbeitet**.
+PROJ-2 liefert dafür gezielt keine Webhooks und keine Sync-Logik. Sein cursor-basierter Änderungsstrom ist ein lokaler Adapter-Testvertrag, keine Vorwegnahme eines echten Herstellerprotokolls.
+
+## PROJ-3: serverseitige Integrationsgrenze
+
+`src/features/integrations/adapter.ts` beschreibt Health, Patienten-, Termin-
+und Änderungsseiten des synthetischen Quellvertrags. `MockPvsAdapter` verwendet
+nur feste `/v1`-Pfade, lokale HTTP-Origins, den privaten Lesezugang, ein
+Drei-Sekunden-Timeout und maximal ein MiB pro Antwort. DentPilot-eigene strikte
+Zod-Schemas validieren alle Ressourcen und Envelopes; Service-Interna werden
+nur in Tests importiert.
+
+Fehler enthalten ausschließlich `configuration_invalid`, `network_unavailable`,
+`rate_limited`, `temporarily_unavailable`, `source_protocol_invalid` oder
+`source_contract_invalid` und einen optionalen Retry-Zeitpunkt. 429/503 verwenden
+nur ganzzahlige Retry-After-Werte von 1 bis 300 Sekunden, sonst 60 Sekunden.
+Es gibt keine automatische Wiederholung und keine neue Browserroute.
+
+`read_integration_sync_status()` nimmt keine Argumente entgegen. PostgreSQL
+ermittelt die Praxis aus `auth.uid()` und gibt nur dem eigenen `praxisadmin`
+sieben technische Statusfelder ohne Cursor zurück. Der server-only Mapper
+prüft zusätzlich die Fähigkeit `integration.status.read` und die Antwortform.
+Private Ergebnis- und Cursorfunktionen besitzen keine Browser-Ausführungsrechte
+und werden von PROJ-3 nicht aus Anwendungscode aufgerufen.
+
+## PROJ-4: lokaler Patienten-Synchronisationsvertrag
+
+Der lokale CLI-Consumer verwendet den PROJ-3-Adapter, `limit=100`, maximal 100
+Seiten, zehn MiB projizierten Batch und eine 60-Sekunden-Frist. Er speichert nur
+die freigegebene Patientenprojektion. Gemischte Terminereignisse verschieben den
+privaten Patientencheckpoint, erzeugen aber keine Terminzeilen. Drei private
+PostgreSQL-Entry-Points leiten Integration und Praxis ausschließlich aus
+`session_user` ab; Browserrollen erhalten keine Ausführungsrechte.
+
+## PROJ-5: lokaler Termin-Synchronisationsvertrag
+
+Der Terminconsumer liest den initialen Vollstand und anschließend den gemischten
+Änderungsfeed über den PROJ-3-Adapter. Patientenereignisse verschieben nur den
+Termincheckpoint. `private.acquire_appointment_sync()`,
+`private.commit_appointment_sync(...)` und
+`private.record_appointment_sync_failure(...)` sind ausschließlich für die
+eigene NOLOGIN-Ausführergruppe ausführbar und bestimmen den Scope aus
+`session_user`. JSON-Batches sind auf 10 MiB und 10.000 Einträge begrenzt;
+Cursor und Initialstatus werden per Compare-and-swap bestätigt.

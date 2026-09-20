@@ -1,10 +1,13 @@
 # PROJ-19: Audit Logging & Rollenrechte
 
-**Sicherheitsfortsetzung 07.09.2026:** Die historische Abnahme bleibt erhalten; zusätzliche Befunde sind offen. Der [Security-Umsetzungsplan](../docs/superpowers/plans/2026-09-07-security-remediation.md) ordnet Korrekturen, Spec-Erweiterungen und Negativtests zu. MFA/Sitzungssperre gehören nach PROJ-31; neue PROJ-19-Anforderungen werden in T01 spezifiziert. Diese Planung setzt keine Abnahmekriterien auf bestanden und öffnet kein Real-Data-Gate.
+**Sicherheitsfortsetzung 07.09.2026:** Die historische Abnahme bleibt erhalten;
+zusätzliche Befunde sind offen. Der
+[Security-Umsetzungsplan](../docs/superpowers/plans/2026-09-07-security-remediation.md)
+ordnet Korrekturen und Negativtests zu. Das Real-Data-Gate bleibt geschlossen.
 
-## Status: Implementiert — Hosted-Schema und synthetische Cloud-Abnahme verifiziert; Scheduler-Monitoring offen
+## Status: In Review — lokale Abnahmeevidenz auf isoliertem Branch bestätigt; Hosted-Cron-Verifikation offen
 **Created:** 2026-08-26
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-13
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -108,10 +111,33 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 
 Die detaillierte Architektur ist in [`docs/superpowers/specs/2026-08-26-proj-19-audit-and-authorization-design.md`](../docs/superpowers/specs/2026-08-26-proj-19-audit-and-authorization-design.md) festgehalten. Sie definiert eine zentrale Autorisierungsgrenze, getrennte Anbieteridentitäten, atomare Auditoperationen, RLS/Grants sowie Unit-, pgTAP- und Playwright-Nachweise. Die verbindlichen Begriffe stehen in `CONTEXT.md`; die Anbieterzugriffsentscheidung in ADR-0001.
 
-## Abnahmeevidenz — 05.09.2026
+## Abnahmeevidenz — isolierter Review-Stand vom 13.09.2026
+
+Die erneute Verifikation erfolgte ausschließlich auf dem isolierten
+PROJ-19-Branch mit lokalen, synthetischen Daten. Der lokale Stack wurde aus
+den versionierten Migrationen neu aufgebaut; echte Praxis-, Patienten- oder
+Zugangsdaten kamen nicht zum Einsatz.
+
+- `npm run lint`: bestanden (Exit 0).
+- `npm run typecheck`: bestanden (Exit 0).
+- `npm test`: bestanden, 22 Testdateien und 174 Tests.
+- `npx supabase test db --local`: bestanden, 3 Dateien und 108 pgTAP-Tests.
+- Ein lokal provisioniertes synthetisches Konto konnte sich anmelden; ein
+  Anmeldeversuch über den Self-Sign-up-Endpunkt wurde mit HTTP 422 ohne
+  Benutzer oder Sitzung abgewiesen.
+- `npm run test:e2e:edge-required`: Produktions-Build und alle 17
+  Browser-Tests bestanden (Chromium 13, Firefox 1, WebKit 1, Microsoft Edge
+  2), einschließlich des Audit-Zugriffsfalls.
+
+Die unabhängige Standards- und Spezifikationsprüfung ergab keinen Befund, der
+die lokale Branch-Abnahme blockiert. Die Hosted-Cron-Verifikation und MFA/Re-
+Authentisierung für Portaladmins bleiben ausdrücklich offen; dieser Stand
+öffnet das Real-Data-Gate nicht.
+
+## Abnahmeevidenz — 05.09.2026 (historisch)
 
 Alle nachstehenden Daten sind ausschließlich lokal und synthetisch. Die
-Verifikation auf dem aktuellen HEAD ergab:
+Verifikation auf dem damaligen HEAD ergab:
 
 - `npm run lint`: bestanden (Exit 0).
 - `npm test`: bestanden, 17 Testdateien und 90 Tests.
@@ -139,18 +165,17 @@ prüfen fremde Praxen sowie Ablauf und Widerruf atomar, und das Auditmodell
 beschränkt sich auf kontrollierte Metadaten ohne Freitext, medizinische
 Inhalte, Bodies, Tokens, Passwörter, Prompts oder IP-Adressen.
 
-Die vollständige Migrationskette ist am 06.09.2026 im gehosteten Zielprojekt
-nachgewiesen; die PROJ-19-Migration richtet den täglichen Produktions-Scheduler
-`dentpilot-purge-expired-audit-events` um 03:17 Uhr ein. Der synthetische
-Seed und die 17/17 Cloud-Browserabnahme sind ebenfalls belegt. Offen bleiben
-das laufende Scheduler-Monitoring und der Nachweis eines ausgeführten
-Löschlaufs. MFA und Re-Authentisierung für Portaladmins bleiben ebenfalls
-offen. Diese Evidenz ist ausdrücklich keine Real-Data-Gate-Freigabe; das
-Real-Data-Gate bleibt geschlossen.
+Die Hosted-Cron-Verifikation wurde nicht ausgeführt, weil keine freigegebene,
+nicht geheime administrative Session vorliegt. Hosted-Cron-Commissioning und
+der Nachweis für den Produktions-Scheduler
+`dentpilot-purge-expired-audit-events` bleiben offen. MFA und Re-
+Authentisierung für Portaladmins bleiben ebenfalls offen. Diese Evidenz ist
+ausdrücklich keine Real-Data-Gate-Freigabe; das Real-Data-Gate bleibt
+geschlossen.
 
 ## Open Questions
 
-- [ ] Das Scheduler-Monitoring und der Nachweis eines ausgeführten 90-Tage-Löschlaufs sind vor der Produktionsfreigabe festzulegen und zu dokumentieren.
+- [ ] Die technische Wahl und Betriebsfreigabe des Hosted-Cron-Schedulers für die 90-Tage-Wartungsroutine sind als Produktionsbetriebs-Gate vor Inbetriebnahme im Supabase-Zielprojekt zu prüfen.
 - [ ] MFA und der genaue Re-Authentisierungsmechanismus für Portaladmins werden mit PROJ-31/Auth-Hardening verbindlich umgesetzt; ohne sie bleibt die Verarbeitung echter Daten gesperrt.
 - [ ] Ein externer Ticketing-Prozess und die spätere Bearbeitung von Supportfällen mit Fachinhalten benötigen eine eigene Spezifikation und Anbieterprüfung.
 

@@ -17,10 +17,10 @@
 |----|---------|----------|--------|---------------|------|---------|
 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | P0 | In Review | None | [Spec](PROJ-1-supabase-infrastructure-setup.md) | 2026-08-24 |
 | PROJ-31 | Sitzungshärtung und MFA | P0 | Planned | PROJ-1, PROJ-19 | [Spec](PROJ-31-session-hardening.md) | 2026-09-07 |
-| PROJ-2 | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem) | P0 | Roadmap | None | - | 2026-08-24 |
-| PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | Roadmap | PROJ-1, PROJ-2 | - | 2026-08-24 |
-| PROJ-4 | Patienten-Synchronisierung | P0 | Roadmap | PROJ-3 | - | 2026-08-24 |
-| PROJ-5 | Termin-Synchronisierung | P0 | Roadmap | PROJ-3 | - | 2026-08-24 |
+| PROJ-2 | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem) | P0 | In Review | None | [Spec](PROJ-2-mock-pvs-service.md) | 2026-08-24 |
+| PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | In Review | PROJ-1, PROJ-2 | [Spec](PROJ-3-integration-adapter-layer.md) | 2026-09-13 |
+| PROJ-4 | Patienten-Synchronisierung | P0 | In Review | PROJ-3 | [Spec](PROJ-4-patient-synchronization.md) | 2026-08-24 |
+| PROJ-5 | Termin-Synchronisierung | P0 | In Review | PROJ-3, PROJ-4 | [Spec](PROJ-5-appointment-synchronization.md) | 2026-08-24 |
 | PROJ-6 | Patientenübersicht & Patientenprofil (360°) | P0 | Roadmap | PROJ-4 | - | 2026-08-24 |
 | PROJ-7 | Terminübersicht (Tages-/Wochen-/Monatsansicht) | P0 | Roadmap | PROJ-5 | - | 2026-08-24 |
 | PROJ-8 | Patienten-Timeline | P0 | Roadmap | PROJ-6, PROJ-7 | - | 2026-08-24 |
@@ -77,36 +77,31 @@ Hinzugefügt am 24.08.2026. Ziel: Bei eingehendem Anruf öffnet sich in der App 
 
 **UI-Hinweis:** Im gewählten UX-Aufbau „Seiten-Navigation" (UX 1) wird das Popup ein Overlay über der aktuellen Seite, damit die laufende Arbeit nicht verloren geht — vergleichbar mit dem Slide-over-Panel aus dem verworfenen UX-3-Entwurf.
 
-## Aktuelle Sicherheitsfortsetzung (07.09.2026)
-
-Der [Security-Umsetzungsplan](../docs/superpowers/plans/2026-09-07-security-remediation.md) ist der nächste Arbeitseinstieg: T00 Paketpatches, T01 Spec-/Entscheidungsgates, T02–T12 technische Härtung und Betriebs-/Datenschutzabnahme. SEC-01 bis SEC-09 bleiben offen. PROJ-31 besitzt nun eine vollständige Spec und ist `Planned`; nach der Architekturprüfung gilt die normale Statusfolge.
-
 ## Empfohlene Build-Reihenfolge (MVP, P0)
 
 1. **PROJ-1** Supabase Infrastructure Setup
 2. **PROJ-19** Audit Logging & Rollenrechte *(früh mitbauen, nicht nachträglich)*
-3. **PROJ-31** Automatische Sitzungssperre, MFA und Re-Authentisierung
-4. **PROJ-2** Mock-PVS-Service
-5. **PROJ-3** Integration-Adapter-Schicht
-6. **PROJ-4** Patienten-Synchronisierung
-7. **PROJ-5** Termin-Synchronisierung
-8. **PROJ-6** Patientenübersicht & Profil
-9. **PROJ-7** Terminübersicht
-10. **PROJ-9** CRM / Nachfassaktionen
-11. **PROJ-11** Kommunikations-Templates-Editor
-12. **PROJ-12** E-Mail-Versand-Integration
-13. **PROJ-10** Regel-Engine
-14. **PROJ-13** Kommunikationsautomatisierung
-15. **PROJ-14** Transkript-Integration
-16. **PROJ-15** KI-Informationsextraktion
-17. **PROJ-16** Automatischer Kostenvoranschlagsentwurf
-18. **PROJ-17** Patientenkennzahlen
-19. **PROJ-8** Patienten-Timeline *(aggregiert Daten aus 6, 7, 9, 13, 14)*
-20. **PROJ-18** Dashboard *(bündelt alles)*
+3. **PROJ-2** Mock-PVS-Service
+4. **PROJ-3** Integration-Adapter-Schicht
+5. **PROJ-4** Patienten-Synchronisierung
+6. **PROJ-5** Termin-Synchronisierung
+7. **PROJ-6** Patientenübersicht & Profil
+8. **PROJ-7** Terminübersicht
+9. **PROJ-9** CRM / Nachfassaktionen
+10. **PROJ-11** Kommunikations-Templates-Editor
+11. **PROJ-12** E-Mail-Versand-Integration
+12. **PROJ-10** Regel-Engine
+13. **PROJ-13** Kommunikationsautomatisierung
+14. **PROJ-14** Transkript-Integration
+15. **PROJ-15** KI-Informationsextraktion
+16. **PROJ-16** Automatischer Kostenvoranschlagsentwurf
+17. **PROJ-17** Patientenkennzahlen
+18. **PROJ-8** Patienten-Timeline *(aggregiert Daten aus 6, 7, 9, 13, 14)*
+19. **PROJ-18** Dashboard *(bündelt alles)*
 
-Danach P1 (PROJ-20 bis PROJ-23, PROJ-29), dann P2 nach Bedarf.
+Danach P1 (PROJ-20 bis PROJ-23, PROJ-29, PROJ-31), dann P2 nach Bedarf.
 
-**Betriebliche Abnahme vor P31-Umsetzung:** PROJ-1 bleibt bis zu Safari-Smoke, Browser-Neustart und kontrolliertem Dienstausfall `In Review`. PROJ-19 bleibt bis zur Abnahme seiner zugeordneten Sicherheitskorrekturen sowie Scheduler-Monitoring und Löschlaufnachweis `In Review`; Hosted-Migrationen, Scheduling und synthetische Cloud-Abnahme sind am 06.09.2026 dokumentiert. Diese Nachweise und PROJ-31 müssen vor echten oder re-identifizierbaren Daten abgeschlossen sein.
+**PROJ-31 (Sitzungssperre) ist zeitkritisch:** muss umgesetzt sein, *bevor* echte Patientendaten ins System kommen (Phase 6, Pilotbetrieb) — unabhängig davon, wie weit die übrigen P1-Features sind.
 
 ## Verbindliche Compliance-Gates (25.08.2026)
 
