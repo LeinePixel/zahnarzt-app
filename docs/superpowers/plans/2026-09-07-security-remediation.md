@@ -142,11 +142,21 @@ Die Fixture erstellt Praxis, Identität und Freigabe innerhalb `BEGIN`/`ROLLBACK
 **Eingang:** Datenbankprüfung T03. **Ausgang:** bedienbarer MFA-/Sperrablauf mit unverändert maßgeblicher Datenautorisierung.
 
 - [ ] Failing Tests für Einrichten/Bestätigen des Faktors, falschen/abgelaufenen Code, Recovery ohne Bypass und abgelaufene Re-Authentisierung schreiben; neutrale deutsche Fehler ohne Token-/QR-Secret-Ausgabe.
-- [ ] Bestehende UI-Bausteine verwenden; sensible Zustände nur im notwendigen Arbeitsspeicher, keine persistenten Testmedien.
+- [x] Bestehende UI-Bausteine verwenden; sensible Zustände nur im notwendigen Arbeitsspeicher, keine persistenten Testmedien.
 - [ ] Aktivität und Sperre nach freigegebener Semantik implementieren: Hintergrundrefresh ist keine menschliche Aktivität; Mehrtabverhalten, Offlinefall und Systemuhränderung explizit prüfen. Serverzeit entscheidet Berechtigung.
 - [ ] Gestohlenes synthetisches Token vor Logout erfassen, danach direkte REST-/RPC-Aufrufe innerhalb/außerhalb der zugesagten Sperrfrist testen. UI-Redirect allein ist kein Erfolgskriterium.
 - [ ] Browser-Neustart mit bestehendem Cookie prüfen: Sitzung darf innerhalb erlaubter Regeln wiederaufgenommen werden, aber niemals Inaktivitäts-/Maximalzeit umgehen. PROJ-1-Neustartkriterium entsprechend präzisieren.
 - [ ] `npm run verify:full`; Safari-/Arbeitsplatz-Smoke als separate manuelle Evidenz dokumentieren.
+
+**Zwischenevidenz 20.09.2026:** TOTP-Bootstrap, neutrale Fehleroberfläche,
+serverseitige Sitzungsaktivität und die DB-erzwungene Re-Authentisierung für
+Supportaktivierung/Audit-Lesen sind implementiert. Die Re-Auth-Grenze wurde nach
+frischem lokalem Reset mit 209 pgTAP-Tests geprüft; 30 fokussierte Vitest-Tests,
+Typecheck und gezielter Lint bestanden. Der synthetische Browserlauf hält
+TOTP-Secrets ausschließlich im Prozessspeicher und bestand mit 17/17 Fällen,
+einschließlich des verpflichtenden Microsoft-Edge-Laufs. Offen bleiben die
+expliziten Token-Replay-, Offline-/Systemuhr- und Browser-Neustart-Nachweise sowie
+der abschließende vollständige `verify:full`-Lauf.
 
 ## T05: Browser-, Cookie- und HTTPS-Härtung
 

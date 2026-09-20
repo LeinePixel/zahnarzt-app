@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { existsSync } from 'node:fs'
 
 import { E2E_FOREIGN_PRACTICE_ID } from '../supabase/seed-fixtures'
+import { loginWithSyntheticMfa } from './helpers/mfa-login'
 
 if (existsSync('.env.seed.local')) {
   process.loadEnvFile('.env.seed.local')
@@ -32,11 +33,7 @@ function requiredSeedCredential(
 }
 
 async function login(page: Page, email: string, credential: string) {
-  await page.goto('/login')
-  await page.getByLabel('E-Mail-Adresse').fill(email)
-  await page.getByLabel('Passwort').fill(credential)
-  await page.getByRole('button', { name: 'Sicher anmelden' }).click()
-  await expect(page).toHaveURL(/\/status$/)
+  await loginWithSyntheticMfa(page, email, credential)
 }
 
 test.describe.configure({ mode: 'serial' })

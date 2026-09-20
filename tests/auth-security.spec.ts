@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import { loginWithSyntheticMfa } from './helpers/mfa-login'
 
 if (existsSync('.env.seed.local')) {
   process.loadEnvFile('.env.seed.local')
@@ -24,11 +25,7 @@ function required(variable: string) {
 }
 
 async function login(page: Page, email = account.email, password = required(account.passwordVariable)) {
-  await page.goto('/login')
-  await page.getByLabel('E-Mail-Adresse').fill(email)
-  await page.getByLabel('Passwort').fill(password)
-  await page.getByRole('button', { name: 'Sicher anmelden' }).click()
-  await expect(page).toHaveURL(/\/status$/)
+  await loginWithSyntheticMfa(page, email, password)
 }
 
 async function logoutEverywhere(context: BrowserContext) {

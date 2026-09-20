@@ -39,7 +39,7 @@ const createProxyAuthClient: ProxyAuthClientFactory = (cookies) => {
   })
 }
 
-function createContentSecurityPolicy(nonce: string): string {
+function createContentSecurityPolicy(nonce: string, supabaseOrigin: string): string {
   const developmentSource =
     process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''
   const localDevelopmentConnections =
@@ -51,7 +51,7 @@ function createContentSecurityPolicy(nonce: string): string {
     "style-src 'self' 'nonce-" + nonce + "'",
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    `connect-src 'self' https://*.supabase.co${localDevelopmentConnections}`,
+    `connect-src 'self' ${supabaseOrigin} https://*.supabase.co${localDevelopmentConnections}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -89,7 +89,10 @@ export async function updateSession(
   createAuthClient: ProxyAuthClientFactory = createProxyAuthClient,
 ): Promise<NextResponse> {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-  const contentSecurityPolicy = createContentSecurityPolicy(nonce)
+  const supabaseOrigin = createAuthClient === createProxyAuthClient
+    ? new URL(getPublicEnv().supabaseUrl).origin
+    : 'https://supabase.invalid'
+  const contentSecurityPolicy = createContentSecurityPolicy(nonce, supabaseOrigin)
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('Content-Security-Policy', contentSecurityPolicy)
   requestHeaders.set('x-nonce', nonce)

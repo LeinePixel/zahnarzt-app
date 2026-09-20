@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { existsSync } from 'node:fs'
+import { captureMfaEnrollment, loginWithSyntheticMfa, resetSyntheticMfa } from './helpers/mfa-login'
 
 if (existsSync('.env.seed.local')) {
   process.loadEnvFile('.env.seed.local')
@@ -43,8 +44,7 @@ async function submitLogin(page: Page, email: string, password: string) {
 }
 
 async function loginSuccessfully(page: Page, email: string, password: string) {
-  await submitLogin(page, email, password)
-  await expect.poll(() => new URL(page.url()).pathname).toBe('/status')
+  await loginWithSyntheticMfa(page, email, password)
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -85,6 +85,8 @@ test('offenbart nicht, ob eine E-Mail-Adresse existiert', async ({ page }) => {
 
 test('unterbindet eine zweite Formularübermittlung während der Anmeldung', async ({ page }) => {
   const account = accounts[0]
+  await resetSyntheticMfa(account.email)
+  const completeMfa = captureMfaEnrollment(page)
   let loginPosts = 0
   page.on('request', (request) => {
     if (request.method() === 'POST' && new URL(request.url()).pathname === '/login') {
@@ -96,8 +98,7 @@ test('unterbindet eine zweite Formularübermittlung während der Anmeldung', asy
   await page.getByLabel('Passwort').fill(requiredPassword(account.passwordVariable))
   const submit = page.getByRole('button', { name: 'Sicher anmelden' })
   await submit.dblclick()
-
-  await expect.poll(() => new URL(page.url()).pathname).toBe('/status')
+  await completeMfa()
   expect(loginPosts).toBe(1)
 })
 
