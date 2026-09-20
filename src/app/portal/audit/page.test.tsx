@@ -9,6 +9,7 @@ import PortalAuditPage from './page'
 vi.mock('@/features/auth/current-user', () => ({
   getCurrentUserContext: vi.fn(),
 }))
+vi.mock('@/components/auth/session-lock', () => ({ SessionLock: () => null }))
 vi.mock('@/features/audit/read-events', async (importOriginal) => {
   const actual = await importOriginal<
     typeof import('@/features/audit/read-events')

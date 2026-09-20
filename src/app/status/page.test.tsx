@@ -9,6 +9,7 @@ vi.mock('@/features/auth/current-user', () => ({
   getCurrentUserContext: vi.fn(),
   logout: vi.fn(),
 }))
+vi.mock('@/components/auth/session-lock', () => ({ SessionLock: () => null }))
 
 describe('StatusPage', () => {
   beforeEach(() => {

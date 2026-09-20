@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { getCurrentUserContext } from '@/features/auth/current-user'
+import { SessionLock } from '@/components/auth/session-lock'
 import {
   readAuditEvents,
   type AuditEvent,
@@ -129,6 +130,7 @@ export default async function PortalAuditPage({
 
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <SessionLock />
         <Card>
           <CardHeader>
             <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
@@ -153,6 +155,7 @@ export default async function PortalAuditPage({
   if (context.status !== 'portal_admin') {
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <SessionLock />
         <Card>
           <CardHeader>
             <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
@@ -168,6 +171,7 @@ export default async function PortalAuditPage({
   if (!practiceId) {
     return (
       <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+        <SessionLock />
         <Card>
           <CardHeader>
             <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
@@ -199,6 +203,7 @@ export default async function PortalAuditPage({
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl bg-background px-5 py-8 sm:px-8">
+      <SessionLock />
       <Card>
         <CardHeader>
           <h1 className="text-2xl font-bold">Audit-Einsicht</h1>
