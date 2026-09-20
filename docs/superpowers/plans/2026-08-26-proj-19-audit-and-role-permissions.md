@@ -1,5 +1,7 @@
 # PROJ-19 Audit Logging & Role Permissions Implementation Plan
 
+**Historischer Implementierungsplan:** PROJ-19 ist implementiert und bleibt `In Review`. Die ursprünglichen Schritte und Codebeispiele werden nicht erneut ausgeführt; den aktuellen Code bestimmen alle sechs Migrationen einschließlich Forward-Härtung. Für SEC-01 bis SEC-09 und die nächste Abnahme gilt [der Security-Umsetzungsplan](2026-09-07-security-remediation.md). Alte offene Checkboxen sind keine Aufforderung zur Neuimplementierung.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
 **Goal:** Enforce the approved role boundary, provide practice-approved temporary provider audit access, and retain data-minimized audit events for 90 days.

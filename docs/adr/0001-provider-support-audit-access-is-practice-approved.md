@@ -2,7 +2,9 @@
 
 **Status:** Accepted — 2026-08-26
 
-`portaladmin` ist eine separate Anbieteridentität und keine vierte Praxisrolle. Sie darf Audit-Ereignisse nur für eine einzeln ausgewählte Praxis sehen, wenn ein `praxisadmin` die Supportfreigabe aktiviert hat; der Zugriff läuft standardmäßig nach acht Stunden und spätestens nach 24 Stunden ab, eine Verlängerung verlangt eine neue Praxisfreigabe. Das schützt vor einer dauerhaften, praxisübergreifenden Superuser-Rolle und lässt dennoch nachvollziehbaren Support zu.
+`portaladmin` ist eine separate Anbieteridentität und keine vierte Praxisrolle. Ein `praxisadmin` legt eine Supportfreigabe für seine Praxis an und kann sie widerrufen. Ein Portaladmin aktiviert diese Freigabe über ihre undurchsichtige ID mit einer strukturierten Ursache; erst dann darf er Audit-Ereignisse dieser Praxis sehen. Der Zugriff läuft standardmäßig acht Stunden und spätestens 24 Stunden nach Aktivierung ab; eine Verlängerung verlangt eine neue Praxisfreigabe. Das schützt vor einer dauerhaften, praxisübergreifenden Superuser-Rolle und lässt dennoch nachvollziehbaren Support zu.
+
+**Präzisierung 06.09.2026:** Die Zuständigkeiten entsprechen der [PROJ-19-Spec](../../features/PROJ-19-audit-logging-and-role-permissions.md) und [ADR-0003](0003-support-grants-are-activated-by-opaque-id.md).
 
 ## Considered Options
 

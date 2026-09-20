@@ -1,5 +1,7 @@
 # PROJ-19: Threat Model
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). Der [Anforderungsentwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) beschreibt geplante Ergänzungen; heutige Runtime-/RPC-/Datenverträge bleiben bis zur Implementierung unverändert. MFA/Re-Authentisierung und weitere Echtbetriebs-Gates sind weiterhin offen.
+
 **Status:** Freigegebener Architekturentwurf, 26.08.2026
 **Scope:** Rollenrechte, Audit-Ereignisse und zeitlich begrenzter Anbieter-Supportzugriff. Ausschließlich synthetische Daten.
 

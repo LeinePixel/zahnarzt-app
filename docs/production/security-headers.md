@@ -1,64 +1,18 @@
-# Security Headers Configuration
+# Cookie-, Browser- und HTTPS-Härtung
 
-Protect against XSS, Clickjacking, MIME sniffing, and other common web attacks.
+**Stand:** 07.09.2026. Geplant, nicht implementiert. Maßgeblich sind SEC-03, D10 und T05 im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md).
 
-## Setup
+## Aktueller Stand
 
-Add security headers to `next.config.ts`:
+next.config.ts enthält keine Security Header/CSP. Die SSR-Clients setzen keine eigenen Cookie-Sicherheitsoptionen. Private/no-store ist implementiert; die Weitergabe sicherer Testcookies beweist noch keine sicheren Cookies im echten HTTPS-Login.
 
-```typescript
-import type { NextConfig } from 'next'
+## Umsetzung und Abnahme
 
-const nextConfig: NextConfig = {
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
-          },
-        ],
-      },
-    ]
-  },
-}
+- Tatsächliche Cookie-Erzeugung unter HTTPS mit Secure prüfen; SameSite und notwendige SSR-Browserfunktion erhalten. HttpOnly ist eine gesonderte Architekturentscheidung, kein blind zu setzendes Flag.
+- CSP passend zur installierten Next.js-Version und Hydration mit Nonces entwerfen. Das frühere Beispiel mit pauschalem Script-unsafe-inline ist keine freigegebene Zielkonfiguration.
+- frame-ancestors, object-src, base-uri und notwendige Verbindungen explizit begrenzen; MIME-, Framing-, Referrer- und Permissions-Regeln auf den realen Funktionsumfang abstimmen.
+- Report-Only nur vorübergehend mit synthetischen Daten; vor Echtdaten wirksam erzwingen. Reports dürfen keine sensiblen URLs, Identitäten oder Inhalte enthalten.
+- HSTS erst nach HTTPS-/Domainprüfung aktivieren; includeSubDomains und Preload benötigen bewusste Prüfung aller betroffenen Hosts.
+- Reale Login-/Logout-/MFA-/Supportflüsse, falschen Origin, Reverse-Proxy-Header und private/no-store testen. Lokaler Build ersetzt keine Hosting-Abnahme.
 
-export default nextConfig
-```
-
-## What Each Header Does
-
-| Header | Protection |
-|--------|-----------|
-| X-Frame-Options: DENY | Prevents your site from being embedded in iframes (clickjacking) |
-| X-Content-Type-Options: nosniff | Prevents browsers from guessing content types (MIME sniffing) |
-| Referrer-Policy | Controls how much URL info is sent to other sites |
-| Strict-Transport-Security | Forces HTTPS connections |
-
-## Verify After Deployment
-1. Open Chrome DevTools
-2. Go to Network tab
-3. Click on any request to your site
-4. Check Response Headers section
-5. Verify all 4 headers are present
-
-## Content Security Policy (vor echten Daten verbindlich)
-**Content-Security-Policy (CSP)** wird zunächst im Report-Only-Modus getestet und vor Öffnung des Real-Data-Gates erzwungen:
-```
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'
-```
-Start with report-only mode first: `Content-Security-Policy-Report-Only`
+Konkrete Dateien, Testreihenfolge und Schließkriterium stehen in T05. Es wird kein bestehender Auth-Proxy durch ein Header-Beispiel ersetzt.

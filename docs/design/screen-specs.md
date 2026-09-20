@@ -1,5 +1,7 @@
 # Screen Specs
 
+**Geplante Sicherheitsergänzungen:** T04/T07 des [Security-Plans](../superpowers/plans/2026-09-07-security-remediation.md) ergänzen MFA-/Sperrbildschirme und die Liste eigener Supportfreigaben. Diese Oberflächen sind noch nicht implementiert; die Praxisliste erweitert keine Portalrechte.
+
 ## Status
 
 Es gibt **drei visuell durchgestaltete Referenz-Screens** und **zwei spezifizierte, aber nicht gestaltete Screens**.

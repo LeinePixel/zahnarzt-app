@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { getPublicEnv } from '@/lib/env'
 
+import { getAuthCookieOptions } from './cookie-options'
+
 export type ProxyCookieMethods = {
   getAll: () => Array<{ name: string; value: string }> | null
   setAll: (
@@ -31,13 +33,66 @@ export type ProxyAuthClientFactory = (
 const createProxyAuthClient: ProxyAuthClientFactory = (cookies) => {
   const env = getPublicEnv()
 
-  return createServerClient(env.supabaseUrl, env.supabaseAnonKey, { cookies })
+  return createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
+    cookieOptions: getAuthCookieOptions(),
+    cookies,
+  })
+}
+
+function createContentSecurityPolicy(nonce: string): string {
+  const developmentSource =
+    process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''
+  const localDevelopmentConnections =
+    process.env.NODE_ENV === 'development' ? ' http://localhost:* http://127.0.0.1:*' : ''
+
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentSource}`,
+    "style-src 'self' 'nonce-" + nonce + "'",
+    "img-src 'self' blob: data:",
+    "font-src 'self'",
+    `connect-src 'self' https://*.supabase.co${localDevelopmentConnections}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    'upgrade-insecure-requests',
+  ].join('; ')
+}
+
+function setSecurityHeaders(
+  response: NextResponse,
+  policy: string,
+  useHsts: boolean,
+): void {
+  response.headers.set('Content-Security-Policy', policy)
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('Referrer-Policy', 'same-origin')
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+  )
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
+  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
+
+  if (useHsts) {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains',
+    )
+  }
 }
 
 export async function updateSession(
   request: NextRequest,
   createAuthClient: ProxyAuthClientFactory = createProxyAuthClient,
 ): Promise<NextResponse> {
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const contentSecurityPolicy = createContentSecurityPolicy(nonce)
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('Content-Security-Policy', contentSecurityPolicy)
+  requestHeaders.set('x-nonce', nonce)
   const pendingCookies: Parameters<ProxyCookieMethods['setAll']>[0] = []
   const refreshHeaders = new Headers()
   const cookieMethods: ProxyCookieMethods = {
@@ -89,7 +144,7 @@ export async function updateSession(
     statusUrl.hash = ''
     response = NextResponse.redirect(statusUrl)
   } else {
-    response = NextResponse.next({ request })
+    response = NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   for (const cookie of pendingCookies) {
@@ -98,6 +153,11 @@ export async function updateSession(
 
   refreshHeaders.forEach((value, name) => response.headers.set(name, value))
   response.headers.set('Cache-Control', 'private, no-store')
+  setSecurityHeaders(
+    response,
+    contentSecurityPolicy,
+    process.env.NODE_ENV === 'production' && request.nextUrl.protocol === 'https:',
+  )
 
   return response
 }

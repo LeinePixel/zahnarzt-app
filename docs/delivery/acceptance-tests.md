@@ -1,5 +1,7 @@
 # Acceptance Tests
 
+**Neue Abnahmeplanung 07.09.2026:** Die folgenden Testergebnisse sind historische Evidenz. Die zusätzlichen Fälle und Schließkriterien SEC-01 bis SEC-09 stehen in T00–T12 des [Security-Umsetzungsplans](../superpowers/plans/2026-09-07-security-remediation.md). Insbesondere MFA, Token-Replay, RPC-Quoten, Freigabeliste, Referenzlöschung, Restore und Alarm benötigen neue Nachweise. Ein grüner Altlauf erfüllt diese Kriterien nicht.
+
 ## Teststand — Fakten (26.08.2026)
 
 PROJ-1 besitzt ein dreischichtiges, ausführbares Sicherheitsnetz:

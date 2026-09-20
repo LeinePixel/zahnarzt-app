@@ -1,5 +1,7 @@
 # Architektur
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](docs/superpowers/plans/2026-09-07-security-remediation.md). Alle neun Auditbefunde bleiben bis zu ihrer belegten Korrektur offen; bestehende Architektur und historische Abnahmen bleiben erhalten.
+
 ## Systemüberblick
 
 DentPilot ergänzt bestehende Zahnarzt-Praxissoftware um Workflows, CRM, Kommunikation, Auswertung und später KI-gestützte Vorbereitung. Die Praxissoftware bleibt Source of Truth für medizinische und abrechnungsrelevante Daten.
@@ -22,7 +24,8 @@ Supabase-SSR-Server-Client
   ▼
 Supabase Auth + PostgreSQL-Rechte + RLS
   ▼
-practice / user_profile
+practice / user_profile / portal_admin
+support_access_grant / audit_event (über autorisierte RPCs)
 ~~~
 
 Der Proxy ist kein Autorisierungssystem. Serverseitige Identitätsprüfung und Datenbank-RLS bleiben eigenständige Trust Boundaries.
@@ -30,7 +33,7 @@ Der Proxy ist kein Autorisierungssystem. Serverseitige Identitätsprüfung und D
 ## Anwendungsschichten
 
 - Präsentation: src/app/ und src/components/.
-- Feature-/Domainlogik: src/features/auth/ und src/features/audit/.
+- Feature-/Domainlogik: src/features/auth/, src/features/audit/ und src/features/authorization/; die lokale Rollen-/Fähigkeitsprüfung ergänzt die maßgebliche Datenbankautorisierung.
 - Supabase-Zugriff: src/lib/supabase/ mit getrennten Clients für Browser, Server und Proxy.
 - Persistenz: supabase/migrations/ und PostgreSQL-RLS.
 - CLI-Verwaltung: supabase/seed.ts mit separater geheimer Umgebung.
@@ -42,7 +45,7 @@ Login und Logout verwenden Server Actions; PROJ-1 besitzt keine eigene API-Schic
 
 Die Migrationen definieren `practice`, `user_profile`, `portal_admin`, Supportfreigaben und Audit-Ereignisse. Praxisrollen können nur ihren eigenen Kontokontext lesen und keine Auditdaten einsehen; `portaladmin` ist eine getrennte Identität ohne `user_profile` und erhält Audit-Metadaten nur während einer aktiven praxisgebundenen Supportfreigabe. Browserrollen besitzen keine direkten Schreibrechte auf diese Tabellen. Die `service_role` ist ausschließlich für explizite CLI-Verwaltung vorgesehen.
 
-Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. PROJ-19 ist lokal verifiziert; Hosted-Cron-Commissioning, MFA/Re-Authentisierung und das Real-Data-Gate sind noch offen.
+Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. PROJ-19 ist lokal verifiziert; Hosted-Migrationen, tägliches Scheduling und synthetische Cloud-Abnahme sind zum 06.09.2026 dokumentiert (docs/delivery/acceptance-tests.md). Scheduler-Monitoring, der Nachweis eines ausgeführten Löschlaufs, MFA/Re-Authentisierung und das Real-Data-Gate bleiben offen.
 
 ## Externe Integrationen
 
@@ -52,7 +55,7 @@ Künftige PVS-Anbindungen verwenden Adapter. Herstellerformate dürfen nicht dir
 
 ## Deployment und Betrieb
 
-Es existieren weder Vercel-Konfiguration noch CI-Workflows. Kern- und Vollverifikation laufen lokal über npm run verify und npm run verify:full. Security Header, Monitoring, Backup-/Restore-Nachweise und Incident-Prozesse sind offene Deployment- beziehungsweise Real-Data-Gates.
+Es existiert keine Vercel-Konfiguration. Kern- und Vollverifikation laufen lokal über npm run verify und npm run verify:full; GitHub-Workflows führen zusätzlich Installations-, Verifikations- und Dependency-Audit-Checks aus. CSP/Sicherheitsheader sind im Proxy implementiert. Monitoring, Backup-/Restore-Nachweise, Branch-Protection und Incident-Prozesse sind weiter offene Deployment- beziehungsweise Real-Data-Gates.
 
 ## Architekturinvarianten
 
@@ -67,7 +70,7 @@ Es existieren weder Vercel-Konfiguration noch CI-Workflows. Kern- und Vollverifi
 ## Bekannte Schulden
 
 - MFA und automatische Sitzungssperre fehlen bis PROJ-31.
-- Security Header/CSP und CI fehlen.
+- Hosted-CSP-/HSTS-Nachweis, Secret-Scanning und Branch-Protection fehlen.
 - Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
 
 ## Geplantes Zielbild

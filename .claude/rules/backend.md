@@ -9,7 +9,7 @@ paths:
 
 ## Database (Supabase)
 - ALWAYS enable Row Level Security on every table
-- Create RLS policies for SELECT, INSERT, UPDATE, DELETE
+- Define access for SELECT, INSERT, UPDATE and DELETE explicitly. Grant only permitted direct operations and constrain them with RLS policies. Denied operations use revoked grants and no permissive policy (deny by absence), verified by negative tests. Protected PROJ-19 operations use authorized RPCs without direct application grants on audit/support-grant tables.
 - Add indexes on columns used in WHERE, ORDER BY, and JOIN clauses
 - Use foreign keys with ON DELETE CASCADE where appropriate
 - Never skip RLS - security first

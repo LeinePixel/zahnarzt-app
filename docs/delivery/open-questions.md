@@ -1,5 +1,7 @@
 # Open Questions
 
+**Aktuelle Entscheidungsarbeit:** D01–D10 im [Security-Entwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) bündeln konkrete Vorschläge, Zuständigkeiten und abhängige Aufgaben. Antworten dort mit Datum dokumentieren und widersprechende Punkte hier synchronisieren. Die alten offenen Fragen sind dadurch nicht automatisch entschieden.
+
 Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. **Nichts hiervon wurde geraten** — was hier steht, ist tatsächlich unentschieden.
 
 ## Blockiert eine konkrete Aufgabe

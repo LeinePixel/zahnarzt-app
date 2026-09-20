@@ -1,5 +1,7 @@
 # Sicherheit
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](docs/superpowers/plans/2026-09-07-security-remediation.md). Alle neun Auditbefunde bleiben bis zu ihrer belegten Korrektur offen; bestehende Architektur und historische Abnahmen bleiben erhalten.
+
 ## Geltungsbereich
 
 DentPilot wird später Identitäts-, Termin-, Kommunikations-, Abrechnungs- und Gesundheitsinformationen verarbeiten. Der aktuelle Entwicklungsstand verwendet ausschließlich synthetische Daten. Dieses Dokument beschreibt den belegten technischen Ist-Zustand und die verbindlichen Regeln für Änderungen.
@@ -18,6 +20,9 @@ Die vollständigen Datenschutz-, Real-Data- und KI-Gates stehen in docs/architec
 ## Implementierte Kontrollen
 
 - Cookie-basierte Supabase-SSR-Sitzung mit getrennten Browser-, Server- und Proxy-Clients.
+- Nonce-basierte Content-Security-Policy sowie Frame-, MIME-, Referrer-, Permissions- und Cross-Origin-Schutzheader im Next.js-Proxy.
+- Produktionscookies erzwingen `Secure`; Cookie-Transport bleibt `SameSite=Lax` und pfadgebunden.
+- Reproduzierbare GitHub-Workflows für `npm ci`, Verifikation und Dependency-Audit mit minimalen Leserechten.
 - Serverseitige Identitätsprüfung über getClaims() im Proxy und erneut in der geschützten Seite.
 - Server-seitige Zod-Validierung der Login-Eingaben.
 - Neutrale Credential-, Rate-Limit- und Dienstfehler ohne Kontenoffenlegung.
@@ -33,7 +38,7 @@ Die vollständigen Datenschutz-, Real-Data- und KI-Gates stehen in docs/architec
 
 Der Proxy verwendet verifizierte Claims als Routing-Signal. Er ersetzt weder die erneute serverseitige Claims-Prüfung noch RLS. getSession() und ungeprüfte Cookie-Inhalte sind keine Autorisierungsgrundlage.
 
-Die Praxisrollen `rezeption`, `behandler` und `praxisadmin` sind von `portaladmin` getrennt. Praxisrollen können Auditdaten nicht lesen. Nur ein Portaladmin mit aktiver, von der Praxis erteilter Supportfreigabe darf die minimierte Auditansicht lesen; jede Einsicht wird erneut auditiert. Hosted-Cron-Commissioning sowie MFA/Re-Authentisierung bleiben vor Produktions- und Real-Data-Freigabe offen.
+Die Praxisrollen `rezeption`, `behandler` und `praxisadmin` sind von `portaladmin` getrennt. Praxisrollen können Auditdaten nicht lesen. Nur ein Portaladmin mit aktiver, von der Praxis erteilter Supportfreigabe darf die minimierte Auditansicht lesen; jede Einsicht wird erneut auditiert. Hosted-Migrationen, tägliches Scheduling und synthetische Cloud-Abnahme sind zum 06.09.2026 dokumentiert (docs/delivery/acceptance-tests.md). Scheduler-Monitoring, der Nachweis eines ausgeführten Löschlaufs sowie MFA/Re-Authentisierung bleiben vor Produktions- und Real-Data-Freigabe offen.
 
 ## Sensitive Daten
 
@@ -71,11 +76,11 @@ Aktiv angebunden ist Supabase. Für Vercel, Soniox, IONOS AI Model Hub, Resend, 
 ## Bekannte Risiken und Lücken
 
 - Keine MFA, Inaktivitätssperre, Maximalsitzung oder Re-Authentisierung.
-- Keine Security Header/CSP in next.config.ts.
-- Keine CI-, Dependency- oder Secret-Scanning-Workflows.
+- Hosted-HTTPS-/HSTS-Nachweis und eine CSP-Report-Only-Phase stehen noch aus.
+- Kein Secret-Scanning-Workflow und keine aktivierte Branch-Protection.
 - Keine abgenommenen Lösch-, Aufbewahrungs-, Incident- oder Backup-/Restore-Prozesse.
 - Kein Produktionsbetrieb und kein externer Penetrationstest.
-- Hosted-Cron-Commissioning für die datenbankseitige 90-Tage-Auditlöschung ist nicht betrieblich verifiziert.
+- Für die bereits terminierte datenbankseitige 90-Tage-Auditlöschung fehlen laufendes Scheduler-Monitoring und der Nachweis eines ausgeführten Löschlaufs.
 
 ## Regeln für Coding-Agenten
 
@@ -87,6 +92,8 @@ Aktiv angebunden ist Supabase. Für Vercel, Soniox, IONOS AI Model Hub, Resend, 
 - Sicherheitslücken als aktuelle Risiken dokumentieren; Zielkontrollen nicht als implementiert darstellen.
 
 ## Vertiefung
+
+- [Sicherheitsaudit 06.–07.09.2026](docs/architecture/2026-09-06-security-audit.md): belegte Kontrollen, zusätzliche lokale Proben, priorisierte Lücken und konkrete Freigabenachweise. Die Befunde sind noch nicht behoben.
 
 - docs/architecture/privacy-security-ai-compliance.md: verbindliches Real-Data-Gate und Zielarchitektur.
 - docs/delivery/known-issues.md: nachverfolgte technische Schulden.

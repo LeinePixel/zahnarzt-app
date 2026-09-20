@@ -1,5 +1,7 @@
 # PROJ-1 Supabase Infrastructure & Login Implementation Plan
 
+**Historischer PROJ-1-Plan:** Die nachstehenden Ergebnisse dokumentieren die ursprüngliche Umsetzung. Die aktuelle Sicherheitsfortsetzung einschließlich PROJ-31 steht im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md); historische Versions-/Auditbefunde gelten nicht als aktueller Schwachstellennachweis.
+
 > **Für agentische Umsetzung:** Aufgaben strikt der Reihe nach und testgetrieben ausführen. Für jede Verhaltensänderung zuerst den angegebenen fehlschlagenden Test beobachten, dann minimal implementieren. Keine echten Patienten- oder Gesundheitsdaten verwenden.
 
 **Ziel:** Ein reproduzierbares Supabase-Fundament mit sicherer Cookie-Anmeldung, verifiziertem serverseitigem Zugriffsschutz, RLS, Demo-Seed und vollständig testbarer deutscher Login-/Statusoberfläche.

@@ -1,6 +1,8 @@
 # Architecture Overview
 
-**Stand:** 27.08.2026
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). Der [Anforderungsentwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) beschreibt geplante Ergänzungen; heutige Runtime-/RPC-/Datenverträge bleiben bis zur Implementierung unverändert. MFA/Re-Authentisierung und weitere Echtbetriebs-Gates sind weiterhin offen.
+
+**Stand:** 06.09.2026
 
 Dieses Dokument trennt die heute ausführbare Architektur ausdrücklich von der geplanten Produktarchitektur. Roadmap-Elemente sind keine implementierten Systembestandteile.
 
@@ -30,7 +32,7 @@ Browser
   │ Cookie-basierte Supabase-Sitzung
   ▼
 src/proxy.ts
-  │ aktualisiert Cookies, prüft getClaims(), steuert /login und /status
+  │ aktualisiert Cookies, prüft getClaims(), steuert /login, /status und /portal
   ▼
 Next.js Server Components / Server Actions
   │ prüfen Claims erneut, validieren Eingaben, laden Kontokontext
@@ -41,7 +43,8 @@ src/lib/supabase/server.ts
 Supabase Auth + PostgreSQL
   │ Tabellenrechte und RLS
   ▼
-practice / user_profile
+practice / user_profile / portal_admin
+support_access_grant / audit_event (über autorisierte RPCs)
 ~~~
 
 Der Proxy ist ein früher Routing- und Sitzungsfilter, aber keine vollständige Autorisierung. Identität wird in geschützten Server-Komponenten erneut geprüft; Datenbankrechte und RLS entscheiden über den Datenzugriff.
@@ -58,7 +61,9 @@ Der Proxy ist ein früher Routing- und Sitzungsfilter, aber keine vollständige 
 
 - src/features/auth/actions.ts validiert Login-Eingaben, neutralisiert Anbieterfehler und führt die Anmeldung aus.
 - src/features/auth/current-user.ts verifiziert Claims, lädt den minimalen Kontokontext und führt Logout aus.
-- UI-Code soll diese Funktionen verwenden, statt Authentifizierungslogik zu duplizieren.
+- src/features/authorization/policy.ts prüft Rollen und Fähigkeiten vor dem RPC-Aufruf; PostgreSQL bleibt für Praxis, Freigabe und Ablauf maßgeblich.
+- src/features/audit/ validiert Support- und Audit-Eingaben, ruft autorisierte RPCs auf und prüft deren Rückgaben.
+- UI-Code verwendet diese Feature-Funktionen; Authentifizierungs- und Autorisierungslogik wird dort gebündelt.
 
 ### Supabase-Zugriff
 
@@ -103,7 +108,7 @@ Auth-Antworten erhalten Cache-Control: private, no-store; Redirects enthalten ke
 
 supabase/seed.ts läuft ausschließlich als CLI-Prozess. Es legt zwei synthetische Praxen und vier Konten einschließlich einer separaten `portaladmin`-Identität idempotent an. Service-Role-Key und Seed-Passwörter werden in .env.seed.local gehalten und vor dem Start des E2E-App-Servers aus dessen Umgebung entfernt.
 
-Die Verifikationsschichten sind:
+Die Verifikationsschichten sind (Testzahlen: dokumentierte Abnahme bis 06.09.2026 in docs/delivery/acceptance-tests.md):
 
 - ESLint und TypeScript,
 - 90 Vitest-Tests,
@@ -112,7 +117,7 @@ Die Verifikationsschichten sind:
 - Chromium sowie Browser-Smokes in Firefox, WebKit und echtem Microsoft Edge,
 - Next.js-Produktions-Build.
 
-Automatisierte PROJ-1- und Cloud-Abnahme wurden am 26.08.2026 dokumentiert. Offen bleiben echter Safari-Smoke, vollständiger Browser-Neustart und kontrollierte Dienstunterbrechung; deshalb bleibt PROJ-1 In Review.
+Automatisierte PROJ-1-Abnahme wurde am 26.08.2026 dokumentiert; Hosted-Migrationen, tägliches Audit-Löschscheduling und synthetische PROJ-19-Cloud-Abnahme am 06.09.2026. Scheduler-Monitoring und der Nachweis eines ausgeführten Löschlaufs bleiben offen. Offen bleiben echter Safari-Smoke, vollständiger Browser-Neustart und kontrollierte Dienstunterbrechung; deshalb bleibt PROJ-1 In Review.
 
 ## Externe Dienste
 

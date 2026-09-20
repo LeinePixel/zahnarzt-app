@@ -1,8 +1,12 @@
 # Known Issues & Tech Debt
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). SEC-09 ist mit dem aktuellen `npm audit` technisch behoben; SEC-01 bis SEC-08 bleiben bis zu ihren jeweiligen Nachweisen offen.
+
 Stand 05.09.2026. PROJ-1 und PROJ-19 sind lokal verifiziert; PROJ-19 bleibt bis zur betrieblichen Freigabe `In Review`. Verbleibend sind bewusst aufgeschobene Punkte und betriebliche Risiken. Die Starter-Kit-Metadaten und ungenutzten Standard-Assets wurden bereinigt.
 
 ## Bewusst aufgeschoben
+
+Der [Sicherheitsaudit vom 06.–07.09.2026](../architecture/2026-09-06-security-audit.md) konkretisiert die offenen Echtbetriebs-Gates und ergänzt SEC-01 bis SEC-09: MFA/Sitzungssperre, Cookie-/Browserschutz, RPC-Missbrauchsbegrenzung, Freigabeaufbewahrung/Kontolöschung, Widerrufsbedienung, Betrieb/Datenschutz, CI und vier betroffene transitive Entwicklungsabhängigkeiten. Diese Befunde sind offen; der Bericht enthält Belege und Abnahmekriterien.
 
 Jeweils mit Begründung im Decision Log (`docs/architecture/decisions.md`).
 
@@ -14,8 +18,8 @@ Jeweils mit Begründung im Decision Log (`docs/architecture/decisions.md`).
 | Kein Passwort-Zurücksetzen | Im MVP über das Supabase-Dashboard | offen |
 | Kein Löschkonzept, keine Aufbewahrungsregeln | Nur synthetische Daten | vor Pilotbetrieb |
 | Kein Multi-Tenant-Betrieb | `practice_id` ist vorbereitet, wird aber nicht mehrmandantenfähig genutzt | PROJ-24 |
-| Keine Security Header/CSP in `next.config.ts` | Noch kein Produktions-Deployment | Deployment- und Real-Data-Gate |
-| Keine CI-Workflows | Kern- und Vollverifikation laufen derzeit nur lokal und werden nicht automatisch erzwungen | vor Teamarbeit oder Deployment |
+| Hosted-CSP-/HSTS-Nachweis | Nonce-CSP und Browserheader sind im Proxy implementiert; noch kein Produktions-Deployment | Deployment- und Real-Data-Gate |
+| CI ohne Secret-Scanning/Branch-Protection | Verify- und Dependency-Audit-Workflows sind versioniert; Plattformdurchsetzung und Secret-Scan stehen aus | vor Teamarbeit oder Deployment |
 | Scheduler-Monitoring für Auditlöschung | Die 90-Tage-Datenbankroutine ist im Zielbetrieb terminiert; laufende Überwachung und Nachweis eines Löschlaufs fehlen noch | vor PROJ-19-Produktivfreigabe |
 | DSFA, AV-Verträge, Löschkonzept und Anbieterprüfungen fehlen | Noch keine echten Daten oder angebundenen Anbieter | Bestandteil des Real-Data-Gates vor Pilotbetrieb |
 | AI-Act-/Medizinprodukte-Einstufung fehlt | KI-Features sind noch unspezifiziert | Pflicht vor PROJ-15/16 |

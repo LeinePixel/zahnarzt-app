@@ -1,21 +1,23 @@
 # Scope & Priorities
 
-_Quelle: `docs/PRD.md` und `features/INDEX.md` (Stand 24.08.2026). `features/INDEX.md` bleibt maßgeblich für den aktuellen Status._
+**Aktuelle Sicherheitsarbeit:** Die [Umsetzung SEC-01 bis SEC-09](../superpowers/plans/2026-09-07-security-remediation.md) hat Vorrang vor weiterer produktiver Datenverarbeitung. T01 liefert erst die vollständige PROJ-31-Spec; der Querschnittsentwurf ist keine zusätzliche fertige Feature-Spec.
+
+_Quelle: `docs/PRD.md` und `features/INDEX.md` (Stand 06.09.2026). `features/INDEX.md` bleibt maßgeblich für den aktuellen Status._
 
 ## Status-Realität — wichtig für Codex
 
-**Nur PROJ-1 hat eine vollständige Spezifikation und einen technischen Entwurf.** Alle übrigen 30 Features stehen auf *Roadmap*: Sie sind benannt, priorisiert und mit Abhängigkeiten versehen, haben aber **keine User Stories und keine Akzeptanzkriterien**.
+**PROJ-1 und PROJ-19 sind spezifiziert, technisch entworfen und implementiert; beide stehen auf `In Review`.** Die Abnahmenachweise und offenen manuellen beziehungsweise betrieblichen Gates stehen in `docs/delivery/acceptance-tests.md`. Die übrigen 29 Features stehen auf *Roadmap* und besitzen noch keine verbindliche Feature-Spec.
 
 Das ist kein Versäumnis dieses Handoffs, sondern der bewusste Arbeitsstand: Spezifiziert wird Feature für Feature kurz vor der Umsetzung. **Codex sollte für Roadmap-Features keinen Code schreiben**, ohne dass vorher eine Spec entsteht.
 
 ## Must-have — MVP (P0)
 
-Reihenfolge = empfohlene Baureihenfolge aus `features/INDEX.md`.
+Die Tabelle zeigt die P0-Reihenfolge. Die vollständige empfohlene Baureihenfolge in `features/INDEX.md` zieht zusätzlich PROJ-31 (P1/Auth-Hardening) vor PROJ-2.
 
 | # | ID | Feature | Status |
 |---|---|---|---|
-| 1 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | **Architected** |
-| 2 | PROJ-19 | Audit Logging & Rollenrechte | Roadmap |
+| 1 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | **In Review** |
+| 2 | PROJ-19 | Audit Logging & Rollenrechte | **In Review** |
 | 3 | PROJ-2 | Mock-PVS-Service | Roadmap |
 | 4 | PROJ-3 | Integration-Adapter-Schicht | Roadmap |
 | 5 | PROJ-4 | Patienten-Synchronisierung | Roadmap |

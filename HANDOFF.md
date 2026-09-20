@@ -1,10 +1,12 @@
 # Handoff: DentPilot
 
-**Last updated:** 2026-08-26
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](docs/superpowers/plans/2026-09-07-security-remediation.md). Alle neun Auditbefunde bleiben bis zu ihrer belegten Korrektur offen; bestehende Architektur und historische Abnahmen bleiben erhalten.
+
+**Last updated:** 2026-09-07
 
 ## Current state
 
-PROJ-1 provides the Next.js 16/Supabase SSR foundation, RLS, synthetic seed accounts, German login and protected account-status UI. PROJ-19 adds role authorization, a separated `portaladmin` identity and a minimized audit stream available only through active, practice-initiated, time-limited support access. Both are `In Review`: local automated QA is complete; real Safari, complete browser restart, controlled service outage, Hosted-Cron commissioning, MFA/re-authentication and the Real-Data-Gate remain open.
+PROJ-1 provides the Next.js 16/Supabase SSR foundation, RLS, synthetic seed accounts, German login and protected account-status UI. PROJ-19 adds role authorization, a separated `portaladmin` identity and a minimized audit stream available only through active, practice-initiated, time-limited support access. Both are `In Review`: local automated QA is complete; real Safari, complete browser restart, controlled service outage, scheduler monitoring and evidence of an executed purge, MFA/re-authentication and the Real-Data-Gate remain open.
 
 Binding status: [`features/INDEX.md`](features/INDEX.md) · PROJ-1: [`features/PROJ-1-supabase-infrastructure-setup.md`](features/PROJ-1-supabase-infrastructure-setup.md) · PROJ-19: [`features/PROJ-19-audit-logging-and-role-permissions.md`](features/PROJ-19-audit-logging-and-role-permissions.md)
 
@@ -32,7 +34,9 @@ npm run verify:full
 
 ## Next task
 
-Commission PROJ-19 only after Hosted-Cron scheduling/monitoring is configured in the target environment. PROJ-31 session hardening (MFA, inactivity and re-authentication) follows before patient-shaped data work.
+Start with T00 (dependency patches) and T01 (approved PROJ-31/19 specifications) in the security remediation plan. Scheduler commissioning alone no longer represents the full remaining scope.
+
+Hosted migrations, daily purge scheduling and synthetic cloud acceptance are documented as of 2026-09-06 in docs/delivery/acceptance-tests.md. Complete scheduler monitoring and record an executed purge before PROJ-19 operational approval. PROJ-31 session hardening (MFA, inactivity and re-authentication) follows before patient-shaped data work.
 
 ## Non-negotiable gate
 

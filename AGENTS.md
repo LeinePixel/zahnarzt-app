@@ -1,5 +1,7 @@
 # Projektanweisungen
 
+**Security continuation:** For work on the open security findings, read `docs/superpowers/plans/2026-09-07-security-remediation.md` and its linked design first. Planned controls are not implemented controls; PROJ-31 still requires its full feature spec.
+
 ## Projektüberblick
 
 DentPilot ist eine deutschsprachige Workflow-, CRM- und Automatisierungsanwendung für Zahnarztpraxen. Die vorhandene Praxissoftware bleibt Source of Truth für Patienten, Behandlungen, Abrechnung und Termine. Implementiert sind PROJ-1 (Supabase-/Anmeldefundament) und PROJ-19 (praxisgebundene Audit- und Rollenautorisierung mit getrennten `portaladmin`-Identitäten und zeitlich begrenzter Supportfreigabe). PROJ-19 ist lokal abgenommen, bleibt bis zur betrieblichen Freigabe `In Review`.
@@ -31,6 +33,8 @@ src/app/                 Routen, Layouts und Server Components
 src/components/auth/     Login-/Logout-Präsentation
 src/components/ui/       vorhandene shadcn/ui-Bausteine
 src/features/auth/       Auth- und Kontokontext-Domainlogik
+src/features/audit/      Supportfreigaben und Audit-RPC-Zugriff
+src/features/authorization/ Rollen- und Fähigkeitsprüfung
 src/lib/supabase/        getrennte Browser-, Server- und Proxy-Clients
 src/proxy.ts             Next.js-16-Zugriffsschutz
 supabase/migrations/     versioniertes Schema und RLS
@@ -43,6 +47,7 @@ docs/                    vertiefende Produkt- und Lieferdokumentation
 ## Architekturgrenzen
 
 - Seiten und Komponenten rufen Feature-Funktionen auf; Auth-Logik gehört nach src/features/auth/.
+- Support- und Auditlogik liegt in src/features/audit/; lokale Rollen-/Fähigkeitsprüfungen verwenden src/features/authorization/policy.ts. PostgreSQL bleibt die Autorisierungsgrenze.
 - Browser, Server und Proxy verwenden jeweils ihren Client aus src/lib/supabase/.
 - Der Proxy aktualisiert Cookies und trifft frühe Routing-Entscheidungen mit getClaims().
 - Geschützte Server Components verifizieren Claims erneut.

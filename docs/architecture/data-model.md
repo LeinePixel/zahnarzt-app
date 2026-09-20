@@ -1,5 +1,7 @@
 # Data Model
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). Der [Anforderungsentwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) beschreibt geplante Ergänzungen; heutige Runtime-/RPC-/Datenverträge bleiben bis zur Implementierung unverändert. MFA/Re-Authentisierung und weitere Echtbetriebs-Gates sind weiterhin offen.
+
 ## Status
 **Die zwei Tabellen aus PROJ-1 und die eng begrenzten PROJ-19-Entitäten sind spezifiziert.** Alles Weitere ist eine Liste geplanter Entitäten ohne Feldstruktur und entsteht erst mit der jeweiligen bindenden Feature-Spezifikation.
 
@@ -13,7 +15,7 @@ Gelten für **jede** Tabelle, die künftig entsteht:
 
 1. **`practice_id` als Fremdschlüssel** auf jeder Tabelle mit Praxisbezug — Vorbereitung auf Multi-Tenant (PROJ-24)
 2. **Row Level Security aktiviert**, ausnahmslos, auch im Single-Tenant-Betrieb
-3. **RLS-Policies für SELECT, INSERT, UPDATE, DELETE** einzeln definiert (aus `.claude/rules/backend.md`)
+3. **Zugriffsentscheidung für SELECT, INSERT, UPDATE und DELETE explizit festlegen.** Erlaubte direkte Zugriffe erhalten minimale Grants und passende RLS-Policies. Verbotene Zugriffe bleiben durch entzogene Grants und fehlende erlaubende Policies gesperrt (deny by absence), belegt durch Negativtests. PROJ-19 verwendet für geschützte Operationen autorisierte RPCs ohne direkte Anwendungsgrants auf Audit-/Freigabetabellen.
 4. **Indizes** auf Spalten in WHERE-, ORDER-BY- und JOIN-Klauseln
 5. **Migrationen versioniert** und im Repository abgelegt
 6. Fremdschlüssel mit `ON DELETE CASCADE`, wo fachlich sinnvoll

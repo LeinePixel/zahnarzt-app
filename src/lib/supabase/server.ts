@@ -3,11 +3,14 @@ import { cookies } from 'next/headers'
 
 import { getPublicEnv } from '@/lib/env'
 
+import { getAuthCookieOptions } from './cookie-options'
+
 export async function createClient() {
   const cookieStore = await cookies()
   const env = getPublicEnv()
 
   return createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
+    cookieOptions: getAuthCookieOptions(),
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (cookiesToSet) => {

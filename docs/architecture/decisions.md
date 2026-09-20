@@ -1,5 +1,7 @@
 # Decision Log
 
+**Entscheidungsstand 07.09.2026:** Neue Sicherheitsparameter D01–D10 stehen als Vorschläge im [Security-Entwurf](../superpowers/specs/2026-09-07-security-remediation-design.md). Erst bestätigte Entscheidungen werden mit Begründung hier beziehungsweise in einer ADR festgehalten; bestehende Entscheidungen bleiben gültig.
+
 Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts erneut ausdiskutiert wird, was bereits entschieden ist. Zusammengeführt aus den Decision-Log-Abschnitten der Feature-Specs und den projektweiten Festlegungen aus `docs/PRD.md`.
 
 Die kanonische Auswahl langlebiger Architekturentscheidungen mit Status, Evidenz und Implikationen steht in `DECISIONS.md`. Dieses Dokument bleibt der vollständige historische Log.
@@ -82,6 +84,8 @@ Bestehende Entscheidungen werden historisch nachvollziehbar gepflegt: Sachfehler
 Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Siehe `docs/product/scope.md`.
 
 ### PROJ-19: Audit Logging & Rollenrechte
+
+Die ergänzenden Einzelentscheidungen stehen in [ADR-0001](../adr/0001-provider-support-audit-access-is-practice-approved.md) (praxisfreigegebener Anbieterzugriff), [ADR-0002](../adr/0002-denied-support-attempts-return-neutral-results.md) (neutrale Verweigerung ohne Audit-Rollback) und [ADR-0003](../adr/0003-support-grants-are-activated-by-opaque-id.md) (Aktivierung über undurchsichtige ID). Diese Einträge sind Teil der Entscheidungshistorie.
 
 | Entscheidung | Begründung | Datum |
 |---|---|---|

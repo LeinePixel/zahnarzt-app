@@ -1,5 +1,7 @@
 # Privacy, Security & AI Compliance Architecture
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). Der [Anforderungsentwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) beschreibt geplante Ergänzungen; heutige Runtime-/RPC-/Datenverträge bleiben bis zur Implementierung unverändert. MFA/Re-Authentisierung und weitere Echtbetriebs-Gates sind weiterhin offen.
+
 **Stand:** 27.08.2026
 **Geltung:** verbindliche Querschnittsanforderung für alle Features
 
@@ -29,7 +31,7 @@ Dieser Abschnitt beschreibt den belegten Ist-Zustand von PROJ-1 und PROJ-19. All
 - CI-Workflows, die Verifikation, Dependency- oder Secret-Prüfungen automatisch erzwingen.
 - Lösch- und Aufbewahrungsprozesse, Anbieterakten, DSFA, Incident Response sowie Backup-/Restore-Nachweise.
 - Vercel-Produktionsbetrieb, Monitoring und externe Penetrationstests.
-- Hosted-Cron-Commissioning für die Audit-Löschroutine sowie die Betriebsfreigabe von PROJ-19.
+- Scheduler-Monitoring, der Nachweis eines ausgeführten Audit-Löschlaufs sowie die Betriebsfreigabe von PROJ-19. Hosted-Migrationen, tägliches Scheduling und synthetische Cloud-Abnahme sind bereits zum 06.09.2026 dokumentiert (docs/delivery/acceptance-tests.md).
 
 Die nachverfolgte Schulden- und Risikoliste steht in `docs/delivery/known-issues.md`; offene Entscheidungen stehen in `docs/delivery/open-questions.md`.
 

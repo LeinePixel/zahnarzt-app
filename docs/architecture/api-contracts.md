@@ -1,14 +1,33 @@
 # API Contracts
 
-## Status: keine API-Verträge definiert
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md). Der [Anforderungsentwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) beschreibt geplante Ergänzungen; heutige Runtime-/RPC-/Datenverträge bleiben bis zur Implementierung unverändert. MFA/Re-Authentisierung und weitere Echtbetriebs-Gates sind weiterhin offen.
 
-**Es existiert keine einzige API-Route im Projekt** (`git ls-files src/app/api/` liefert nichts), und für keine ist ein Vertrag spezifiziert.
+## Status: Server Actions und PROJ-19-RPC-Verträge implementiert
+
+Es existieren keine eigenen Next.js-API-Routen unter `src/app/api/`. PROJ-1 verwendet Server Actions; PROJ-19 ergänzt Server Actions und zweckgebundene Supabase-RPCs.
 
 Das ist kein Versäumnis, sondern folgt aus zwei Entscheidungen:
 
 **1. PROJ-1 braucht bewusst keine API-Routen.** Anmelden und Abmelden laufen über Next.js Server Actions direkt gegen Supabase. Eine zusätzliche API-Schicht würde nur durchreichen und nichts beitragen. Siehe `decisions.md`.
 
-**2. Alle übrigen Features haben keine Spec.** Ihre Verträge entstehen mit der jeweiligen Spezifikation.
+**2. PROJ-19 besitzt eine verbindliche Spec und implementierte RPC-Verträge.** Die übrigen Roadmap-Features erhalten ihre Verträge mit der jeweiligen Spezifikation.
+
+## Implementierte PROJ-19-Schnittstellen
+
+Verbindliche Rollen, Laufzeiten und Auditregeln: [PROJ-19-Spec](../../features/PROJ-19-audit-logging-and-role-permissions.md). Die aktuellen SQL-Signaturen und Autorisierungsprüfungen stehen in der [Forward-Migration](../../supabase/migrations/20260902203000_proj_19_forward_security_hardening.sql); die serverseitige Validierung und Rückgabeprüfung in [support-access.ts](../../src/features/audit/support-access.ts) und [read-events.ts](../../src/features/audit/read-events.ts).
+
+| RPC | Eingabe | Rückgabe / verweigertes Ergebnis |
+|---|---|---|
+| `is_portal_admin` | keine | Boolean für die eigene Anbieteridentität |
+| `request_support_access` | `p_requested_duration_hours`: ganze Stunden, Standard 8, Bereich 1–24 | undurchsichtige Freigabe-UUID / `null` |
+| `activate_support_access` | `p_grant_id`: UUID; `p_reason`: `technical_investigation` oder `account_support` | Objekt mit `practice_id` und `expires_at` / `null` |
+| `revoke_support_access` | `p_grant_id`: UUID | `true` / `false` |
+| `read_audit_events` | `p_practice_id`: UUID; `p_before`: Zeitpunkt; `p_limit`: 1–100 | begrenzte Ereigniszeilen / keine Zeilen |
+| `record_denied_audit_read` | keine | `false`; protokolliert den verweigerten Leseversuch |
+
+Die Server-Schicht prüft Claims und Fähigkeiten, validiert Eingaben und behandelt neutrale Verweigerungen ohne Existenz- oder Berechtigungsdetails. PostgreSQL prüft Identität, Praxis, Freigabe und Ablauf erneut und schreibt das Audit in derselben Transaktion. Audit-Schreibfehler lassen die geschützte Operation fehlschlagen. Siehe [ADR-0002](../adr/0002-denied-support-attempts-return-neutral-results.md).
+
+Praxisadmins legen Freigaben über `/status` an und widerrufen sie dort. Portaladmins aktivieren eine erhaltene ID über `/portal/audit`; es gibt keine Praxis- oder Freigabesuche. Siehe [ADR-0003](../adr/0003-support-grants-are-activated-by-opaque-id.md).
 
 ---
 

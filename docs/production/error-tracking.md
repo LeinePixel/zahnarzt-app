@@ -1,43 +1,16 @@
-# Error Tracking Setup (Sentry)
+# Technisches Monitoring und Incident-Erkennung
 
-Track production errors automatically so you know about issues before your users report them.
+**Stand:** 07.09.2026. Sentry ist nicht angebunden. Betriebsabnahme offen; T09/T10 des [Security-Umsetzungsplans](../superpowers/plans/2026-09-07-security-remediation.md) sind der Umsetzungseinstieg.
 
-## Setup (5 minutes)
+## Anforderungen
 
-### 1. Create Sentry Account
-- Go to [sentry.io](https://sentry.io) (free tier available for small apps)
-- Create a new project and select "Next.js"
+- Schedulerfehler und fehlende/überfällige Läufe mit technischen Kennzahlen erkennen; Empfänger, Dienstbereitschaft und Eskalation festlegen und testen.
+- Keine Request-/Response-Bodies, Cookies, Tokens, Praxis-/Patientenidentitäten, medizinischen Inhalte, Query-Strings, Session-Replays oder Auth-Screenshots erfassen.
+- Fehlermeldungen auf kontrollierte Kategorien beschränken. CSP-Reports und SDK-Breadcrumbs ebenfalls auf Datenabfluss prüfen.
+- Historienfrist, Zugriff auf Alarme/Logs und administrative Änderungen dokumentieren. Monitoring ersetzt kein Audit und keinen Restore-/Incident-Test.
 
-### 2. Install Next.js Integration
-```bash
-npx @sentry/wizard@latest -i nextjs
-```
-This automatically:
-- Installs `@sentry/nextjs`
-- Creates `sentry.client.config.ts` and `sentry.server.config.ts`
-- Updates `next.config.ts` with Sentry webpack plugin
+## Anbieter und Konfiguration
 
-### 3. Add Environment Variables
-Add to `.env.local` (local) and Vercel Dashboard (production):
-```bash
-SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
-NEXT_PUBLIC_SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
-SENTRY_AUTH_TOKEN=sntrys_xxx  # For source maps upload
-```
+Die frühere allgemeine Sentry-Wizard-Anleitung ist keine Implementierungsfreigabe. Vor einer konkreten Integration Anbieter, Region, Verträge, Subprozessoren, Übertragungen, Retention und Kosten prüfen. Automatische Instrumentierung vor Aktivierung kontrollieren und mit synthetischen Testereignissen auf Leaks prüfen.
 
-### 4. Verify Setup
-Trigger a test error and check Sentry Dashboard:
-```typescript
-// Temporary test - remove after verification
-throw new Error("Sentry test error")
-```
-
-## What You Get
-- Automatic error capture (client + server)
-- Stack traces with source maps
-- Error grouping and deduplication
-- Email alerts for new errors
-- Performance monitoring (optional)
-
-## Alternative
-**Vercel Error Tracking** - Built-in, simpler, but fewer features. Available in Vercel Dashboard under "Monitoring".
+Build-/Uploadtokens bleiben in separater CLI-/CI-Secretverwaltung und gelangen nicht in .env.local, Browser oder normale App-Serverumgebungen. Source-Map-Zugriff begrenzen. Neue Variablen erst im gewählten Konfigurationskonzept dokumentieren; keinen Dienst allein für die Planerstellung installieren oder kontaktieren.

@@ -1,6 +1,8 @@
 # PROJ-19 Audit and Authorization Design
 
-**Status:** Freigegebener Entwurf, wartet auf die Prüfung der geschriebenen Spezifikation.
+**Fortschreibung 07.09.2026:** Dieser Entwurf beschreibt die ursprüngliche PROJ-19-Grenze. Die Implementierung und ihre Abnahme sind in der Feature-Spec dokumentiert. Zusätzliche, noch nicht implementierte Sicherheitsanforderungen stehen im [Security-Entwurf](2026-09-07-security-remediation-design.md) und werden über T01 des [Umsetzungsplans](../plans/2026-09-07-security-remediation.md) freigegeben.
+
+**Status:** Historischer Architekturentwurf; ursprüngliche Umsetzung vorhanden, Sicherheitsfortsetzung offen.
 **Feature-Spezifikation:** [`features/PROJ-19-audit-logging-and-role-permissions.md`](../../../features/PROJ-19-audit-logging-and-role-permissions.md)
 
 ## Architektur

@@ -1,5 +1,7 @@
 # PROJ-19: Audit Logging & Rollenrechte
 
+**Sicherheitsfortsetzung 07.09.2026:** Die historische Abnahme bleibt erhalten; zusätzliche Befunde sind offen. Der [Security-Umsetzungsplan](../docs/superpowers/plans/2026-09-07-security-remediation.md) ordnet Korrekturen, Spec-Erweiterungen und Negativtests zu. MFA/Sitzungssperre gehören nach PROJ-31; neue PROJ-19-Anforderungen werden in T01 spezifiziert. Diese Planung setzt keine Abnahmekriterien auf bestanden und öffnet kein Real-Data-Gate.
+
 ## Status: Implementiert — Hosted-Schema und synthetische Cloud-Abnahme verifiziert; Scheduler-Monitoring offen
 **Created:** 2026-08-26
 **Last Updated:** 2026-09-06

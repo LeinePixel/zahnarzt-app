@@ -16,6 +16,7 @@
 | ID | Feature | Priority | Status | Dependencies | Spec | Created |
 |----|---------|----------|--------|---------------|------|---------|
 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | P0 | In Review | None | [Spec](PROJ-1-supabase-infrastructure-setup.md) | 2026-08-24 |
+| PROJ-31 | Sitzungshärtung und MFA | P0 | Planned | PROJ-1, PROJ-19 | [Spec](PROJ-31-session-hardening.md) | 2026-09-07 |
 | PROJ-2 | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem) | P0 | Roadmap | None | - | 2026-08-24 |
 | PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | Roadmap | PROJ-1, PROJ-2 | - | 2026-08-24 |
 | PROJ-4 | Patienten-Synchronisierung | P0 | Roadmap | PROJ-3 | - | 2026-08-24 |
@@ -76,6 +77,10 @@ Hinzugefügt am 24.08.2026. Ziel: Bei eingehendem Anruf öffnet sich in der App 
 
 **UI-Hinweis:** Im gewählten UX-Aufbau „Seiten-Navigation" (UX 1) wird das Popup ein Overlay über der aktuellen Seite, damit die laufende Arbeit nicht verloren geht — vergleichbar mit dem Slide-over-Panel aus dem verworfenen UX-3-Entwurf.
 
+## Aktuelle Sicherheitsfortsetzung (07.09.2026)
+
+Der [Security-Umsetzungsplan](../docs/superpowers/plans/2026-09-07-security-remediation.md) ist der nächste Arbeitseinstieg: T00 Paketpatches, T01 Spec-/Entscheidungsgates, T02–T12 technische Härtung und Betriebs-/Datenschutzabnahme. SEC-01 bis SEC-09 bleiben offen. PROJ-31 besitzt nun eine vollständige Spec und ist `Planned`; nach der Architekturprüfung gilt die normale Statusfolge.
+
 ## Empfohlene Build-Reihenfolge (MVP, P0)
 
 1. **PROJ-1** Supabase Infrastructure Setup
@@ -101,7 +106,7 @@ Hinzugefügt am 24.08.2026. Ziel: Bei eingehendem Anruf öffnet sich in der App 
 
 Danach P1 (PROJ-20 bis PROJ-23, PROJ-29), dann P2 nach Bedarf.
 
-**Betriebliche Abnahme vor P31-Umsetzung:** PROJ-1 bleibt bis zu Safari-Smoke, Browser-Neustart und kontrolliertem Dienstausfall `In Review`. PROJ-19 bleibt bis zum Hosted-Cron-Commissioning mit Monitoring `In Review`. Diese Nachweise und PROJ-31 müssen vor echten oder re-identifizierbaren Daten abgeschlossen sein.
+**Betriebliche Abnahme vor P31-Umsetzung:** PROJ-1 bleibt bis zu Safari-Smoke, Browser-Neustart und kontrolliertem Dienstausfall `In Review`. PROJ-19 bleibt bis zur Abnahme seiner zugeordneten Sicherheitskorrekturen sowie Scheduler-Monitoring und Löschlaufnachweis `In Review`; Hosted-Migrationen, Scheduling und synthetische Cloud-Abnahme sind am 06.09.2026 dokumentiert. Diese Nachweise und PROJ-31 müssen vor echten oder re-identifizierbaren Daten abgeschlossen sein.
 
 ## Verbindliche Compliance-Gates (25.08.2026)
 

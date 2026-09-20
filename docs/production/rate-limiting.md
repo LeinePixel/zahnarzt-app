@@ -1,101 +1,20 @@
-# Rate Limiting
+# Missbrauchsbegrenzung für Auth, Support und Audit
 
-Prevent abuse, DDoS attacks, and excessive API usage.
+**Stand:** 07.09.2026. SEC-04 offen. Maßgeblich sind D05/D06 und T06 im [Security-Umsetzungsplan](../superpowers/plans/2026-09-07-security-remediation.md).
 
-## When to Add Rate Limiting
-- **MVP:** Für Login/Auth verbindlich; für rein interne, noch nicht vorhandene APIs risikobasiert
-- **Production with users:** Recommended on auth endpoints and public APIs
-- **Public-facing APIs:** Required
+## Aktueller Stand
 
-## Setup with Upstash Redis
+Supabase-Auth-Limits und neutrale 429-Behandlung im Login sind vorhanden. Sie begrenzen nicht automatisch die direkten Daten-RPCs. Supportanforderungen und Audit-Verweigerungen erzeugen aktuell je Aufruf neue Datensätze.
 
-### 1. Install Dependencies
-```bash
-npm install @upstash/ratelimit @upstash/redis
-```
+## Geplante Grenze
 
-### 2. Create Upstash Account
-- Go to [upstash.com](https://upstash.com) (free tier: 10k requests/day)
-- Create a Redis database
-- Copy REST URL and token
+- Mengen-/Parallelitätsgrenzen atomar an der tatsächlichen RPC-Autorisierungsgrenze prüfen. Ein rein lokaler Next.js-Zähler oder ein Proxy nur vor eigenen API-Routen deckt direkte Supabase-Aufrufe nicht ab.
+- Praxis und Akteur aus verifiziertem DB-Kontext ableiten; weder frei gelieferte practice_id noch ungeprüfte Forwarded-IP als Vertrauensanker verwenden.
+- D05 enthält vorgeschlagene Quoten; vor Umsetzung bestätigen. Idempotenz und Obergrenze offener Freigaben berücksichtigen.
+- Widerruf und Logout bleiben bei ausgeschöpfter Anforderungsquote verfügbar.
+- D06 legt auditierbare, mengenbegrenzte Drosselung fest. Erlaubte Operationen bleiben bei Auditfehlern gesperrt.
+- Parallelität, Fenstergrenze, Schwelle+1 und direkte RPCs auf einem isolierten synthetischen Stack testen; kein unkontrollierter Lasttest im Hosted-Ziel.
 
-### 3. Add Environment Variables
-```bash
-# .env.local
-UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=xxx
-```
+## Dienste und Secrets
 
-### 4. Create Rate Limiter
-```typescript
-// src/lib/rate-limit.ts
-import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
-
-export const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '10 s'), // 10 requests per 10 seconds
-})
-```
-
-### 5. Use in API Routes
-```typescript
-// src/app/api/example/route.ts
-import { ratelimit } from '@/lib/rate-limit'
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
-  const { success, limit, remaining } = await ratelimit.limit(ip)
-
-  if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': limit.toString(),
-          'X-RateLimit-Remaining': remaining.toString(),
-        },
-      }
-    )
-  }
-
-  // Process request normally...
-}
-```
-
-### 6. Use in Middleware (Global)
-```typescript
-// proxy.ts (Next.js 16)
-import { ratelimit } from '@/lib/rate-limit'
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function proxy(request: NextRequest) {
-  // Only rate limit API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
-    const { success } = await ratelimit.limit(ip)
-
-    if (!success) {
-      return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 })
-    }
-  }
-}
-
-export const config = {
-  matcher: '/api/:path*',
-}
-```
-
-## Recommended Limits
-
-| Endpoint Type | Limit | Window |
-|--------------|-------|--------|
-| Login/Register | 5 requests | 1 minute |
-| Password Reset | 3 requests | 5 minutes |
-| General API | 30 requests | 10 seconds |
-| File Upload | 5 requests | 1 minute |
-
-## Alternative
-**Vercel Edge Config** - Simpler but less flexible. Built into Vercel, no external service needed.
+Es ist kein Upstash-/Redis-Dienst beschlossen oder angebunden. Die frühere generische Installationsanleitung ist abgelöst. Eine neue Anbieterintegration benötigt begründete Architektur-/Datenschutzprüfung und gegebenenfalls Budgetfreigabe. .env.local bleibt auf die beiden öffentlichen Supabase-Appwerte begrenzt; geheime Betriebs-/CI-Werte werden getrennt verwaltet. Der bestehende Auth-Proxy und sein Matcher bleiben erhalten.

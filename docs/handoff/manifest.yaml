@@ -1,7 +1,19 @@
-generated: "2026-08-26"
+generated: "2026-09-07"
 scope: all
 
 artifacts:
+  - path: docs/superpowers/plans/2026-09-07-security-remediation.md
+    status: complete
+    gaps: "Planning complete; T00-T12 execution and SEC-01 through SEC-09 closure remain open."
+  - path: docs/superpowers/specs/2026-09-07-security-remediation-design.md
+    status: partial
+    gaps: "Cross-cutting draft; D01-D10 and full PROJ-31 feature specification remain to be approved before dependent implementation."
+  - path: docs/architecture/2026-09-06-security-audit.md
+    status: complete
+    gaps: "Audit evidence; nine findings remain open and are mapped to the remediation plan."
+  - path: docs/architecture/2026-09-06-security-primary-sources.md
+    status: complete
+    gaps: "Primary-source research snapshot, not a compliance or Real-Data approval."
   - path: HANDOFF.md
     status: complete
     gaps: "Short entry point; detail intentionally lives in referenced artifacts."
@@ -10,10 +22,25 @@ artifacts:
     gaps: ""
   - path: features/INDEX.md
     status: complete
-    gaps: "Only PROJ-1 currently has a binding feature spec; later features remain Roadmap."
+    gaps: "PROJ-1 and PROJ-19 have binding specs and are In Review; 29 features remain Roadmap."
   - path: features/PROJ-1-supabase-infrastructure-setup.md
     status: partial
-    gaps: "Automated QA complete; real Safari, full browser restart and controlled service outage remain manual."
+    gaps: "Historical automated QA recorded; real Safari, full browser restart and controlled service outage remain manual. New session, MFA and browser-security remediation remains open."
+  - path: features/PROJ-19-audit-logging-and-role-permissions.md
+    status: partial
+    gaps: "Implemented and In Review. Hosted migrations, daily scheduling and synthetic cloud acceptance recorded on 2026-09-06; security remediation, scheduler monitoring, an executed purge and production gates remain open."
+  - path: AGENTS.md
+    status: complete
+    gaps: "Operational map; includes auth, audit and authorization boundaries."
+  - path: ARCHITECTURE.md
+    status: complete
+    gaps: "Current runtime and planned product architecture are separated."
+  - path: SECURITY.md
+    status: partial
+    gaps: "Technical controls documented; Real-Data-Gate remains closed."
+  - path: DECISIONS.md
+    status: complete
+    gaps: "Selected durable decisions and links to PROJ-19 ADRs."
   - path: docs/architecture/overview.md
     status: complete
     gaps: ""
@@ -25,7 +52,7 @@ artifacts:
     gaps: "Binding engineering gates exist; legal bases, DSFA, contracts, retention and provider reviews require qualified approval before real data."
   - path: docs/architecture/data-model.md
     status: partial
-    gaps: "PROJ-1 identity model is implemented; later entities are provisional until their feature specs."
+    gaps: "PROJ-1 identity and PROJ-19 portal-admin, support-grant and audit entities are implemented; other entities remain provisional."
   - path: docs/architecture/api-contracts.md
     status: partial
     gaps: "Future PVS, communication and AI contracts are not binding until their feature specs and architecture reviews."
@@ -37,10 +64,10 @@ artifacts:
     gaps: "Login/status are implemented; later feature screens remain to be specified."
   - path: docs/delivery/implementation-plan.md
     status: complete
-    gaps: "PROJ-1 tasks complete; manual review gates remain listed."
+    gaps: "Historical PROJ-1 implementation plan; current combined acceptance is in docs/delivery/acceptance-tests.md and the feature specs."
   - path: docs/delivery/acceptance-tests.md
     status: partial
-    gaps: "58 Vitest, 36 pgTAP and 15 Playwright checks recorded; three manual PROJ-1 checks remain."
+    gaps: "Historical evidence: 90 Vitest, 108 pgTAP, upgrade checks 25/25 and 26/26, and 17/17 cloud browser checks. Documentation verification on 2026-09-07 passed lint, typecheck, 90 Vitest and build. SEC-01 through SEC-09 remediation, manual gates, scheduler monitoring and an executed purge remain open."
   - path: docs/delivery/known-issues.md
     status: complete
     gaps: ""

@@ -1,5 +1,7 @@
 # DentPilot Project Context
 
+**Security continuation:** For work on the open security findings, read `docs/superpowers/plans/2026-09-07-security-remediation.md` and its linked design first. Planned controls are not implemented controls; PROJ-31 still requires its full feature spec.
+
 DentPilot is a German-language workflow, CRM, and automation application for dental practices. Existing practice-management software remains the source of truth for patients, treatments, billing, and appointments. The current implementation contains the secure Next.js/Supabase foundation and PROJ-19 audit/role authorization; most product features remain roadmap items.
 
 Read `AGENTS.md` first for repository-wide operating rules. Use the root architecture, security, and decision documents as the canonical entry points; follow their links only when deeper context is needed.
@@ -20,6 +22,8 @@ src/app/                 App Router pages and layouts
 src/components/auth/     Login/logout presentation
 src/components/ui/       Existing shadcn/ui primitives; reuse these
 src/features/auth/       Authentication and current-user domain logic
+src/features/audit/      Support grants and audit RPC access
+src/features/authorization/ Local role and capability checks
 src/lib/supabase/        Environment-specific browser/server/proxy clients
 src/proxy.ts             Next.js 16 request protection entrypoint
 supabase/migrations/     Versioned PostgreSQL schema and RLS policies
@@ -33,6 +37,7 @@ docs/                    Product, architecture, security, design, and delivery c
 ## Architecture Boundaries
 
 - Pages and components call feature/domain functions; authentication logic belongs in `src/features/auth/` and audit authorization in `src/features/audit/`.
+- Local role/capability checks use `src/features/authorization/policy.ts`; PostgreSQL remains authoritative for practice ownership, support grants and expiry.
 - Browser, Server Component, and proxy code use their dedicated client from `src/lib/supabase/` because their cookie capabilities differ.
 - The proxy refreshes cookies and performs optimistic routing with verified `getClaims()` results. Protected Server Components verify claims again.
 - PostgreSQL privileges and RLS are the authorization boundary. Proxy redirects and hidden UI are not authorization.

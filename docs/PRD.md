@@ -1,5 +1,7 @@
 # Product Requirements Document
 
+**Sicherheitspriorität 07.09.2026:** Vor der Fortsetzung patientenbezogener Funktionen gilt der [Security-Umsetzungsplan](superpowers/plans/2026-09-07-security-remediation.md). PROJ-1/19 bleiben `In Review`, PROJ-31 bleibt bis zur vollständigen Spec `Roadmap`; technische, betriebliche und Datenschutzfreigaben bleiben getrennt.
+
 ## Vision
 Wir bauen kein neues Praxisverwaltungssystem (PVS), sondern eine **Automatisierungs- und Intelligence-Schicht**, die sich per API an bestehende Zahnarztsoftware (Ziel-System: Dampsoft) und ein Gesprächstranskriptions-Tool (Soniox) anschließt. Das Add-on führt vorhandene Praxisdaten intelligent zusammen, leitet daraus relevante Aktionen ab und automatisiert administrative Prozesse, die heute manuell liegen bleiben oder über mehrere Insellösungen verteilt sind — eine Mischung aus CRM, Workflow Automation, Practice Analytics und Communication Layer. Positionierung: "Die Automatisierungs- und Intelligence-Schicht für Ihre bestehende Praxissoftware", nicht "KI-Software für Zahnärzte". Die Praxis muss ihre bisherige Software nicht ersetzen.
 
@@ -14,7 +16,7 @@ Beide Gruppen arbeiten weiterhin primär in der bestehenden Praxissoftware für 
 
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 (MVP) | Supabase Infrastructure Setup (Auth, Login, DB-Schema, Rollen, Tenant-Grundlage) | Planned |
+| P0 (MVP) | Supabase Infrastructure Setup (Auth, Login, DB-Schema, Rollen, Tenant-Grundlage) | In Review |
 | P0 (MVP) | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem, Dampsoft-Datenform) | Roadmap |
 | P0 (MVP) | Integration-Adapter-Schicht (herstellerunabhängiges internes Datenmodell) | Roadmap |
 | P0 (MVP) | Patientenübersicht & Patientenprofil (360°-Ansicht) | Roadmap |
@@ -30,7 +32,7 @@ Beide Gruppen arbeiten weiterhin primär in der bestehenden Praxissoftware für 
 | P0 (MVP) | Automatischer Kostenvoranschlagsentwurf (Behandlungsvorlagen + Freigabeprozess) | Roadmap |
 | P0 (MVP) | Patientenkennzahlen (Termintreue, PZR-Frequenz, Umsatz, letzter/nächster Termin) | Roadmap |
 | P0 (MVP) | Dashboard (Aufgaben, Chancen, Risiko, Kommunikation) | Roadmap |
-| P0 (MVP) | Audit Logging & Rollenrechte | Roadmap |
+| P0 (MVP) | Audit Logging & Rollenrechte | In Review |
 | P1 | Analytics (Termin-KPIs, Recall-Quote, KV-Conversion, Patientenwert) | Roadmap |
 | P1 | Erweitertes Patientenrating (Termintreue, PZR-Compliance, CLV, Praxisbindung als transparente Einzelkennzahlen) | Roadmap |
 | P1 | Rohtranskript-Verarbeitung (eigene Zusammenfassung statt fertiger Soniox-Zusammenfassung) | Roadmap |

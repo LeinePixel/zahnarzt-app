@@ -133,6 +133,25 @@ describe('updateSession', () => {
     expect(response.headers.get('pragma')).toBe('no-cache')
     expect(response.headers.get('cache-control')).toBe('private, no-store')
   })
+
+  it('sets a nonce-based CSP and browser security headers on protected responses', async () => {
+    const request = new NextRequest('https://app.example/status')
+    const authenticated = authFactory({
+      data: { claims: { sub: 'synthetic-user-id' } },
+      error: null,
+    })
+
+    const response = await updateSession(request, authenticated)
+    const policy = response.headers.get('content-security-policy')
+
+    expect(policy).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/)
+    expect(policy).not.toContain("'unsafe-inline'")
+    expect(policy).toContain("frame-ancestors 'none'")
+    expect(policy).toContain("object-src 'none'")
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(response.headers.get('referrer-policy')).toBe('same-origin')
+    expect(response.headers.get('permissions-policy')).toContain('camera=()')
+  })
 })
 
 describe('proxy matcher', () => {

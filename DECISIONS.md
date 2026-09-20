@@ -1,6 +1,18 @@
 # Architekturentscheidungen
 
+**Entscheidungsstand 07.09.2026:** Neue Sicherheitsparameter D01–D10 stehen als Vorschläge im [Security-Entwurf](docs/superpowers/specs/2026-09-07-security-remediation-design.md). Erst bestätigte Entscheidungen werden mit Begründung hier beziehungsweise in einer ADR festgehalten; bestehende Entscheidungen bleiben gültig.
+
 Dieses Dokument enthält nur langlebige, schwer umkehrbare und ohne Kontext überraschende Entscheidungen. Der vollständige historische Decision Log steht in docs/architecture/decisions.md.
+
+## PROJ-19: eigenständige ADRs
+
+Bei Änderungen an Anbieterzugriff, Auditverweigerungen oder Supportaktivierung gelten ergänzend:
+
+- [ADR-0001: Praxisfreigegebener, zeitlich begrenzter Anbieterzugriff](docs/adr/0001-provider-support-audit-access-is-practice-approved.md).
+- [ADR-0002: Neutrale Verweigerung mit dauerhaftem Audit](docs/adr/0002-denied-support-attempts-return-neutral-results.md).
+- [ADR-0003: Aktivierung über undurchsichtige Freigabe-ID](docs/adr/0003-support-grants-are-activated-by-opaque-id.md).
+
+Die Kennungen ADR-0001 bis ADR-0003 gehören zum eigenständigen PROJ-19-Register; die nachfolgenden ADR-001 bis ADR-007 sind die projektweite Auswahl.
 
 ## ADR-001 – Praxissoftware bleibt Source of Truth
 

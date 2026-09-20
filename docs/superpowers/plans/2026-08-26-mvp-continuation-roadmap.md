@@ -31,44 +31,23 @@
 - [ ] Simulate Supabase unavailability in a controlled development environment and confirm the neutral service-unavailable UI.
 - [ ] Keep PROJ-1 `In Review` until these checks pass; move to `Approved` only with recorded evidence.
 
-## Phase 1: PROJ-19 Audit Logging & Role Permissions — Next Task
+## Phase 1: Sicherheitskorrekturen an PROJ-1/19
 
-**Why first:** Authentication exists, but stored roles currently do not authorize actions and security-relevant access is not audited. Adding features before this would spread authorization logic and create unverifiable access paths.
+**Stand 07.09.2026:** PROJ-19 ist implementiert und lokal/mit synthetischer Cloud-Abnahme dokumentiert; Rollenautorisierung und Audit müssen nicht neu gebaut werden. SEC-01 bis SEC-09 bleiben offen. Der [Security-Umsetzungsplan](2026-09-07-security-remediation.md) ersetzt die früheren Spezifikations-/Neuimplementierungsaufgaben dieser Phase.
 
-### Deliverable A: Specification and threat model
-
-- [ ] Read `docs/architecture/privacy-security-ai-compliance.md`, `docs/architecture/data-model.md`, PROJ-1 RLS/migration code and all role references.
-- [ ] Use `superpowers:brainstorming` to confirm the permission matrix for `rezeption`, `behandler` and `praxisadmin`; distinguish read, create, update, delete, export and administration.
-- [ ] Define audit events, lawful purpose, actor/tenant/resource metadata, prohibited payloads, retention, access rights and tamper-resistance expectations.
-- [ ] Write `features/PROJ-19-audit-logging-and-role-permissions.md` with Given/When/Then criteria, negative authorization cases, edge cases and explicit out-of-scope items.
-- [ ] Review the spec against DSGVO data minimization, accountability and access-control requirements; keep legal approval as a Real-Data-Gate item.
-- [ ] Commit the approved spec separately.
-
-### Deliverable B: Architecture and implementation plan
-
-- [ ] Define one centralized authorization interface consumed by server actions/components; database RLS remains the final authority.
-- [ ] Design append-only audit storage without request bodies, tokens, passwords, free text or health content.
-- [ ] Define actor, practice, action, resource type/ID, outcome, timestamp and correlation identifier types.
-- [ ] Design RLS/grants, audit-read permissions, retention/deletion mechanism and negative pgTAP coverage.
-- [ ] Write an ADR and a detailed TDD implementation plan under `docs/superpowers/plans/`.
-- [ ] Do not implement until the user approves spec and architecture.
-
-### Deliverable C: Test-driven implementation
-
-- [ ] Implement the approved permission matrix and audit boundary test-first.
-- [ ] Add unit tests for every allow/deny branch and payload redaction.
-- [ ] Add pgTAP tests for anonymous, cross-practice, wrong-role and forbidden mutation access.
-- [ ] Add Playwright tests for role-visible/hidden actions and safe audit administration where specified.
-- [ ] Run lint, all unit tests, typecheck, pgTAP, production E2E and build; request independent code review.
+- [ ] T00: Vier betroffene Entwicklungsabhängigkeiten gezielt aktualisieren und verifizieren.
+- [ ] T01/T02: Entscheidungs-/Spec-Gates und reproduzierbare Security-CI vorbereiten.
+- [ ] T05–T08: Cookie-/Browserschutz, begrenzte RPCs, eigene Freigabeliste sowie Aufbewahrung/Offboarding absichern.
+- [ ] T09–T12: Scheduler, Restore, Incident-/Datenschutzakten und finale Abnahme belegen.
 
 ## Phase 2: PROJ-31 Session Hardening
 
-**Why now:** Shared dental-practice workstations require idle locking, maximum session lifetime and deliberate re-authentication before patient-shaped data is introduced.
+PROJ-31 bleibt Roadmap, bis T01 die vollständige Feature-Spec liefert. Vorschlagswerte sind im [Entscheidungsentwurf](../specs/2026-09-07-security-remediation-design.md) ausdrücklich gekennzeichnet.
 
-- [ ] Specify inactivity timeout, absolute session lifetime, MFA policy, re-authentication triggers and shared-device behavior with the user/security owner.
-- [ ] Decide which controls live in Supabase Auth, Next.js and the client activity monitor; document clock/race/failure behavior.
-- [ ] Implement synthetic-account tests for idle lock, multi-tab synchronization, back navigation, refresh-token expiry and recovery.
-- [ ] Add the completed controls to the Real-Data-Gate evidence.
+- [ ] D01–D04 entscheiden: MFA/Recovery, Inaktivität, Maximalsitzung, Re-Auth, Sperrfrist und Datenbankmodell.
+- [ ] T03: Sitzungs-/AAL-Prüfung einschließlich direkter REST-/RPC-Wege implementieren.
+- [ ] T04: MFA, Arbeitsplatzsperre und Token-Replay-Negativtests umsetzen.
+- [ ] Alle Abnahmen nach dem Security-Plan dokumentieren; dessen Abhängigkeitsreihenfolge ist maßgeblich. Die Phasennummern bedeuten nicht, dass T03 auf sämtliche Betriebsakten warten muss.
 
 ## Phase 3: Synthetic PVS Foundation
 

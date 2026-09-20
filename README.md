@@ -1,5 +1,7 @@
 # DentPilot
 
+**Sicherheitsfortsetzung 07.09.2026:** Aktuelle Arbeitspakete und Abnahmekriterien stehen im [Security-Umsetzungsplan](docs/superpowers/plans/2026-09-07-security-remediation.md). Alle neun Auditbefunde bleiben bis zu ihrer belegten Korrektur offen; bestehende Architektur und historische Abnahmen bleiben erhalten.
+
 DentPilot ist eine deutschsprachige Workflow-, CRM- und Automatisierungsanwendung für Zahnarztpraxen. Die bestehende Praxissoftware bleibt führend für Patienten-, Behandlungs-, Abrechnungs- und Termindaten; DentPilot ergänzt praxisübergreifende Abläufe, Kommunikation, Auswertung und später KI-gestützte Vorbereitung.
 
 ## Aktueller Stand
@@ -14,7 +16,7 @@ PROJ-1 stellt die technische Grundlage bereit; PROJ-19 ergänzt sie um die lokal
 - PROJ-19-Audit-/Rollenautorisierung mit praxisinitiierter, zeitlich begrenzter Supportfreigabe
 - Unit-, RLS- und browserübergreifende Auth-/Security-Tests
 
-PROJ-1 und PROJ-19 sind `In Review`: lokale automatisierte Abnahme ist dokumentiert. Echter Safari-Smoke, vollständiger Browser-Neustart, kontrollierte Dienstunterbrechung, Hosted-Cron-Commissioning sowie MFA/Re-Authentisierung bleiben vor Produktions- und Real-Data-Freigabe offene Gates. Der verbindliche Status steht in [`features/INDEX.md`](features/INDEX.md).
+PROJ-1 und PROJ-19 sind `In Review`: lokale automatisierte Abnahme ist dokumentiert. Echter Safari-Smoke, vollständiger Browser-Neustart, kontrollierte Dienstunterbrechung, Scheduler-Monitoring und Nachweis eines ausgeführten Löschlaufs sowie MFA/Re-Authentisierung bleiben vor Produktions- und Real-Data-Freigabe offene Gates. Der verbindliche Status steht in [`features/INDEX.md`](features/INDEX.md).
 
 ## Technologie
 
@@ -83,6 +85,8 @@ npm run build
 src/app/                 Next.js App-Router-Seiten
 src/components/          Auth-Oberfläche und shadcn/ui-Bausteine
 src/features/auth/       Login-, Logout- und Kontokontext-Logik
+src/features/audit/      Supportfreigaben und Audit-RPC-Zugriff
+src/features/authorization/ Rollen- und Fähigkeitsprüfung
 src/lib/supabase/        Browser-, Server- und Proxy-Clients
 supabase/migrations/     versioniertes Schema und RLS-Policies
 supabase/tests/          pgTAP-Sicherheitstests
@@ -98,7 +102,7 @@ docs/                    Produkt-, Architektur-, Sicherheits- und Lieferdokument
 - Datenbankrechte und RLS bilden die Autorisierungsgrenze.
 - Der Service-Role-Key ist ausschließlich für das CLI-Seed-Skript vorgesehen.
 - Bis zur dokumentierten Freigabe des Real-Data-Gates sind nur synthetische Daten erlaubt.
-- PROJ-19-Rollenautorisierung und Audit-Logging sind lokal verifiziert und `In Review`; Hosted-Cron-Commissioning, MFA und Inaktivitätssperre bleiben vor der Produktions- und Real-Data-Freigabe offen.
+- PROJ-19-Rollenautorisierung und Audit-Logging sind lokal verifiziert und `In Review`; Scheduler-Monitoring und Nachweis eines ausgeführten Löschlaufs, MFA und Inaktivitätssperre bleiben vor der Produktions- und Real-Data-Freigabe offen.
 
 ## Projektdokumentation
 
