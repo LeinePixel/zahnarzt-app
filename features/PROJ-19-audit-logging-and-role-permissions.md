@@ -7,7 +7,7 @@ ordnet Korrekturen und Negativtests zu. Das Real-Data-Gate bleibt geschlossen.
 
 ## Status: In Review — lokale Abnahmeevidenz auf isoliertem Branch bestätigt; Hosted-Cron-Verifikation offen
 **Created:** 2026-08-26
-**Last Updated:** 2026-09-13
+**Last Updated:** 2026-09-20
 **Priority:** P0 (MVP)
 
 ## Zusammenfassung
@@ -60,6 +60,43 @@ Die Einsicht eines Portaladmins ist selbst ein Audit-Ereignis. Audit-Ereignisse 
 - Serveraktionen und geschützte Komponenten verwenden einen zentralen Autorisierungsmodul; UI-Ausblendung allein ist nie eine Berechtigung.
 - Jede neue Tabelle erhält RLS, explizite Least-Privilege-Grants und positive sowie negative Mandantentests.
 - Auditpflichtige Mutationen und Audit-Lesezugriffe verwenden zweckgebundene, atomare Datenbankoperationen. Schlägt das Audit-Schreiben fehl, darf die Mutation oder Audit-Anzeige nicht erfolgreich sein. Verweigerte Aufrufe liefern ein neutrales verweigertes Ergebnis ohne Ereignisinhalte, damit ihr `denied`-Audit-Ereignis dauerhaft gespeichert wird; sie geben keinen SQL-Fehler mit Existenz- oder Berechtigungsdetails nach außen.
+
+### Freigegebene Sicherheitsfortsetzung: Freigabeliste, Quoten und Aufbewahrung
+
+Dieser Abschnitt erweitert PROJ-19 gemäß den am 20.09.2026 freigegebenen
+Entscheidungen D05–D07 für T06–T08. Die bestehenden Rollen-, Mandanten- und
+Supportgrenzen bleiben unverändert.
+
+- Ein `praxisadmin` darf ausschließlich die eigenen Freigaben der aktuellen
+  Praxis mit Status, Erstellungs-, Aktivierungs-, Ablauf- und Widerrufszeit
+  auflisten. Die Antwort enthält weder Auditereignisse noch Portalidentitäten,
+  fremde Praxen oder eine globale Suche. `portaladmin` erhält keine Liste.
+- Die Liste ist nach Erstellungszeit stabil absteigend sortiert, begrenzt und
+  serverseitig paginiert. Reload und mehrere gleichzeitig bestehende
+  Freigaben müssen bedienbar bleiben; Widerruf verwendet weiterhin die
+  undurchsichtige Freigabe-ID und prüft die Praxis atomar.
+- Das Anfordern einer Freigabe akzeptiert einen zufälligen,
+  praxisgebundenen Idempotenzschlüssel. Derselbe Schlüssel liefert innerhalb
+  seiner Aufbewahrungsfrist dieselbe Freigabe; er erzeugt weder eine zweite
+  Freigabe noch wirkt er für eine andere Praxis oder einen anderen Akteur.
+- Quoten werden atomar in PostgreSQL innerhalb der autorisierenden RPC-Grenze
+  geprüft: höchstens fünf neue Anforderungen je Praxis in zehn Minuten,
+  höchstens drei gleichzeitig offene Freigaben und höchstens 60
+  Audit-Lese- oder Aktivierungsversuche je Akteur in einer Minute. Widerruf
+  und Logout bleiben auch bei ausgeschöpfter Quote verfügbar.
+- Eine Drosselung erzeugt höchstens ein kontrolliertes `denied`-Ereignis je
+  Akteur, Aktion und Zeitfenster sowie einen aggregierten Zähler. Sie darf
+  keinen unbegrenzten eigenen Auditstrom erzeugen. Auditfehler lassen eine
+  ansonsten erlaubte Operation weiterhin fehlschlagen.
+- Nicht mehr aktive Freigaben und ihre Idempotenzdaten werden 90 Tage nach
+  Ablauf oder Widerruf durch eine getrennte Wartungsroutine entfernt. Aktive
+  Freigaben werden nie bereinigt. Identitätsreferenzen werden vor einer
+  Kontolöschung kontrolliert anonymisiert oder auf eine nicht
+  re-identifizierende technische Referenz überführt; es gibt keine
+  `ON DELETE CASCADE`-Kette in Auditereignisse.
+- Die 90 Tage sind eine synthetische MVP-Vorgabe. Rechtsgrundlage,
+  Aufbewahrung je Datenkategorie, Backup-/Restore-Wiederholung und endgültige
+  Identitätsbehandlung bleiben vor dem Real-Data-Gate fachkundig freizugeben.
 
 ## Out of Scope
 

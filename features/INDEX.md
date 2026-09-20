@@ -16,7 +16,7 @@
 | ID | Feature | Priority | Status | Dependencies | Spec | Created |
 |----|---------|----------|--------|---------------|------|---------|
 | PROJ-1 | Supabase Infrastructure Setup (inkl. Login) | P0 | In Review | None | [Spec](PROJ-1-supabase-infrastructure-setup.md) | 2026-08-24 |
-| PROJ-31 | Sitzungshärtung und MFA | P0 | Planned | PROJ-1, PROJ-19 | [Spec](PROJ-31-session-hardening.md) | 2026-09-07 |
+| PROJ-31 | Sitzungshärtung und MFA | P0 | Architected | PROJ-1, PROJ-19 | [Spec](PROJ-31-session-hardening.md) | 2026-09-20 |
 | PROJ-2 | Mock-PVS-Service (simuliertes externes Praxisverwaltungssystem) | P0 | In Review | None | [Spec](PROJ-2-mock-pvs-service.md) | 2026-08-24 |
 | PROJ-3 | Integration-Adapter-Schicht (internes Datenmodell) | P0 | In Review | PROJ-1, PROJ-2 | [Spec](PROJ-3-integration-adapter-layer.md) | 2026-09-13 |
 | PROJ-4 | Patienten-Synchronisierung | P0 | In Review | PROJ-3 | [Spec](PROJ-4-patient-synchronization.md) | 2026-08-24 |

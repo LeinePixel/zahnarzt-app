@@ -1,6 +1,9 @@
 # Decision Log
 
-**Entscheidungsstand 07.09.2026:** Neue Sicherheitsparameter D01–D10 stehen als Vorschläge im [Security-Entwurf](../superpowers/specs/2026-09-07-security-remediation-design.md). Erst bestätigte Entscheidungen werden mit Begründung hier beziehungsweise in einer ADR festgehalten; bestehende Entscheidungen bleiben gültig.
+**Entscheidungsstand 20.09.2026:** D01–D07 und D10 sind mit Rolle, Datum und
+Begründung im [Security-Entwurf](../superpowers/specs/2026-09-07-security-remediation-design.md)
+freigegeben. D08/D09 bleiben als Betriebsentscheidungen offen; bestehende
+Entscheidungen bleiben gültig.
 
 Jede folgenreiche Entscheidung dieses Projekts mit Begründung — damit nichts erneut ausdiskutiert wird, was bereits entschieden ist. Zusammengeführt aus den Decision-Log-Abschnitten der Feature-Specs und den projektweiten Festlegungen aus `docs/PRD.md`.
 
@@ -95,6 +98,15 @@ Die ergänzenden Einzelentscheidungen stehen in [ADR-0001](../adr/0001-provider-
 | Audit-Export und Freitextsuche bleiben gesperrt | Auditdaten dürfen keinen neuen Datenabfluss oder unkontrollierte Inhaltsdaten erzeugen. | 2026-08-26 |
 | Audit-Ereignisse werden nach 90 Tagen automatisch gelöscht | Bestätigte MVP-Produktentscheidung; die Rechts- und Aufbewahrungsprüfung vor echten Daten bleibt offen. | 2026-08-26 |
 | Kein Break-Glass-Zugang im MVP | Es gibt keine klinisch kritischen Abläufe; ein Notfallzugang benötigt später eine eigene Risikoentscheidung. | 2026-08-26 |
+
+### Security-Fortsetzung PROJ-31/PROJ-19
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| D01–D04: verpflichtendes TOTP/AAL2, fünf Minuten Inaktivität, acht Stunden absolute Sitzung, fünf Minuten Re-Auth, kurze Tokenrestlaufzeit und private DB-Sitzungsgrenze | Praxisarbeitsplätze und direkte Datenzugriffe benötigen dieselbe fail-closed Autorisierungsgrenze; die vollständige Semantik steht in PROJ-31. | 2026-09-20 |
+| D05–D06: atomare PostgreSQL-Quoten und aggregiertes Drosselungs-Audit | Direkte RPC-Aufrufe dürfen Prozesslimits nicht umgehen; Drosselung darf keinen unbeschränkten Auditstrom erzeugen. | 2026-09-20 |
+| D07: inaktive Freigaben und Idempotenzdaten nach 90 Tagen bereinigen, Referenzen ohne Cascade kontrolliert entkoppeln | Minimiert synthetische MVP-Daten, ohne Auditketten oder aktive Freigaben unkontrolliert zu löschen; das Real-Data-Gate bleibt separat. | 2026-09-20 |
+| D10: Supabase-SSR-Cookies mit `Secure` unter HTTPS und noncebasierte CSP | Erhält den unterstützten SSR-Flow und härtet die Browsergrenze ohne pauschales Script-`unsafe-inline`. | 2026-09-20 |
 
 ### PROJ-4: Patienten-Synchronisierung
 

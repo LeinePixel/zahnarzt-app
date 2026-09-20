@@ -75,11 +75,17 @@ mit 40 Dateien/364 Tests, anschließend bestand der Next.js-Produktionsbuild.
 
 **Eingang:** D01–D10 im Entwurf. **Ausgang:** vollständige Feature-Specs mit entschiedenen Parametern und freigegebener Architektur für T03–T08.
 
-- [ ] D01–D10 einzeln mit Entscheidung, verantwortlicher Rolle, Datum und Begründung erfassen; nur abhängige Pakete auf die jeweilige Antwort warten lassen.
-- [ ] PROJ-31: User Stories, AAL-/Recovery-Regeln, Timeoutsemantik, Hintergrund-/Offline-/Mehrtabverhalten, bereits laufende Anfragen und Fehlzustände vollständig spezifizieren.
-- [ ] PROJ-19: eigene Freigabeliste, Quoten/Idempotenz, Auditaggregation und Referenz-/Aufbewahrungsmodell in einem ausdrücklich neuen Anforderungsabschnitt festlegen. Bestehende Rollen-/Supportgrenzen erhalten.
-- [ ] Vollständige PROJ-31-Spec auf `Planned`, erst nach Architekturfreigabe auf `Architected` setzen. PROJ-1/19 bleiben `In Review`; ein Plan schließt kein Finding.
-- [ ] Specs gegen den Audit und die zehn Entscheidungszeilen selbst prüfen; Schnittstellen der folgenden Pakete konkretisieren, bevor Schema-/Produktcode geschrieben wird.
+- [x] D01–D10 einzeln mit Entscheidung, verantwortlicher Rolle, Datum und Begründung erfassen; nur abhängige Pakete auf die jeweilige Antwort warten lassen.
+- [x] PROJ-31: User Stories, AAL-/Recovery-Regeln, Timeoutsemantik, Hintergrund-/Offline-/Mehrtabverhalten, bereits laufende Anfragen und Fehlzustände vollständig spezifizieren.
+- [x] PROJ-19: eigene Freigabeliste, Quoten/Idempotenz, Auditaggregation und Referenz-/Aufbewahrungsmodell in einem ausdrücklich neuen Anforderungsabschnitt festlegen. Bestehende Rollen-/Supportgrenzen erhalten.
+- [x] Vollständige PROJ-31-Spec auf `Planned`, erst nach Architekturfreigabe auf `Architected` setzen. PROJ-1/19 bleiben `In Review`; ein Plan schließt kein Finding.
+- [x] Specs gegen den Audit und die zehn Entscheidungszeilen selbst prüfen; Schnittstellen der folgenden Pakete konkretisieren, bevor Schema-/Produktcode geschrieben wird.
+
+**Evidenz 20.09.2026:** D01–D07 und D10 wurden freigegeben; D08/D09 sind
+mit Verantwortlichkeit und gezielter Blockadewirkung offen erfasst. PROJ-31 ist
+`Architected`; PROJ-19 bleibt `In Review`. Beide Specs enthalten die
+Schnittstellen und Negativgrenzen für T03–T08. Das Real-Data-Gate bleibt
+geschlossen.
 
 ## T02: Reproduzierbare Security-CI
 

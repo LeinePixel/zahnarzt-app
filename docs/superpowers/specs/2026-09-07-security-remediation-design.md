@@ -1,6 +1,8 @@
 # Sicherheitskorrekturen: Anforderungs- und Entscheidungsentwurf
 
-**Status:** Planungsentwurf vom 07.09.2026; keine Implementierung, keine Betriebs- oder Real-Data-Freigabe. Der Auftrag umfasst Planung und Dokumentationsabgleich. Neue Produktparameter werden erst mit der jeweiligen Feature-Spec freigegeben.
+**Status:** Architekturfreigabe vom 20.09.2026 für D01–D07 und D10; D08/D09
+bleiben als Betriebsentscheidungen offen. Keine Betriebs- oder
+Real-Data-Freigabe.
 
 **Grundlage:** [Audit SEC-01 bis SEC-09](../../architecture/2026-09-06-security-audit.md), [Primärquellen](../../architecture/2026-09-06-security-primary-sources.md), [PROJ-1](../../../features/PROJ-1-supabase-infrastructure-setup.md), [PROJ-19](../../../features/PROJ-19-audit-logging-and-role-permissions.md), [Real-Data-Gate](../../architecture/privacy-security-ai-compliance.md).
 
@@ -21,22 +23,24 @@ Nicht enthalten: Patienten-/PVS-/KI-Funktionen, allgemeine Benutzerverwaltung, E
 - Audit-Löschschwelle 90 Tage bleibt bestehende Produktentscheidung. Eine zulässige Ausführungsverzögerung wird zusätzlich abgenommen; keine Umdeutung in eine allgemeine Patientenaktenfrist.
 - Historische Migrationen und historische Testergebnisse bleiben erhalten. Korrekturen verwenden neue Forward-Migrationen und neue Nachweise.
 
-## Noch zu bestätigende Entscheidungen
+## Entscheidungen
 
-Alle folgenden Werte sind konkrete Planungsangebote, keine bereits freigegebenen oder implementierten Kontrollen. T01 im Umsetzungsplan dokumentiert die Entscheidung vor abhängiger Implementierung.
+Jede Zeile hält Status, verantwortliche Rolle, Entscheidungsdatum und Begründung
+fest. Eine offene Betriebsentscheidung blockiert nur das jeweils genannte
+Arbeitspaket.
 
-| ID | Vorschlag / zu prüfende Alternative | Entscheidung durch | Abhängige Aufgaben |
+| ID | Entscheidung | Status / verantwortlich / Datum | Begründung und Folge |
 |---|---|---|---|
-| D01 | MFA für alle Praxis- und Portalidentitäten; TOTP als Start, Wiederherstellung über getrennt verifizierten Administrationsprozess ohne dauerhaften Bypass | Produkt-/Security-Verantwortliche | T03–T04 |
-| D02 | Arbeitsplatzsperre nach 5 Minuten ohne menschliche Aktivität; absolute Sitzung 8 Stunden; sensible Supportaktionen nur mit Authentisierung innerhalb 5 Minuten | Praxisverantwortliche und Security | T03–T04 |
-| D03 | Widerruf/Kontosperre bei neu beginnenden Datenoperationen innerhalb höchstens 60 Sekunden wirksam; JWT-TTL als Vorschlag 5 Minuten; bereits laufende Operationen separat zeitlich begrenzen | Security/Betrieb | T03–T04 |
-| D04 | Session-State hinter privater DB-Grenze; prüfen, welche Supabase-Sitzungsfelder verlässlich verwendet werden können. Falls zusätzliche Aktivitätsdaten nötig: minimale private Tabelle mit begrenzter Aufbewahrung und atomarer Prüfung | Architektur/Security | T03 |
-| D05 | Keine neue externe Redis-/Monitoring-Abhängigkeit als Standard. RPC-Limits vorzugsweise atomar in PostgreSQL: vorgeschlagen 5 Anforderungen je Praxis/10 Minuten, höchstens 3 offene Freigaben, 60 Audit-Lese-/Aktivierungsversuche je Akteur/Minute | Produkt/Architektur | T06 |
-| D06 | Verweigerungs-Audit bei Drosselung: einzelnes kontrolliertes Ereignis je Akteur/Aktion/Zeitfenster plus Zähler; genaue Beweiskraft und Frist vor Schemaänderung bestätigen. Alternative: abgewiesene Last vor DB-RPC mit garantiertem direktem API-Schutz | Security/Datenschutz | T06 |
-| D07 | Nicht mehr aktive Freigaben nach vorgeschlagenen 90 Tagen seit Ende bereinigen; rechtlich erforderliche Ausnahmen und Identitätsreferenzen explizit entscheiden. Keine automatische Cascade-Löschung | Verantwortliche/Datenschutz | T08 |
-| D08 | Cron: täglich, Zeitzone live erfassen; Alarm nach 26 Stunden ohne Erfolg oder sofort nach Fehler, vorgeschlagene Reaktionszeit 4 Stunden. Regelbetrieb höchstens 24 Stunden Verzögerung nach Audit-Altersgrenze | Betrieb/Datenschutz | T09 |
-| D09 | Vorschlag RPO 24 Stunden, RTO 4 Stunden; Tarif, tatsächliche Backup-/PITR-Abdeckung, Alarmempfänger, Bereitschaft und Budget anhand Pilotanforderungen festlegen | Betrieb/Praxis | T10 |
-| D10 | SSR-Cookies beibehalten und unter HTTPS `Secure` setzen. HttpOnly-/reines Server-Sitzungsmodell nur nach separater Machbarkeitsentscheidung; noncebasierte CSP, keine pauschale `unsafe-inline`-Freigabe für Scripts | Architektur/Security | T05 |
+| D01 | MFA für alle Praxis- und Portalidentitäten; TOTP als Start, Wiederherstellung über getrennt verifizierten Administrationsprozess ohne dauerhaften Bypass | Freigegeben; Produkt/Security; 20.09.2026 | Einheitliche AAL2-Grenze ohne dauerhafte Ausnahme; T03–T04 dürfen beginnen. |
+| D02 | Arbeitsplatzsperre nach 5 Minuten ohne menschliche Aktivität; absolute Sitzung 8 Stunden; sensible Supportaktionen nur mit höchstens 5 Minuten alter Authentisierung | Freigegeben; Praxis/Security; 20.09.2026 | Begrenzt unbeaufsichtigte Rezeptions- und Supportzugriffe; Semantik steht in PROJ-31. |
+| D03 | Neue Datenoperationen reagieren binnen höchstens 60 Sekunden auf Widerruf/Kontosperre; JWT-TTL 5 Minuten; atomar autorisierte Operationen dürfen enden | Freigegeben; Security/Betrieb; 20.09.2026 | Kurze Tokenrestlaufzeit plus aktueller DB-Entscheid; T03 verifiziert die Hosted-Fähigkeiten. |
+| D04 | Sitzungszustand liegt hinter einer privaten DB-Grenze; eine zusätzliche minimale Tabelle ist nur zulässig, soweit verlässliche Supabase-Felder nicht genügen | Freigegeben; Architektur/Security; 20.09.2026 | Verhindert Vertrauen in Browserzustand und unnötige Auth-Systemeingriffe. |
+| D05 | Keine neue Redis-/Monitoring-Abhängigkeit; atomare PostgreSQL-Limits: 5 Anforderungen je Praxis/10 Minuten, höchstens 3 offene Freigaben, 60 Audit-Lese-/Aktivierungsversuche je Akteur/Minute | Freigegeben; Produkt/Architektur; 20.09.2026 | Direkte RPC-Aufrufe teilen dieselbe Grenze; T06 darf beginnen. |
+| D06 | Drosselung schreibt höchstens ein kontrolliertes Ereignis je Akteur/Aktion/Zeitfenster plus aggregierten Zähler | Freigegeben; Security/Datenschutz; 20.09.2026 | Erhält Nachweisbarkeit ohne selbst erzeugte Auditlast; Aufbewahrung folgt der Auditfrist. |
+| D07 | Inaktive Freigaben und Idempotenzdaten 90 Tage nach Ende bereinigen; keine automatische Cascade-Löschung; Identitätsreferenzen kontrolliert entkoppeln | Freigegeben für synthetisches MVP; Produkt/Datenschutz-Gate; 20.09.2026 | T08 darf technisch umgesetzt werden; Rechts- und Restore-Freigabe bleibt vor echten Daten zwingend. |
+| D08 | Täglicher Cron; Alarm nach 26 Stunden ohne Erfolg oder sofort bei Fehler; vorgeschlagene Reaktionszeit 4 Stunden | Offen; Betrieb/Datenschutz; kein Datum | Benötigt Zielzeitzone, Alarmempfänger und Bereitschaft. Blockiert T09, nicht T03–T08. |
+| D09 | Vorgeschlagenes RPO 24 Stunden und RTO 4 Stunden | Offen; Betrieb/Praxis; kein Datum | Benötigt Tarif-, PITR-, Budget- und Verantwortlichkeitsentscheidung. Blockiert T10. |
+| D10 | SSR-Cookies bleiben; unter HTTPS `Secure`; noncebasierte CSP ohne pauschales Script-`unsafe-inline`; HttpOnly nur nach separater Machbarkeitsprüfung | Freigegeben; Architektur/Security; 20.09.2026 | Bewahrt das Supabase-SSR-Modell und gibt T05 zur Umsetzung frei. |
 
 ## Verbindliche Anforderungen an die Korrekturen
 

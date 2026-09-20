@@ -1,6 +1,9 @@
 # Open Questions
 
-**Aktuelle Entscheidungsarbeit:** D01–D10 im [Security-Entwurf](../superpowers/specs/2026-09-07-security-remediation-design.md) bündeln konkrete Vorschläge, Zuständigkeiten und abhängige Aufgaben. Antworten dort mit Datum dokumentieren und widersprechende Punkte hier synchronisieren. Die alten offenen Fragen sind dadurch nicht automatisch entschieden.
+**Aktueller Entscheidungsstand:** D01–D07 und D10 sind im
+[Security-Entwurf](../superpowers/specs/2026-09-07-security-remediation-design.md)
+mit Rolle, Datum und Begründung freigegeben. D08/D09 bleiben offen und
+blockieren ausschließlich T09 beziehungsweise T10.
 
 Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. **Nichts hiervon wurde geraten** — was hier steht, ist tatsächlich unentschieden.
 
@@ -13,7 +16,9 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 
 ## Produktentscheidungen offen
 
-- [ ] **Ab wann und nach welcher Zeitspanne greift die Sitzungssperre?** (PROJ-31) Muss vor dem Pilotbetrieb mit echten Patientendaten entschieden sein.
+- [x] **Sitzungssperre (PROJ-31):** fünf Minuten ohne menschliche Aktivität,
+  acht Stunden absolute Sitzung und höchstens fünf Minuten alte
+  Authentisierung für sensible Supportaktionen (D02, 20.09.2026).
 - [ ] **Passwortregeln** über den Supabase-Standard hinaus? Bei synthetischen Daten unkritisch, vor Pilotbetrieb zu klären.
 - [ ] **Kann eine Person mehreren Praxen angehören?** Bestimmt, ob die Praxiszugehörigkeit am Profil hängt oder eine Zuordnungstabelle braucht (PROJ-24).
 - [ ] **Umgang mit mehrdeutigen Rufnummern-Treffern** (PROJ-29): gemeinsame Familien-Festnetznummer, mehrere Patienten pro Nummer, unbekannte oder unterdrückte Nummer.
@@ -27,7 +32,15 @@ Unerledigte Punkte, die vor der betroffenen Arbeit beantwortet werden müssen. *
 - [ ] Welche Aufbewahrungs- und Löschfristen gelten je Datenkategorie und gesetzlicher Dokumentationspflicht?
 - [ ] Welche Regionen, Subprozessoren und Drittlandzugriffe haben Supabase, Vercel, Soniox, IONOS, Resend und Fehlertracking?
 - [ ] Wer führt und genehmigt die Datenschutz-Folgenabschätzung und das Real-Data-Gate?
-- [ ] Welche MFA-, Inaktivitäts-, Maximalsitzungs- und Re-Authentisierungswerte gelten für Praxisarbeitsplätze?
+- [x] MFA-, Inaktivitäts-, Maximalsitzungs- und Re-Authentisierungswerte sind
+  mit D01–D04 am 20.09.2026 entschieden; die technische und betriebliche
+  Abnahme bleibt Bestandteil von PROJ-31.
+- [ ] **D08:** Welche Zielzeitzone, Alarmempfänger und Bereitschaft gelten für
+  die tägliche Löschautomation, und wird die vorgeschlagene Reaktionszeit von
+  vier Stunden betrieblich getragen? Blockiert T09.
+- [ ] **D09:** Welcher Supabase-Tarif und welche tatsächliche Backup-/PITR-
+  Abdeckung finanzieren RPO 24 Stunden und RTO 4 Stunden; wer verantwortet
+  Wiederherstellung und Abnahme? Blockiert T10.
 - [ ] Welche KI-Funktionen fallen unter welche AI-Act-Klasse, und kann PROJ-15/16 aufgrund des beabsichtigten Zwecks Medizinprodukterecht berühren?
 - [ ] Welche Inhalte dürfen externe KI-Anbieter verarbeiten, wie werden sie pseudonymisiert, und ist Training/Retention vertraglich ausgeschlossen?
 
