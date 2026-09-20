@@ -23,6 +23,13 @@ export class MfaError extends Error {
   override name = 'MfaError'
 }
 
+export async function getVerifiedTotpFactorId(client: Pick<PrepareClient, 'listFactors'>) {
+  const listed = await client.listFactors()
+  const factor = listed.data?.totp.find(candidate => candidate.status === 'verified')
+  if (listed.error || !factor) throw new MfaError('MFA konnte nicht vorbereitet werden.')
+  return factor.id
+}
+
 export async function prepareTotp(client: PrepareClient) {
   const listed = await client.listFactors()
   if (listed.error || !listed.data) throw new MfaError('MFA konnte nicht vorbereitet werden.')

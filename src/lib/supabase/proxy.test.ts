@@ -85,6 +85,14 @@ describe('updateSession', () => {
     expect(response.headers.get('location')).toBe('https://app.example/auth/mfa')
   })
 
+  it('protects the reauthentication route and sends AAL1 to MFA', async () => {
+    const anonymousResponse = await updateSession(new NextRequest('https://app.example/auth/reauth'), anonymous)
+    expect(anonymousResponse.headers.get('location')).toBe('https://app.example/login')
+    const aal1 = authFactory({ data: { claims: { sub: 'synthetic-user-id', aal: 'aal1' } }, error: null })
+    const aal1Response = await updateSession(new NextRequest('https://app.example/auth/reauth'), aal1)
+    expect(aal1Response.headers.get('location')).toBe('https://app.example/auth/mfa')
+  })
+
   it('treats failed claim verification as anonymous', async () => {
     const request = new NextRequest('https://app.example/status')
     const invalidClaims = authFactory({

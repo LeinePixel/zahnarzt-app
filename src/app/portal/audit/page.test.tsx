@@ -2,7 +2,12 @@ import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getCurrentUserContext } from '@/features/auth/current-user'
+import { hasCurrentRecentTotpAuthentication } from '@/features/auth/reauth-server'
 import { readAuditEvents } from '@/features/audit/read-events'
+
+vi.mock('@/features/auth/reauth-server', () => ({
+  hasCurrentRecentTotpAuthentication: vi.fn(async () => true),
+}))
 
 import PortalAuditPage from './page'
 
@@ -33,6 +38,8 @@ describe('PortalAuditPage', () => {
   beforeEach(() => {
     vi.mocked(getCurrentUserContext).mockReset()
     vi.mocked(readAuditEvents).mockReset()
+    vi.mocked(hasCurrentRecentTotpAuthentication).mockReset()
+    vi.mocked(hasCurrentRecentTotpAuthentication).mockResolvedValue(true)
     rpc.mockReset()
   })
 
@@ -161,5 +168,18 @@ describe('PortalAuditPage', () => {
     ).toBeEnabled()
     expect(readAuditEvents).not.toHaveBeenCalled()
     expect(screen.queryByRole('textbox', { name: /suche/i })).not.toBeInTheDocument()
+  })
+
+  it('requires a recent TOTP confirmation before portal support actions', async () => {
+    vi.mocked(getCurrentUserContext).mockResolvedValue({
+      status: 'portal_admin',
+      userId: '11000000-0000-0000-0000-000000000003',
+    })
+    vi.mocked(hasCurrentRecentTotpAuthentication).mockResolvedValue(false)
+
+    await expect(PortalAuditPage({
+      searchParams: Promise.resolve({ practiceId: '21000000-0000-0000-0000-000000000001' }),
+    })).rejects.toThrow('NEXT_REDIRECT')
+    expect(readAuditEvents).not.toHaveBeenCalled()
   })
 })

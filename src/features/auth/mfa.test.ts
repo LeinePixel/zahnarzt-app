@@ -1,6 +1,20 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { prepareTotp, verifyTotp } from './mfa'
+import { getVerifiedTotpFactorId, prepareTotp, verifyTotp } from './mfa'
+
+describe('getVerifiedTotpFactorId', () => {
+  it('returns only an already verified factor', async () => {
+    await expect(getVerifiedTotpFactorId({
+      listFactors: async () => ({ data: { totp: [{ id: 'verified', status: 'verified' }] }, error: null }),
+    })).resolves.toBe('verified')
+  })
+
+  it('fails neutrally instead of enrolling a reauthentication factor', async () => {
+    await expect(getVerifiedTotpFactorId({
+      listFactors: async () => ({ data: { totp: [] }, error: null }),
+    })).rejects.toThrow('MFA konnte nicht vorbereitet werden.')
+  })
+})
 
 describe('prepareTotp', () => {
   it('uses an existing verified TOTP factor without exposing a secret', async () => {

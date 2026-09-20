@@ -21,7 +21,22 @@ begin
     set last_human_activity_at = excluded.last_human_activity_at,
         revoked_at = null,
         updated_at = now();
-  perform set_config('request.jwt.claim', jsonb_build_object('sub', v_user_id, 'role', 'authenticated', 'aal', 'aal2', 'session_id', v_user_id)::text, true);
+  perform set_config(
+    'request.jwt.claim',
+    jsonb_build_object(
+      'sub', v_user_id,
+      'role', 'authenticated',
+      'aal', 'aal2',
+      'session_id', v_user_id,
+      'amr', jsonb_build_array(
+        jsonb_build_object(
+          'method', 'totp',
+          'timestamp', extract(epoch from now())::bigint
+        )
+      )
+    )::text,
+    true
+  );
 end;
 $$;
 

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { getCurrentUserContext } from '@/features/auth/current-user'
+import { hasCurrentRecentTotpAuthentication } from '@/features/auth/reauth-server'
 import { SessionLock } from '@/components/auth/session-lock'
 import {
   readAuditEvents,
@@ -166,6 +168,13 @@ export default async function PortalAuditPage({
         </Card>
       </main>
     )
+  }
+
+  if (!await hasCurrentRecentTotpAuthentication()) {
+    const target = practiceId
+      ? `/portal/audit?practiceId=${encodeURIComponent(practiceId)}`
+      : '/portal/audit'
+    redirect(`/auth/reauth?next=${encodeURIComponent(target)}`)
   }
 
   if (!practiceId) {

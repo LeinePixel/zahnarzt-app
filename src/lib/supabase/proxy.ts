@@ -127,11 +127,16 @@ export async function updateSession(
     data.claims.sub.length > 0
   const pathname = request.nextUrl.pathname
   const isMfaRoute = pathname.startsWith('/auth/mfa')
+  const isReauthenticationRoute = pathname.startsWith('/auth/reauth')
+  const isProtectedRoute = pathname.startsWith('/status')
+    || pathname.startsWith('/portal')
+    || isMfaRoute
+    || isReauthenticationRoute
   let response: NextResponse
 
   if (
     !isAuthenticated &&
-    (pathname.startsWith('/status') || pathname.startsWith('/portal') || isMfaRoute)
+    isProtectedRoute
   ) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
