@@ -194,7 +194,8 @@ begin
       select * into v_existing from public.appointment
       where integration_id = p_integration_id and source_id = v_source_id;
       select p.id into v_patient_id from public.patient p
-      where p.integration_id = p_integration_id and p.practice_id = p_practice_id and p.source_id = v_patient_source_id;
+      where p.integration_id = p_integration_id and p.practice_id = p_practice_id and p.source_id = v_patient_source_id
+      for key share;
       if found and v_existing.patient_id = v_patient_id and (v_existing.source_version, v_existing.starts_at, v_existing.ends_at, v_existing.status::text, v_existing.practitioner_source_id, v_existing.source_created_at, v_existing.source_updated_at)
         is not distinct from (v_version, (v_appointment->>'startsAt')::timestamptz, (v_appointment->>'endsAt')::timestamptz, v_appointment->>'status', v_appointment->>'practitionerSourceId', (v_appointment->>'sourceCreatedAt')::timestamptz, (v_appointment->>'sourceUpdatedAt')::timestamptz)
       then return; end if;
@@ -206,7 +207,8 @@ begin
     delete from public.appointment where integration_id = p_integration_id and source_id = v_source_id;
   else
     select p.id into v_patient_id from public.patient p
-    where p.integration_id = p_integration_id and p.practice_id = p_practice_id and p.source_id = v_patient_source_id;
+    where p.integration_id = p_integration_id and p.practice_id = p_practice_id and p.source_id = v_patient_source_id
+    for key share;
     if v_patient_id is null then
       raise exception 'Invalid appointment sync input' using errcode = 'P4001';
     end if;
@@ -221,7 +223,7 @@ begin
   values(p_integration_id, p_practice_id, v_source_id, v_version, v_operation = 'delete', clock_timestamp())
   on conflict(integration_id, source_id) do update set source_version = excluded.source_version,
     is_deleted = excluded.is_deleted, updated_at = excluded.updated_at;
-exception when sqlstate '22007' or sqlstate '22P02' or sqlstate '22003' then
+exception when sqlstate '22007' or sqlstate '22P02' or sqlstate '22003' or foreign_key_violation then
   raise exception 'Invalid appointment sync input' using errcode = 'P4001';
 end;
 $$;

@@ -46,6 +46,7 @@ describe('appointment sync runtime configuration', () => {
     'SUPABASE_SERVICE_ROLE_KEY',
     'SEED_PRAXISADMIN_PASSWORD',
     'APPOINTMENT_SYNC_ADMIN_DATABASE_URL',
+    'PATIENT_SYNC_ADMIN_DATABASE_URL',
     'MOCK_PVS_TEST_TOKEN',
   ])('rejects a nonempty privileged variable without exposing it: %s', variable => {
     expectInvalid({ ...validEnvironment, [variable]: 'must-not-appear' })

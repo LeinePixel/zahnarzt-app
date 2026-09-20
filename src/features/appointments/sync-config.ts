@@ -11,6 +11,7 @@ export class AppointmentSyncConfigError extends Error {
 const forbiddenRuntimeVariables = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'APPOINTMENT_SYNC_ADMIN_DATABASE_URL',
+  'PATIENT_SYNC_ADMIN_DATABASE_URL',
   'MOCK_PVS_TEST_TOKEN',
 ]
 
