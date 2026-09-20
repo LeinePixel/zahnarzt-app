@@ -158,6 +158,11 @@ einschließlich des verpflichtenden Microsoft-Edge-Laufs. Offen bleiben die
 expliziten Token-Replay-, Offline-/Systemuhr- und Browser-Neustart-Nachweise sowie
 der abschließende vollständige `verify:full`-Lauf.
 
+Der positive Browser-Neustartfall wurde anschließend separat in Chromium
+bestätigt: Eine noch gültige HttpOnly-Cookie-Sitzung wird wiederaufgenommen. Der
+negative Neustartfall nach Inaktivitäts-/Maximalablauf bleibt bis zur kombinierten
+Browser-/Serverzeit-Probe offen.
+
 ## T05: Browser-, Cookie- und HTTPS-Härtung
 
 **Files:** Modify `src/lib/supabase/client.ts`, `server.ts`, `proxy.ts`, `src/proxy.ts`, `next.config.ts`, zugehörige Tests, `tests/auth-security.spec.ts`, `docs/production/security-headers.md`.

@@ -104,6 +104,21 @@ test('entzieht einem zweiten Tab nach Logout beim nächsten Request den Zugriff'
   await expect(secondTab.getByText('DentPilot Testpraxis', { exact: true })).toHaveCount(0)
 })
 
+test('nimmt eine gültige Cookie-Sitzung nach einem Browserneustart wieder auf', async ({ browser, page }) => {
+  await login(page)
+  const storageState = await page.context().storageState()
+  const restartedContext = await browser.newContext({ storageState })
+  const restartedPage = await restartedContext.newPage()
+
+  try {
+    await restartedPage.goto('/status')
+    await expect(restartedPage.getByText('DentPilot Testpraxis', { exact: true })).toBeVisible()
+    await expect(restartedPage).toHaveURL(/\/status$/)
+  } finally {
+    await restartedContext.close()
+  }
+})
+
 test('zeigt für ein synthetisches Auth-Konto ohne Profil einen sicheren Einrichtungszustand', async ({ page }) => {
   const email = `e2e-incomplete-${randomUUID()}@dentpilot.example`
   const password = `E2e!${randomUUID()}Aa1`
