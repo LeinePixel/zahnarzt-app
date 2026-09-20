@@ -33,6 +33,9 @@ Die vollständigen Datenschutz-, Real-Data- und KI-Gates stehen in docs/architec
 - Deaktivierte persistente Auth-Testmedien.
 - PROJ-19-Auditgrenze mit RLS, Least-Privilege-RPCs, 90-Tage-Löschroutine und kontrollierten Metadaten ohne medizinische Inhalte oder Freitext.
 - Getrennte `portaladmin`-Identitäten; Audit-Einsicht nur über aktive, praxisgebundene und zeitlich begrenzte Supportfreigaben.
+- Private datenbankseitige PROJ-31-Sitzungsgrenze für AAL2, aktuelle
+  Auth-Sitzung, Kontosperre, Widerruf sowie Inaktivitäts- und Maximaldauer;
+  direkte RLS- und browserseitige RPC-Zugriffe verwenden denselben Entscheid.
 
 ## Authentifizierung und Autorisierung
 
@@ -75,7 +78,10 @@ Aktiv angebunden ist Supabase. Für Vercel, Soniox, IONOS AI Model Hub, Resend, 
 
 ## Bekannte Risiken und Lücken
 
-- Keine MFA, Inaktivitätssperre, Maximalsitzung oder Re-Authentisierung.
+- Die Datenbank erzwingt AAL2, Kontosperre, Sitzungsbestand,
+  Inaktivitäts- und Maximaldauer lokal. MFA-Einrichtung,
+  Re-Authentisierungsoberfläche, Aktivitätssignal und Browser-Sperrablauf
+  fehlen bis T04; deshalb ist die Browserabnahme noch offen.
 - Hosted-HTTPS-/HSTS-Nachweis und eine CSP-Report-Only-Phase stehen noch aus.
 - Kein Secret-Scanning-Workflow und keine aktivierte Branch-Protection.
 - Keine abgenommenen Lösch-, Aufbewahrungs-, Incident- oder Backup-/Restore-Prozesse.

@@ -2,6 +2,21 @@ begin;
 
 select plan(16);
 
+create function pg_temp.authenticate_aal2()
+returns void
+language plpgsql
+as $$
+declare
+  v_user_id uuid := current_setting('request.jwt.claim.sub')::uuid;
+begin
+  insert into auth.sessions (id, user_id, created_at, updated_at, aal, not_after)
+  values (v_user_id, v_user_id, now() - interval '1 minute', now(), 'aal2', now() + interval '7 hours 59 minutes');
+  insert into private.session_security_state (session_id, user_id, started_at, last_human_activity_at)
+  values (v_user_id, v_user_id, now() - interval '1 minute', now());
+  perform set_config('request.jwt.claim', jsonb_build_object('sub', v_user_id, 'role', 'authenticated', 'aal', 'aal2', 'session_id', v_user_id)::text, true);
+end;
+$$;
+
 select has_table('public', 'practice', 'practice table exists');
 select col_is_pk('public', 'practice', 'id', 'practice.id is the primary key');
 select col_not_null('public', 'practice', 'name', 'practice.name is required');
@@ -83,6 +98,7 @@ select throws_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(

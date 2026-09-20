@@ -1,6 +1,6 @@
 # PROJ-31 – Sitzungshärtung und MFA
 
-**Status:** Architected
+**Status:** In Progress
 **Priorität:** P0  
 **Abhängigkeiten:** PROJ-1, PROJ-19  
 **Stand:** 20.09.2026

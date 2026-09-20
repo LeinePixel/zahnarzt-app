@@ -1,5 +1,13 @@
 begin;
 select plan(26);
+create function pg_temp.authenticate_aal2(p_user_id uuid)
+returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claim.sub', p_user_id::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  perform set_config('request.jwt.claim', jsonb_build_object('sub', p_user_id, 'role', 'authenticated', 'aal', 'aal2', 'session_id', p_user_id)::text, true);
+end;
+$$;
 select has_table('public', 'integration', 'integration exists');
 select has_table('public', 'integration_sync_state', 'state exists');
 select has_table('public', 'integration_sync_event', 'event exists');
@@ -19,6 +27,22 @@ insert into public.user_profile(user_id,practice_id,display_name,role) values
 ('13000000-0000-0000-0000-000000000002','23000000-0000-0000-0000-000000000001','Synthetic reception','rezeption'),
 ('13000000-0000-0000-0000-000000000004','23000000-0000-0000-0000-000000000002','Synthetic foreign','praxisadmin');
 insert into public.portal_admin(user_id) values ('13000000-0000-0000-0000-000000000003');
+insert into auth.sessions(id,user_id,created_at,updated_at,aal,not_after)
+select id,id,now()-interval '1 minute',now(),'aal2',now()+interval '7 hours 59 minutes'
+from auth.users where id in (
+  '13000000-0000-0000-0000-000000000001',
+  '13000000-0000-0000-0000-000000000002',
+  '13000000-0000-0000-0000-000000000003',
+  '13000000-0000-0000-0000-000000000004'
+);
+insert into private.session_security_state(session_id,user_id,started_at,last_human_activity_at)
+select id,id,now()-interval '1 minute',now()
+from auth.users where id in (
+  '13000000-0000-0000-0000-000000000001',
+  '13000000-0000-0000-0000-000000000002',
+  '13000000-0000-0000-0000-000000000003',
+  '13000000-0000-0000-0000-000000000004'
+);
 insert into public.integration(id,practice_id,provider) values ('33000000-0000-0000-0000-000000000001','23000000-0000-0000-0000-000000000001','mock_pvs');
 select is((select status::text from public.integration_sync_state where integration_id='33000000-0000-0000-0000-000000000001'), 'idle', 'new integration starts idle');
 select throws_ok($$insert into public.integration(practice_id,provider) values ('23000000-0000-0000-0000-000000000001','mock_pvs')$$,'23505',null,'provider is unique per practice');
@@ -27,16 +51,16 @@ select ok(not has_function_privilege('authenticated','private.confirm_integratio
 select ok(not has_function_privilege('authenticated','private.purge_expired_integration_sync_events()','EXECUTE'),'browser cannot purge');
 select ok(not has_function_privilege('anon','public.read_integration_sync_status()','EXECUTE'),'anonymous cannot call status RPC');
 set local role authenticated;
-select set_config('request.jwt.claim.sub','13000000-0000-0000-0000-000000000001',true);
+select pg_temp.authenticate_aal2('13000000-0000-0000-0000-000000000001');
 select is((select count(*) from public.read_integration_sync_status()),1::bigint,'owning admin sees status');
 create temporary table proj_3_public_status_shape as select * from public.read_integration_sync_status() limit 0;
 select is((select count(*) from pg_attribute where attrelid='pg_temp.proj_3_public_status_shape'::regclass and attnum>0 and not attisdropped),7::bigint,'exactly seven public fields');
 select ok(not exists(select 1 from pg_attribute where attrelid='pg_temp.proj_3_public_status_shape'::regclass and attname='confirmed_change_cursor'),'no public cursor');
-select set_config('request.jwt.claim.sub','13000000-0000-0000-0000-000000000002',true);
+select pg_temp.authenticate_aal2('13000000-0000-0000-0000-000000000002');
 select is((select count(*) from public.read_integration_sync_status()),0::bigint,'reception sees nothing');
-select set_config('request.jwt.claim.sub','13000000-0000-0000-0000-000000000003',true);
+select pg_temp.authenticate_aal2('13000000-0000-0000-0000-000000000003');
 select is((select count(*) from public.read_integration_sync_status()),0::bigint,'portal admin sees nothing');
-select set_config('request.jwt.claim.sub','13000000-0000-0000-0000-000000000004',true);
+select pg_temp.authenticate_aal2('13000000-0000-0000-0000-000000000004');
 select is((select count(*) from public.read_integration_sync_status()),0::bigint,'foreign admin sees nothing');
 reset role;
 select lives_ok($$select private.record_integration_sync_result('33000000-0000-0000-0000-000000000001','succeeded',null,null)$$,'technical success is recorded');

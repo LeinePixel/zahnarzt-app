@@ -4,6 +4,8 @@ import { z } from 'zod'
 
 import { createClient } from '@/lib/supabase/server'
 
+import { runRequireAal2Session } from './session-policy'
+
 export type UserRole = 'rezeption' | 'behandler' | 'praxisadmin'
 
 export type UserProfileRow = {
@@ -27,7 +29,9 @@ export type CurrentUserContext =
     }
 
 type ClaimsResult = {
-  data: { claims: { sub?: string } } | null
+  data: {
+    claims: { aal?: string; session_id?: string; sub?: string }
+  } | null
   error: unknown
 }
 
@@ -39,6 +43,7 @@ type ProfileResult = {
 type GetClaims = () => Promise<ClaimsResult>
 type GetProfile = (userId: string) => Promise<ProfileResult>
 type GetPortalAdmin = () => Promise<{ data: unknown; error: unknown }>
+type InitializeSession = () => Promise<{ data: unknown; error: unknown }>
 type RedirectTo = (path: string) => never
 type SignOut = () => Promise<{ error: unknown }>
 type Revalidate = (path: string, type: 'layout') => void
@@ -65,17 +70,22 @@ export async function runGetCurrentUserContext(
   getProfile: GetProfile,
   redirectTo: RedirectTo,
   getPortalAdmin: GetPortalAdmin = async () => ({ data: false, error: null }),
+  initializeSession: InitializeSession = async () => ({
+    data: true,
+    error: null,
+  }),
 ): Promise<CurrentUserContext> {
   const { data: claimsData, error: claimsError } = await getClaims()
-  const subject = claimsData?.claims.sub
 
-  if (
-    claimsError ||
-    typeof subject !== 'string' ||
-    subject.length === 0
-  ) {
+  if (claimsError || !claimsData) {
     redirectTo('/login')
   }
+
+  const subject = await runRequireAal2Session(
+    claimsData.claims,
+    initializeSession,
+    redirectTo,
+  )
 
   const { data: profileData, error: profileError } = await getProfile(subject)
 
@@ -138,6 +148,11 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext> {
     redirect,
     async () => {
       const result = await supabase.rpc('is_portal_admin')
+
+      return result as unknown as { data: unknown; error: unknown }
+    },
+    async () => {
+      const result = await supabase.rpc('initialize_current_session')
 
       return result as unknown as { data: unknown; error: unknown }
     },

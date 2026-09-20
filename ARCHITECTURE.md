@@ -43,7 +43,7 @@ Login und Logout verwenden Server Actions; PROJ-1 besitzt keine eigene API-Schic
 
 ## Daten und Autorisierung
 
-Die Migrationen definieren `practice`, `user_profile`, `portal_admin`, Supportfreigaben und Audit-Ereignisse. Praxisrollen können nur ihren eigenen Kontokontext lesen und keine Auditdaten einsehen; `portaladmin` ist eine getrennte Identität ohne `user_profile` und erhält Audit-Metadaten nur während einer aktiven praxisgebundenen Supportfreigabe. Browserrollen besitzen keine direkten Schreibrechte auf diese Tabellen. Die `service_role` ist ausschließlich für explizite CLI-Verwaltung vorgesehen.
+Die Migrationen definieren `practice`, `user_profile`, `portal_admin`, Supportfreigaben und Audit-Ereignisse. Eine private Sitzungsgrenze gleicht AAL2, Session-ID, aktuellen Auth-Sitzungsbestand, Kontosperre, Widerruf, fünf Minuten Inaktivität und acht Stunden Maximaldauer ab. Praxisrollen können nur mit gültigem Zustand ihren eigenen Kontokontext lesen und keine Auditdaten einsehen; `portaladmin` ist eine getrennte Identität ohne `user_profile` und erhält Audit-Metadaten nur während einer aktiven praxisgebundenen Supportfreigabe. Browserrollen besitzen keine direkten Schreibrechte auf diese Tabellen. Die `service_role` ist ausschließlich für explizite CLI-Verwaltung vorgesehen.
 
 Die Anwendung trägt die Praxisgrenze im Schema und erzwingt sie mit RLS, Tabellenrechten und autorisierten RPCs. PROJ-19 ist lokal verifiziert; Hosted-Migrationen, tägliches Scheduling und synthetische Cloud-Abnahme sind zum 06.09.2026 dokumentiert (docs/delivery/acceptance-tests.md). Scheduler-Monitoring, der Nachweis eines ausgeführten Löschlaufs, MFA/Re-Authentisierung und das Real-Data-Gate bleiben offen.
 
@@ -69,7 +69,9 @@ Es existiert keine Vercel-Konfiguration. Kern- und Vollverifikation laufen lokal
 
 ## Bekannte Schulden
 
-- MFA und automatische Sitzungssperre fehlen bis PROJ-31.
+- Die datenbankseitige PROJ-31-Sitzungs-/AAL2-Grenze ist lokal implementiert;
+  MFA-Einrichtung, Re-Authentisierung und die bedienbare Arbeitsplatzsperre
+  folgen in T04.
 - Hosted-CSP-/HSTS-Nachweis, Secret-Scanning und Branch-Protection fehlen.
 - Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
 

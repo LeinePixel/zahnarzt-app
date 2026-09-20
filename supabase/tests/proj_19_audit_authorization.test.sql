@@ -2,6 +2,29 @@ begin;
 
 select plan(72);
 
+create function pg_temp.authenticate_aal2()
+returns void
+language plpgsql
+as $$
+declare
+  v_user_id uuid := current_setting('request.jwt.claim.sub')::uuid;
+begin
+  insert into auth.sessions (id, user_id, created_at, updated_at, aal, not_after)
+  values (v_user_id, v_user_id, now() - interval '1 minute', now(), 'aal2', now() + interval '7 hours 59 minutes')
+  on conflict (id) do update
+    set aal = excluded.aal,
+        not_after = excluded.not_after,
+        updated_at = excluded.updated_at;
+  insert into private.session_security_state (session_id, user_id, started_at, last_human_activity_at)
+  values (v_user_id, v_user_id, now() - interval '1 minute', now())
+  on conflict (session_id) do update
+    set last_human_activity_at = excluded.last_human_activity_at,
+        revoked_at = null,
+        updated_at = now();
+  perform set_config('request.jwt.claim', jsonb_build_object('sub', v_user_id, 'role', 'authenticated', 'aal', 'aal2', 'session_id', v_user_id)::text, true);
+end;
+$$;
+
 select has_table('public', 'portal_admin', 'portal admin identities are stored separately from practice roles');
 select has_table('public', 'support_access_grant', 'practice-approved support access is stored explicitly');
 select has_table('public', 'audit_event', 'audit events have a dedicated table');
@@ -173,6 +196,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -184,6 +208,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -195,6 +220,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000005', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -207,6 +233,7 @@ reset role;
 
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select set_config(
@@ -236,6 +263,7 @@ select ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -253,6 +281,7 @@ select throws_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -264,6 +293,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000005', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -275,6 +305,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -394,6 +425,7 @@ select lives_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -452,6 +484,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -470,6 +503,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000004', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -544,6 +578,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select throws_ok(
@@ -622,6 +657,7 @@ values (
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -662,6 +698,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -688,6 +725,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -706,6 +744,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select set_config(
@@ -721,6 +760,7 @@ select ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select lives_ok(
@@ -751,6 +791,7 @@ select lives_ok(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(
@@ -782,6 +823,7 @@ select is(
 reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select pg_temp.authenticate_aal2();
 set local role authenticated;
 
 select is(

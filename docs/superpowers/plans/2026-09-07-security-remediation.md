@@ -105,11 +105,20 @@ geschlossen.
 
 **Eingang:** freigegebene D01–D04/PROJ-31. **Ausgang:** ein serverseitiger Sitzungsentscheid, den direkte Tabellenzugriffe und jede geschützte RPC ebenfalls erzwingen.
 
-- [ ] Vor Umsetzung die installierte Supabase-API und Hosted-Fähigkeiten prüfen: Sitzungsfelder, Refresh-/Timeoutsemantik, AAL, Recovery und Tarif. Auth-Systemtabellen nicht eigenmächtig verändern.
-- [ ] Failing pgTAP-Fälle schreiben: Rolle korrekt, aber AAL1; nicht vorhandene Sitzung; widerrufene Sitzung; Timeout exakt an Grenze; falsche Praxis; aktiver AAL2-Kontext. Geschützte Daten/Mutationen müssen in Negativfällen verweigert werden.
-- [ ] Minimalen zentralen privaten Prüfpfad implementieren; aktuelle Sperrinformation statt ausschließlichem Vertrauen auf JWT-Laufzeit. Zusätzliche private Tabelle nur gemäß D04, mit RLS/Grants, Index, begrenzter Aufbewahrung und Negativtests. SECURITY-DEFINER-RPCs rufen die Prüfung explizit auf.
-- [ ] Fail-closed bei fehlendem Zustand oder Prüffehler. Login, Faktorregistrierung und Recovery benötigen eng begrenzte Bootstrap-Wege ohne Zugriff auf Praxis-/Auditdaten; keine MFA-Einschleusung über diese Wege.
+- [x] Vor Umsetzung die installierte Supabase-API und Hosted-Fähigkeiten prüfen: Sitzungsfelder, Refresh-/Timeoutsemantik, AAL, Recovery und Tarif. Auth-Systemtabellen nicht eigenmächtig verändern.
+- [x] Failing pgTAP-Fälle schreiben: Rolle korrekt, aber AAL1; nicht vorhandene Sitzung; widerrufene Sitzung; Timeout exakt an Grenze; falsche Praxis; aktiver AAL2-Kontext. Geschützte Daten/Mutationen müssen in Negativfällen verweigert werden.
+- [x] Minimalen zentralen privaten Prüfpfad implementieren; aktuelle Sperrinformation statt ausschließlichem Vertrauen auf JWT-Laufzeit. Zusätzliche private Tabelle nur gemäß D04, mit RLS/Grants, Index, begrenzter Aufbewahrung und Negativtests. SECURITY-DEFINER-RPCs rufen die Prüfung explizit auf.
+- [x] Fail-closed bei fehlendem Zustand oder Prüffehler. Login, Faktorregistrierung und Recovery benötigen eng begrenzte Bootstrap-Wege ohne Zugriff auf Praxis-/Auditdaten; keine MFA-Einschleusung über diese Wege.
 - [ ] `npx supabase test db --local`, fokussierte Vitest-Prüfung und `npm run verify:full`; neue Forward-Migration zusätzlich gegen bisherigen Schema-Stand testen. Lokaler Reset nur in einem ausdrücklich entbehrlichen Teststack.
+
+**Zwischenevidenz 20.09.2026:** Die Forward-Migration wurde nach lokalem Reset
+frisch angewendet. 196 pgTAP-Tests, 27 fokussierte Auth-/Policy-Tests,
+41 Dateien/373 Vitest-Tests, Lint, Typecheck, Build sowie Patienten-/Termin-
+DB- und Prozessprüfungen bestanden. Der Edge-verpflichtende Browserlauf endete
+bei vier alten geschützten Flows erwartbar auf der neuen Route `/auth/mfa`;
+9 Tests bestanden, 4 wurden nach den ersten Fehlern nicht ausgeführt. T04 muss
+den MFA-/Sperrablauf und die aktualisierten E2E-Fälle liefern, bevor dieser
+letzte T03-Abnahmepunkt und `verify:full` geschlossen werden.
 
 **Beispiel für die Negativtest-Anforderung:**
 

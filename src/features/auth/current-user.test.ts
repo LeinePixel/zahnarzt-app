@@ -17,7 +17,15 @@ const readyProfile: UserProfileRow = {
 
 function claims(sub?: string, error: unknown = null) {
   return async () => ({
-    data: sub ? { claims: { sub } } : { claims: {} },
+    data: sub
+      ? {
+          claims: {
+            sub,
+            aal: 'aal2',
+            session_id: '33000000-0000-0000-0000-000000000001',
+          },
+        }
+      : { claims: {} },
     error,
   })
 }
@@ -75,6 +83,51 @@ describe('runGetCurrentUserContext', () => {
       roleLabel: 'Behandler',
       userId: 'user-123',
     })
+  })
+
+  it('routes AAL1 to MFA before querying protected profile data', async () => {
+    const getProfile = vi.fn(profileResult(readyProfile))
+    const initializeSession = vi.fn()
+    const redirect = redirectRecorder()
+
+    await expect(
+      runGetCurrentUserContext(
+        async () => ({
+          data: {
+            claims: {
+              sub: 'user-123',
+              aal: 'aal1',
+              session_id: '33000000-0000-0000-0000-000000000001',
+            },
+          },
+          error: null,
+        }),
+        getProfile,
+        redirect.redirectTo,
+        undefined,
+        initializeSession,
+      ),
+    ).rejects.toThrow('redirect:/auth/mfa')
+
+    expect(getProfile).not.toHaveBeenCalled()
+    expect(initializeSession).not.toHaveBeenCalled()
+  })
+
+  it('fails closed before profile access when database session state is denied', async () => {
+    const getProfile = vi.fn(profileResult(readyProfile))
+    const redirect = redirectRecorder()
+
+    await expect(
+      runGetCurrentUserContext(
+        claims('user-123'),
+        getProfile,
+        redirect.redirectTo,
+        undefined,
+        async () => ({ data: false, error: null }),
+      ),
+    ).rejects.toThrow('redirect:/login')
+
+    expect(getProfile).not.toHaveBeenCalled()
   })
 
   it.each([
