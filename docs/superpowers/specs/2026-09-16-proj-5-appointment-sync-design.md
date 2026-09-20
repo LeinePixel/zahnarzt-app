@@ -1,6 +1,8 @@
 # PROJ-5 Termin-Synchronisierung — Architekturentwurf
 
-**Status:** Freigegeben; bereit für den TDD-Umsetzungsplan
+**Umsetzungsstatus:** Lokal implementiert und verifiziert, `In Review` seit 2026-09-20.
+
+**Status:** Lokal implementiert und verifiziert; `In Review`
 **Datum:** 2026-09-16
 **Verbindliche Anforderungen:** [PROJ-5-Spec](../../../features/PROJ-5-appointment-synchronization.md)
 

@@ -126,3 +126,13 @@ Name, Geburtsdatum, E.164-Telefonnummer sowie Quell- und lokale Zeitpunkte. E-Ma
 medizinische Inhalte und Rohpayloads fehlen. `private.patient_source_version`
 bewahrt minimale Delete-Versionen; `private.patient_sync_checkpoint` hält einen
 vom PROJ-3-Gesamtcursor getrennten Patientenfortschritt. Alle Tabellen nutzen RLS.
+
+## PROJ-5: implementierte Terminprojektion
+
+`public.appointment` enthält interne UUID, Praxis/Integration, undurchsichtige
+Quell-ID und -Version, internen Patienten-FK, Zeitraum, geschlossenen Status,
+undurchsichtige Practitioner-Quellreferenz sowie Quell- und lokale Zeitpunkte.
+Der zusammengesetzte Patienten-FK erzwingt dieselbe Praxis und Integration.
+`private.appointment_source_version` bewahrt minimale Delete-Versionen;
+`private.appointment_sync_checkpoint` hält einen vom Patienten- und technischen
+Cursor getrennten Terminfortschritt. Browserrollen besitzen keine Tabellenrechte.

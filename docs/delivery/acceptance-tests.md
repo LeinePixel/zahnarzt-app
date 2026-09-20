@@ -174,6 +174,25 @@ Alle Patientendaten im MVP sind erfunden. Der Referenz-Prototyp (`docs/design/as
 Die Evidenz ist lokal und synthetisch. Sie ist keine Freigabe für echte Daten,
 Hosting, produktive Rollen, Scheduler oder Deployment.
 
+## PROJ-5 – lokale Termin-Synchronisierung (2026-09-20)
+
+- `npm run verify:full`: erfolgreich nach Abschluss der Reviewkorrekturen.
+- Vitest: 39 Dateien und 361 Tests; Mock-PVS separat: 5 Dateien und 84 Tests.
+- pgTAP: 6 Dateien und 174 Assertions; eingeschränkte PostgreSQL-LOGIN-Suites:
+  5 Patienten- und 9 Termintests.
+- CLI-Kindprozesse: 1 Patienten- und 3 Termintests; Edge-Browser: 17 Flows.
+- Die Termin-DB-Suite deckt Patientenauflösung, vollständigen Rollback,
+  Versionskonflikt, Delete und höhere Wiederbelebung, Checkpoint-CAS, beide
+  Lockrichtungen, Mapping-Entzug und wiederholbare lokale Provisionierung ab.
+- Die Prozesssuite belegt initialen Import, Idempotenz, Missing-Patient-Rollback
+  und Busy-Exit 2 mit bereinigter Runtime-Umgebung.
+- Ein unabhängiger Review prüfte Scope, Berechtigungen, Transaktionen,
+  COMMIT-Unsicherheit und Secret-Grenzen; alle konkreten Findings wurden behoben.
+
+Die Evidenz gilt ausschließlich lokal und mit synthetischen Daten. Echter
+Providervertrag, Hosting, produktive Rollen, Scheduler, UI, Deployment und
+Real-Data-Gate bleiben offen.
+
 ## Lokale PROJ-3-Prüfevidenz — 14.09.2026
 
 `npm run verify:full` endete mit Exit 0: Lint, Typecheck, 25 Vitest-Dateien /

@@ -87,3 +87,14 @@ die freigegebene Patientenprojektion. Gemischte Terminereignisse verschieben den
 privaten Patientencheckpoint, erzeugen aber keine Terminzeilen. Drei private
 PostgreSQL-Entry-Points leiten Integration und Praxis ausschließlich aus
 `session_user` ab; Browserrollen erhalten keine Ausführungsrechte.
+
+## PROJ-5: lokaler Termin-Synchronisationsvertrag
+
+Der Terminconsumer liest den initialen Vollstand und anschließend den gemischten
+Änderungsfeed über den PROJ-3-Adapter. Patientenereignisse verschieben nur den
+Termincheckpoint. `private.acquire_appointment_sync()`,
+`private.commit_appointment_sync(...)` und
+`private.record_appointment_sync_failure(...)` sind ausschließlich für die
+eigene NOLOGIN-Ausführergruppe ausführbar und bestimmen den Scope aus
+`session_user`. JSON-Batches sind auf 10 MiB und 10.000 Einträge begrenzt;
+Cursor und Initialstatus werden per Compare-and-swap bestätigt.

@@ -373,3 +373,20 @@ npm run verify:full
 
 Provisionierung, Laufzeitdateien und Zugangsdaten bleiben ignoriert und lokal.
 Der Real-Data-Gate bleibt geschlossen.
+
+### PROJ-5 lokaler Terminsync
+
+PROJ-5 übernimmt synthetische Termine über einen getrennten lokalen CLI-Lauf.
+Der eingeschränkte PostgreSQL-Login ist fest einer Integration zugeordnet; der
+Commit löst Patientenreferenzen auf und schreibt Termine, Delete-Marken und den
+eigenen Termincheckpoint atomar. Patienten- und Terminsync teilen nur den
+integrationsbezogenen Advisory Lock.
+
+```powershell
+Copy-Item .env.appointment-sync-admin.local.example .env.appointment-sync-admin.local
+npm run appointment-sync:provision-local
+# .env.appointment-sync.local mit den lokalen Mock-PVS-Werten vervollständigen
+npm run appointment-sync
+```
+
+Browserrechte, Scheduler, UI, Hosting und echte Daten sind nicht freigegeben.

@@ -1,9 +1,9 @@
 # PROJ-5: Termin-Synchronisierung
 
-## Status: Architected
+## Status: In Review
 
 **Created:** 2026-08-24
-**Last Updated:** 2026-09-16
+**Last Updated:** 2026-09-20
 **Priority:** P0 (MVP)
 **Freigabe:** Vollständige Spec und Architektur am 16.09.2026 vom Nutzer freigegeben.
 
@@ -201,31 +201,31 @@ geschlossen.
 
 ## Akzeptanzkriterien
 
-- [ ] AC01: Alle initialen Terminseiten werden projiziert; der Initialimport wird
+- [x] AC01: Alle initialen Terminseiten werden projiziert; der Initialimport wird
   erst nach erfolgreichem Gesamtcommit bestätigt.
-- [ ] AC02: Ein zweiter Lauf erzeugt keine Duplikate und keinen zweiten Vollimport.
-- [ ] AC03: Jeder Termin verweist auf den internen Patienten derselben Integration;
+- [x] AC02: Ein zweiter Lauf erzeugt keine Duplikate und keinen zweiten Vollimport.
+- [x] AC03: Jeder Termin verweist auf den internen Patienten derselben Integration;
   fehlende, gelöschte oder fremde Patienten rollen den gesamten Lauf zurück.
-- [ ] AC04: Zeitintervall, Status und längenbegrenzte Practitioner-Quellreferenz
+- [x] AC04: Zeitintervall, Status und längenbegrenzte Practitioner-Quellreferenz
   werden strikt validiert; nicht freigegebene Felder werden nicht gespeichert.
-- [ ] AC05: Neuere Versionen aktualisieren, ältere verändern nichts und gleiche
+- [x] AC05: Neuere Versionen aktualisieren, ältere verändern nichts und gleiche
   widersprüchliche Versionen rollen den gesamten Lauf zurück.
-- [ ] AC06: Delete entfernt Fachattribute und schützt per Versionsmarke gegen alte Upserts.
-- [ ] AC07: Ein Fehler auf später Quellseite oder im SQL verändert weder Termine
+- [x] AC06: Delete entfernt Fachattribute und schützt per Versionsmarke gegen alte Upserts.
+- [x] AC07: Ein Fehler auf später Quellseite oder im SQL verändert weder Termine
   noch Versionsmarken, Termincheckpoint oder Initialabschluss.
-- [ ] AC08: Der Endcursor stammt vom letzten Ereignis einschließlich Patientenereignis;
+- [x] AC08: Der Endcursor stammt vom letzten Ereignis einschließlich Patientenereignis;
   leerer Feed bewahrt den Termincheckpoint und PROJ-3-/PROJ-4-Cursor bleiben unverändert.
-- [ ] AC09: Patienten- und Terminsync schließen einander über denselben
+- [x] AC09: Patienten- und Terminsync schließen einander über denselben
   integrationsbezogenen Advisory Lock aus, ohne vorab die Quelle zu lesen.
-- [ ] AC10: Echte separate DB-LOGIN-Rollen sind auf ihre eigene Integration und
+- [x] AC10: Echte separate DB-LOGIN-Rollen sind auf ihre eigene Integration und
   ihre eigenen Funktionen begrenzt; Browserrollen besitzen keine Terminrechte.
-- [ ] AC11: Konfiguration, Frist, Seiten-/Byte-Grenzen, Cursorzyklen, Retry und
+- [x] AC11: Konfiguration, Frist, Seiten-/Byte-Grenzen, Cursorzyklen, Retry und
   neutrale Log-/CLI-Ausgabe werden geprüft.
-- [ ] AC12: 429/503/Netzwerkfälle schreiben nur neutralen technischen Status;
+- [x] AC12: 429/503/Netzwerkfälle schreiben nur neutralen technischen Status;
   ungültige Quellcursor lösen keinen automatischen Rebootstrap aus.
-- [ ] AC13: Der tatsächliche lokale CLI-Prozess nutzt keine privilegierten Secrets
+- [x] AC13: Der tatsächliche lokale CLI-Prozess nutzt keine privilegierten Secrets
   und liefert die festgelegten Exitcodes.
-- [ ] AC14: Gezielte Unit-, HTTP-, pgTAP-, Rollen-, Konkurrenz- und Prozessprüfungen
+- [x] AC14: Gezielte Unit-, HTTP-, pgTAP-, Rollen-, Konkurrenz- und Prozessprüfungen
   sowie `npm run verify:full` bestehen; nur tatsächlich ausgeführte Evidenz wird dokumentiert.
 
 ## Out of Scope
@@ -234,6 +234,19 @@ Kalender- oder Status-UI, Browser-Terminleserechte, Terminbearbeitung, Erinnerun
 Regelautomatisierung, Scheduler, Practitioner-Stammdaten, generisches Sync-Framework,
 Umbau des Patientensyncs, echte PVS-Anbindung, produktive Provisionierung,
 Hosted-Migration, Deployment, Real-Data-Gate-Freigabe und PROJ-31.
+
+## Lokale Verifikation (2026-09-20)
+
+Die lokale synthetische Umsetzung und das unabhängige Review sind abgeschlossen.
+`npm run verify:full` bestand mit 39 Vitest-Dateien und 361 Tests, sechs
+pgTAP-Dateien und 174 Assertions, 5 Patienten-DB-, 9 Termin-DB-, 1 Patienten-
+prozess-, 3 Terminprozess- und 17 Edge-Browserprüfungen. Zusätzlich bestanden
+84 Mock-PVS-Tests. Reviewfindings zu atomarer
+Provisionierung, Secret-Logging, fremden Adminvariablen und konkurrierenden
+Patientenlöschungen wurden mit gezielten Regressionstests geschlossen.
+
+Der Status `In Review` öffnet keine Betriebsfreigabe. Hosted-Provisionierung,
+Scheduler, UI, echter Providervertrag, Deployment und Real-Data-Gate bleiben offen.
 
 ## Technischer Entwurf
 

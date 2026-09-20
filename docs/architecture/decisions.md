@@ -97,6 +97,15 @@ Keine Entscheidungen protokolliert — diese Features haben noch keine Spec. Sie
 | Expliziter lokaler CLI-Lauf mit je Integration eingeschränkter PostgreSQL-Loginrolle | Verhindert Service-Role-Zugriff im Runtime-Prozess und hält Scheduler, Browser und Hosting außerhalb des freigegebenen synthetischen Scopes. | 2026-09-14 |
 | Eigener Patientencheckpoint und atomarer Fachcommit | Der gemischte Feed bleibt für PROJ-5 unabhängig lesbar; Patienten, Versionen, Checkpoint und technischer Erfolg werden gemeinsam bestätigt. | 2026-09-14 |
 
+### PROJ-5: Termin-Synchronisierung
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Eigener Terminconsumer und eigene eingeschränkte LOGIN-Rolle | Terminvertrag und Berechtigungen bleiben von PROJ-4 getrennt. | 2026-09-16 |
+| Gemeinsamer Integrationslock, getrennte Checkpoints | Patienten können sich während der atomaren Terminauflösung nicht ändern; beide Consumer bestätigen ihren Fortschritt unabhängig. | 2026-09-16 |
+| Practitioner nur als undurchsichtige Quellreferenz | PROJ-5 besitzt keinen belastbaren Practitioner-Stammdatenvertrag. | 2026-09-16 |
+| Physisches Delete plus minimale Versionsmarke | Fachattribute verschwinden, ohne alte Ereignisse wiederzubeleben. | 2026-09-16 |
+
 ---
 
 ## Offene Präferenzen

@@ -60,3 +60,11 @@ Herstellervertrag und Bootstrap-Wasserzeichen, produktive Rollenprovisionierung,
 Aufbewahrung und Backup-Löschung der Versionsmarken, Scheduler, UI, Hosting,
 Deployment und Real-Data-Gate bleiben offen. Der Mock-PVS-Cursor wird bei Neustart
 oder Szenariowechsel absichtlich ungültig; es gibt keinen automatischen Rebootstrap.
+
+## PROJ-5: offene Folgegates
+
+Der lokale Terminsync ist ausschließlich mit deterministischen synthetischen
+Daten verifiziert. Offen bleiben ein belastbarer Snapshot-/Cursor-Vertrag des
+echten Providers, produktive Rollenprovisionierung, Aufbewahrung und
+Backup-Löschung der Versionsmarken, Scheduler, Termin-UI und Browserleserechte,
+Hosting, Deployment und Real-Data-Gate. Es gibt keinen automatischen Rebootstrap.

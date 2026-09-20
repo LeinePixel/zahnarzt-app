@@ -573,7 +573,7 @@ Expected: unit/process checks pass with exact neutral output and no privileged r
 - Consumes: AC01–AC14 and the actual evidence from Tasks 1–5.
 - Produces: a locally implemented `In Review` feature record with exact test evidence and unchanged operational gates.
 
-- [ ] **Step 1: Map acceptance criteria to required evidence before changing status.**
+- [x] **Step 1: Map acceptance criteria to required evidence before changing status.**
 
 | Criteria | Required evidence |
 |---|---|
@@ -585,7 +585,7 @@ Expected: unit/process checks pass with exact neutral output and no privileged r
 
 Keep unchecked operational follow-ups for real provider snapshot/cursor guarantees, production retention, scheduler, UI, hosted provisioning, deployment and the Real-Data-Gate.
 
-- [ ] **Step 2: Run all required verification commands.**
+- [x] **Step 2: Run all required verification commands.**
 
 ```powershell
 npm run test:mock-pvs
@@ -604,15 +604,15 @@ git diff --check
 
 Every command must exit 0 using only local synthetic configuration. Confirm dedicated outputs show the intended DB/process files actually ran. If any command fails, use `superpowers:systematic-debugging`, reproduce the focused red case, fix it, rerun the affected suite and then the full workflow.
 
-- [ ] **Step 3: Request an independent bounded code review and resolve valid findings.**
+- [x] **Step 3: Request an independent bounded code review and resolve valid findings.**
 
 Use `superpowers:requesting-code-review`, then `superpowers:receiving-code-review`. Review the complete diff against both approved PROJ-5 documents and this plan, focusing on patient-reference races, same-version comparisons, both shared-lock directions, `session_user` scope, rollback after late mutation, COMMIT uncertainty, runtime environment and logging privileges. Turn each valid finding into a failing targeted test before fixing it, then repeat affected and full checks.
 
-- [ ] **Step 4: Record only executed evidence and implemented status.**
+- [x] **Step 4: Record only executed evidence and implemented status.**
 
 Set feature/index/design to local `In Review` only after every required command passes and actionable review findings are closed. Check only ACs backed by actual output. Add the exact date, test/assertion totals and commands to the feature and acceptance document. Update API/data model/decisions with the private checkpoint, opaque practitioner reference, patient FK, shared lock and restricted identity. Keep known issues explicit about no scheduler, UI, hosted role, real provider contract, deployment or real-data approval.
 
-- [ ] **Step 5: Verify scope, secret and import boundaries.**
+- [x] **Step 5: Verify scope, secret and import boundaries.**
 
 ```powershell
 git diff --check
@@ -625,7 +625,7 @@ git status --short
 
 The first `rg` returns no product import. The forbidden-variable scan may match only rejection by name in `sync-config.ts`, never retrieval/use. The grant scan must show no appointment table or sync-function grant to browser roles. Confirm no generated `.env` file, source payload dump or `src/app` change appears.
 
-- [ ] **Step 6: Commit the verified documentation state.**
+- [x] **Step 6: Commit the verified documentation state.**
 
 ```powershell
 git add features/INDEX.md features/PROJ-5-appointment-synchronization.md docs/superpowers/specs/2026-09-16-proj-5-appointment-sync-design.md docs/superpowers/plans/2026-09-16-proj-5-appointment-sync.md README.md docs/architecture/api-contracts.md docs/architecture/data-model.md docs/architecture/decisions.md docs/delivery/acceptance-tests.md docs/delivery/known-issues.md
