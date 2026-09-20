@@ -46,7 +46,6 @@
 | PROJ-28 | Online-Terminbuchung | P2 | Roadmap | PROJ-5 | - | 2026-08-24 |
 | PROJ-29 | Anrufer-Erkennung (CTI-Popup mit Patientenübersicht bei eingehendem Anruf) | P1 | Roadmap | PROJ-4, PROJ-6, PROJ-17, PROJ-19 | - | 2026-08-24 |
 | PROJ-30 | Benutzerverwaltung & Einladungen (Nutzer anlegen, einladen, deaktivieren) | P2 | Roadmap | PROJ-1, PROJ-19 | - | 2026-08-24 |
-| PROJ-31 | Automatische Sitzungssperre nach Inaktivität | P1 | Roadmap | PROJ-1 | - | 2026-08-24 |
 
 <!-- Add features above this line -->
 
@@ -99,9 +98,10 @@ Hinzugefügt am 24.08.2026. Ziel: Bei eingehendem Anruf öffnet sich in der App 
 18. **PROJ-8** Patienten-Timeline *(aggregiert Daten aus 6, 7, 9, 13, 14)*
 19. **PROJ-18** Dashboard *(bündelt alles)*
 
-Danach P1 (PROJ-20 bis PROJ-23, PROJ-29, PROJ-31), dann P2 nach Bedarf.
-
-**PROJ-31 (Sitzungssperre) ist zeitkritisch:** muss umgesetzt sein, *bevor* echte Patientendaten ins System kommen (Phase 6, Pilotbetrieb) — unabhängig davon, wie weit die übrigen P1-Features sind.
+**Nächster Security-Schritt ist PROJ-31** als P0-Gate vor der weiteren
+Produktoberfläche. Danach folgt PROJ-6; anschließend P1 (PROJ-20 bis PROJ-23 und
+PROJ-29) sowie P2 nach Bedarf. PROJ-31 muss vollständig umgesetzt sein, bevor
+echte Patientendaten ins System kommen.
 
 ## Verbindliche Compliance-Gates (25.08.2026)
 
