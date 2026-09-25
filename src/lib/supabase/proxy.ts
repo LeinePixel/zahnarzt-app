@@ -18,6 +18,7 @@ export type ProxyCookieMethods = {
 }
 
 type ProxyAuthClient = {
+  rpc: (functionName: string) => PromiseLike<{ data: unknown; error: unknown }>
   auth: {
     getClaims: () => Promise<{
       data: { claims: { aal?: string; sub?: string } } | null
@@ -135,6 +136,17 @@ export async function updateSession(
     || pathname.startsWith('/portal')
     || isMfaRoute
     || isReauthenticationRoute
+  let activeLoginSession = false
+  if (pathname === '/login' && isAuthenticated && data?.claims.aal === 'aal2') {
+    try {
+      const remaining = await supabase.rpc('current_session_remaining_ms')
+      activeLoginSession = !remaining.error
+        && typeof remaining.data === 'number'
+        && remaining.data > 0
+    } catch {
+      activeLoginSession = false
+    }
+  }
   let response: NextResponse
 
   if (
@@ -152,7 +164,7 @@ export async function updateSession(
     mfaUrl.search = ''
     mfaUrl.hash = ''
     response = NextResponse.redirect(mfaUrl)
-  } else if (isAuthenticated && pathname === '/login') {
+  } else if (activeLoginSession) {
     const statusUrl = request.nextUrl.clone()
     statusUrl.pathname = '/status'
     statusUrl.search = ''

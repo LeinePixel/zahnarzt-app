@@ -45,7 +45,7 @@ Die Rolle wird in PROJ-1 nur gespeichert und angezeigt — sie schränkt noch ni
 - Anmeldeseite mit E-Mail und Passwort
 - Geschützter Bereich, der ohne gültige Sitzung nicht erreichbar ist
 - Schlichte Seite nach der Anmeldung: Anzeigename, Rolle, Praxisname, Abmelde-Schaltfläche
-- Sitzung bleibt über das Schließen des Browsers hinaus bestehen und wird im Hintergrund erneuert
+- Eine noch gültige Sitzung bleibt über das Schließen des Browsers hinaus bestehen und wird im Hintergrund technisch erneuert. Ein Browserneustart oder Tokenrefresh setzt weder die fünfminütige Inaktivitätsfrist noch die achtstündige Maximaldauer aus PROJ-31 zurück; Hintergrundrefresh zählt nicht als menschliche Aktivität.
 
 ### Einrichtung
 - Dokumentierte, getrennte Umgebungsvariablen (`.env.local.example` öffentlich, `.env.seed.local.example` geheim/CLI)

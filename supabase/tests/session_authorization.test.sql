@@ -1,6 +1,6 @@
 begin;
 
-select plan(22);
+select plan(24);
 
 select has_table(
   'private',
@@ -283,5 +283,41 @@ select is(
 );
 
 reset role;
+insert into auth.sessions (id, user_id, created_at, updated_at, aal, not_after)
+values (
+  '33000000-0000-0000-0000-000000000004',
+  '31000000-0000-0000-0000-000000000003',
+  now() + interval '1 second',
+  now(),
+  'aal2',
+  now() + interval '8 hours'
+);
+select set_config(
+  'request.jwt.claims',
+  json_build_object(
+    'sub', '31000000-0000-0000-0000-000000000003',
+    'role', 'authenticated',
+    'aal', 'aal2',
+    'session_id', '33000000-0000-0000-0000-000000000004'
+  )::text,
+  true
+);
+set local role authenticated;
+select lives_ok(
+  'select public.initialize_current_session()',
+  'a small forward auth clock skew cannot break session initialization'
+);
+
+reset role;
+select ok(
+  exists (
+    select 1 from private.session_security_state
+    where session_id = '33000000-0000-0000-0000-000000000004'
+      and started_at <= last_human_activity_at
+      and started_at <= now()
+  ),
+  'the skewed session starts no later than database time'
+);
+
 select * from finish();
 rollback;

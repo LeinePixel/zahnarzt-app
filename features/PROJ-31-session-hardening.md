@@ -13,7 +13,7 @@ Jeder Zugriff auf geschützte DentPilot-Daten verlangt eine verifizierte Supabas
 
 - MFA: TOTP für alle bestehenden Rollen; AAL1 darf keine geschützten Praxis-, Audit- oder Supportdaten lesen oder ändern.
 - Ablauf: JWT höchstens fünf Minuten, Supabase-Sitzung höchstens acht Stunden. Der Client sperrt nach fünf Minuten ohne menschliche Interaktion und meldet global ab; Hintergrundrefresh zählt nicht als Aktivität.
-- Widerruf: Logout beendet alle Sitzungen. Access Tokens bleiben wegen JWT-Technik bis zu fünf Minuten gültig; die Datenbank verweigert geschützte Aktionen zusätzlich anhand des AAL. Eine echte serverseitige Sperrliste ist erst zulässig, wenn sie mit der Hosted-Supabase-Sitzungs-API verifiziert ist.
+- Widerruf: Logout beendet alle Sitzungen. Access Tokens können wegen JWT-Technik bis zu fünf Minuten technisch gültig bleiben; die Datenbank verweigert geschützte Aktionen anhand des aktuellen privaten Sitzungszustands, einschließlich Widerruf, Inaktivität und Maximaldauer. Diese Grenze ist lokal geprüft; Hosted-Abnahme bleibt separat offen.
 - Wiederherstellung: Keine Selbstbedienungsumgehung und keine dauerhafte Ausnahme. Ein Verlust des TOTP-Faktors erfordert einen getrennten, dokumentierten administrativen Wiederherstellungsprozess; bis dahin bleibt der Datenzugriff gesperrt.
 - Bootstrap: MFA-Einrichtung, Challenge und Verifikation sind die einzigen AAL1-Flows nach dem Passwortlogin. Sie erhalten weder Praxis- noch Auditdaten.
 

@@ -109,7 +109,7 @@ geschlossen.
 - [x] Failing pgTAP-Fälle schreiben: Rolle korrekt, aber AAL1; nicht vorhandene Sitzung; widerrufene Sitzung; Timeout exakt an Grenze; falsche Praxis; aktiver AAL2-Kontext. Geschützte Daten/Mutationen müssen in Negativfällen verweigert werden.
 - [x] Minimalen zentralen privaten Prüfpfad implementieren; aktuelle Sperrinformation statt ausschließlichem Vertrauen auf JWT-Laufzeit. Zusätzliche private Tabelle nur gemäß D04, mit RLS/Grants, Index, begrenzter Aufbewahrung und Negativtests. SECURITY-DEFINER-RPCs rufen die Prüfung explizit auf.
 - [x] Fail-closed bei fehlendem Zustand oder Prüffehler. Login, Faktorregistrierung und Recovery benötigen eng begrenzte Bootstrap-Wege ohne Zugriff auf Praxis-/Auditdaten; keine MFA-Einschleusung über diese Wege.
-- [ ] `npx supabase test db --local`, fokussierte Vitest-Prüfung und `npm run verify:full`; neue Forward-Migration zusätzlich gegen bisherigen Schema-Stand testen. Lokaler Reset nur in einem ausdrücklich entbehrlichen Teststack.
+- [x] `npx supabase test db --local`, fokussierte Vitest-Prüfung und `npm run verify:full`; neue Forward-Migration zusätzlich gegen bisherigen Schema-Stand testen. Lokaler Reset nur in einem ausdrücklich entbehrlichen Teststack.
 
 **Zwischenevidenz 20.09.2026:** Die Forward-Migration wurde nach lokalem Reset
 frisch angewendet. 196 pgTAP-Tests, 27 fokussierte Auth-/Policy-Tests,
@@ -143,10 +143,10 @@ Die Fixture erstellt Praxis, Identität und Freigabe innerhalb `BEGIN`/`ROLLBACK
 
 - [ ] Failing Tests für Einrichten/Bestätigen des Faktors, falschen/abgelaufenen Code, Recovery ohne Bypass und abgelaufene Re-Authentisierung schreiben; neutrale deutsche Fehler ohne Token-/QR-Secret-Ausgabe.
 - [x] Bestehende UI-Bausteine verwenden; sensible Zustände nur im notwendigen Arbeitsspeicher, keine persistenten Testmedien.
-- [ ] Aktivität und Sperre nach freigegebener Semantik implementieren: Hintergrundrefresh ist keine menschliche Aktivität; Mehrtabverhalten, Offlinefall und Systemuhränderung explizit prüfen. Serverzeit entscheidet Berechtigung.
-- [ ] Gestohlenes synthetisches Token vor Logout erfassen, danach direkte REST-/RPC-Aufrufe innerhalb/außerhalb der zugesagten Sperrfrist testen. UI-Redirect allein ist kein Erfolgskriterium.
-- [ ] Browser-Neustart mit bestehendem Cookie prüfen: Sitzung darf innerhalb erlaubter Regeln wiederaufgenommen werden, aber niemals Inaktivitäts-/Maximalzeit umgehen. PROJ-1-Neustartkriterium entsprechend präzisieren.
-- [ ] `npm run verify:full`; Safari-/Arbeitsplatz-Smoke als separate manuelle Evidenz dokumentieren.
+- [x] Aktivität und Sperre nach freigegebener Semantik implementieren: Hintergrundrefresh ist keine menschliche Aktivität; Mehrtabverhalten, Offlinefall und Systemuhränderung explizit prüfen. Serverzeit entscheidet Berechtigung.
+- [x] Gestohlenes synthetisches Token vor Logout erfassen, danach direkte REST-/RPC-Aufrufe innerhalb/außerhalb der zugesagten Sperrfrist testen. UI-Redirect allein ist kein Erfolgskriterium.
+- [x] Browser-Neustart mit bestehendem Cookie prüfen: Sitzung darf innerhalb erlaubter Regeln wiederaufgenommen werden, aber niemals Inaktivitäts-/Maximalzeit umgehen. PROJ-1-Neustartkriterium entsprechend präzisieren.
+- [x] `npm run verify:full`; Safari-/Arbeitsplatz-Smoke als separate manuelle Evidenz dokumentieren.
 
 **Zwischenevidenz 20.09.2026:** TOTP-Bootstrap, neutrale Fehleroberfläche,
 serverseitige Sitzungsaktivität und die DB-erzwungene Re-Authentisierung für
@@ -162,6 +162,25 @@ Der positive Browser-Neustartfall wurde anschließend separat in Chromium
 bestätigt: Eine noch gültige HttpOnly-Cookie-Sitzung wird wiederaufgenommen. Der
 negative Neustartfall nach Inaktivitäts-/Maximalablauf bleibt bis zur kombinierten
 Browser-/Serverzeit-Probe offen.
+
+**Lokale Evidenz 25.09.2026:** Ein Neustart lädt die verbleibende Frist aus
+`current_session_remaining_ms()`, ohne einen Aktivitätsimpuls zu erzeugen.
+Synthetische Browserfälle prüfen einen gültigen und einen nach fünf Minuten
+abgelaufenen Cookie-Neustart sowie direkte REST- und RPC-Aufrufe mit demselben
+vorher erfassten Token nach globalem Logout und nach Ablauf. Die lokale Sperre
+nutzt eine monotone Uhr; Unit-Tests prüfen Tab-Signal, Offlinefehler und einen
+Sprung der Systemuhr. Nach frischem lokalen Reset und Seed bestand
+`npm run verify:full`: 394 Vitest-, 215 pgTAP-, 18 Sync-DB-/Prozess- und
+20 Browserfälle einschließlich echtem Edge. Ein pgTAP-Grenztest wurde gegen
+die Rundung des ganzzahligen TOTP-Zeitstempels stabilisiert. Die manuelle
+Safari-/Arbeitsplatzprobe und Hosted-Nachweise sind weiterhin offen.
+
+Ein sporadischer HTTP-400-Fehler beim MFA-Bootstrap wurde als Verletzung von
+`session_security_state_started_before_activity_check` nachgewiesen: Der
+Auth-Zeitpunkt kann geringfügig nach der Datenbankzeit liegen. Ein zuvor roter
+synthetischer Grenztest ist nach einer Forward-Migration grün. Sie begrenzt
+den gespeicherten Sitzungsbeginn konservativ auf die frühere der beiden Zeiten;
+die absolute Frist wird dadurch nicht verlängert.
 
 ## T05: Browser-, Cookie- und HTTPS-Härtung
 

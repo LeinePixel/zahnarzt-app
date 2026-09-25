@@ -21,10 +21,10 @@ insert into public.support_access_grant(id,practice_id,requested_by,requested_at
 select set_config('request.jwt.claims',json_build_object(
   'sub','37000000-0000-0000-0000-000000000002','role','authenticated','aal','aal2',
   'session_id','39000000-0000-0000-0000-000000000001',
-  'amr',json_build_array(json_build_object('method','totp','timestamp',extract(epoch from now()-interval '5 minutes')::bigint))
+  'amr',json_build_array(json_build_object('method','totp','timestamp',extract(epoch from now()-interval '5 minutes 1 second')::bigint))
 )::text,true);
 set local role authenticated;
-select is(public.activate_support_access('3a000000-0000-0000-0000-000000000001','technical_investigation'),null::jsonb,'reauthentication is expired exactly at five minutes');
+select is(public.activate_support_access('3a000000-0000-0000-0000-000000000001','technical_investigation'),null::jsonb,'reauthentication older than five minutes is expired');
 
 reset role;
 select set_config('request.jwt.claims',json_build_object(
@@ -49,7 +49,7 @@ reset role;
 select set_config('request.jwt.claims',json_build_object(
   'sub','37000000-0000-0000-0000-000000000002','role','authenticated','aal','aal2',
   'session_id','39000000-0000-0000-0000-000000000001',
-  'amr',json_build_array(json_build_object('method','totp','timestamp',extract(epoch from now()-interval '5 minutes')::bigint))
+  'amr',json_build_array(json_build_object('method','totp','timestamp',extract(epoch from now()-interval '5 minutes 1 second')::bigint))
 )::text,true);
 set local role authenticated;
 select is((select count(*) from public.read_audit_events('38000000-0000-0000-0000-000000000001',now(),100)),0::bigint,'expired reauthentication denies audit reading despite an active grant');

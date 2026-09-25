@@ -19,16 +19,33 @@ export function createSessionActivityController(options: Options) {
   }
 
   return {
-    async activity() {
+    syncRemaining(remainingMs: number) {
       if (expired) return
-      const timestamp = options.now()
-      lastActivity = timestamp
-      if (timestamp - lastReport < options.reportIntervalMs) return
-      lastReport = timestamp
-      if (!await options.record()) expire()
+      if (!Number.isFinite(remainingMs) || remainingMs <= 0) {
+        expire()
+        return
+      }
+      lastActivity = options.now() - (options.inactivityMs - Math.min(remainingMs, options.inactivityMs))
     },
-    remoteActivity(timestamp: number) {
-      if (!expired && timestamp > lastActivity) lastActivity = timestamp
+    async activity() {
+      if (expired) return false
+      const timestamp = options.now()
+      if (timestamp - lastActivity >= options.inactivityMs) {
+        expire()
+        return false
+      }
+      lastActivity = timestamp
+      if (timestamp - lastReport < options.reportIntervalMs) return true
+      lastReport = timestamp
+      try {
+        if (!await options.record()) expire()
+      } catch {
+        expire()
+      }
+      return !expired
+    },
+    remoteActivity() {
+      if (!expired) lastActivity = options.now()
     },
     check() {
       if (options.now() - lastActivity >= options.inactivityMs) expire()

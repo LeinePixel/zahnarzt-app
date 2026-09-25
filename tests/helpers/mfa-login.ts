@@ -51,8 +51,18 @@ export async function resetSyntheticMfa(email: string) {
 
 export function captureMfaEnrollment(page: Page) {
   let secret: string | undefined
+  const sessionResults: string[] = []
   page.on('response', async response => {
     const path = new URL(response.url()).pathname
+    if (path.endsWith('/rpc/initialize_current_session') || path.endsWith('/rpc/current_session_remaining_ms')) {
+      const value = await response.json().catch(() => null)
+      const safeValue = typeof value === 'number' || typeof value === 'boolean'
+        ? value
+        : value && typeof value === 'object' && 'code' in value && typeof value.code === 'string'
+          ? value.code
+          : 'unavailable'
+      sessionResults.push(`${path.split('/').pop()}:${response.status()}:${safeValue}`)
+    }
     if (response.request().method() !== 'POST' || !path.endsWith('/factors')) return
     const payload = await response.json().catch(() => null) as { totp?: { secret?: unknown } } | null
     if (typeof payload?.totp?.secret === 'string') secret = payload.totp.secret
@@ -62,7 +72,11 @@ export function captureMfaEnrollment(page: Page) {
     await expect.poll(() => secret).toBeTruthy()
     await page.getByLabel('Sicherheitscode').fill(totp(secret!))
     await page.getByRole('button', { name: 'Code bestätigen' }).click()
-    await expect(page).toHaveURL(/\/status$/)
+    try {
+      await expect(page).toHaveURL(/\/status$/, { timeout: 15_000 })
+    } catch (error) {
+      throw new Error(`Synthetische MFA-Anmeldung endete auf ${new URL(page.url()).pathname}; Sitzungs-RPCs: ${sessionResults.join(', ') || 'keine'}`, { cause: error })
+    }
   }
 }
 

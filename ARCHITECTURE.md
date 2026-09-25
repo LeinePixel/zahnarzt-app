@@ -69,9 +69,9 @@ Es existiert keine Vercel-Konfiguration. Kern- und Vollverifikation laufen lokal
 
 ## Bekannte Schulden
 
-- Die datenbankseitige PROJ-31-Sitzungs-/AAL2-Grenze ist lokal implementiert;
-  MFA-Einrichtung, Re-Authentisierung und die bedienbare Arbeitsplatzsperre
-  folgen in T04.
+- Die datenbankseitige PROJ-31-Sitzungs-/AAL2-Grenze sowie MFA-Einrichtung,
+  Re-Authentisierung und Arbeitsplatzsperre sind lokal implementiert und
+  synthetisch geprüft. Hosted- und manuelle Arbeitsplatzabnahme stehen aus.
 - Hosted-CSP-/HSTS-Nachweis, Secret-Scanning und Branch-Protection fehlen.
 - Lösch-, Aufbewahrungs-, Incident- und Anbieterprozesse sind nicht abgenommen.
 

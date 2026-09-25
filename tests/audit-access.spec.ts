@@ -101,9 +101,14 @@ test('schützt eine praxisfreigegebene Audit-Einsicht vollständig', async ({
 
     await practicePage.getByLabel('Freigabekennung widerrufen').fill(grantId)
     await practicePage.getByRole('button', { name: 'Supportzugriff widerrufen' }).click()
-    await expect(
-      practicePage.getByText('Supportzugriff wurde widerrufen.'),
-    ).toBeVisible()
+    try {
+      await expect(
+        practicePage.getByText('Supportzugriff wurde widerrufen.'),
+      ).toBeVisible()
+    } catch (error) {
+      const denied = await practicePage.getByText('Supportzugriff wurde verweigert.').isVisible()
+      throw new Error(`Synthetischer Widerruf endete auf ${new URL(practicePage.url()).pathname}; verweigert=${denied}`, { cause: error })
+    }
 
     await portalPage.goto(`/portal/audit?practiceId=${allowedPracticeId}`)
     await expect(

@@ -81,7 +81,9 @@ Aktiv angebunden ist Supabase. Für Vercel, Soniox, IONOS AI Model Hub, Resend, 
 - Die Datenbank erzwingt AAL2, Kontosperre, Sitzungsbestand,
   Inaktivitäts- und Maximaldauer lokal. MFA-Einrichtung,
   Re-Authentisierungsoberfläche, Aktivitätssignal und Browser-Sperrablauf
-  fehlen bis T04; deshalb ist die Browserabnahme noch offen.
+  sind lokal implementiert; synthetische REST-/RPC-Replay- und Browserprüfungen
+  bestehen. Der manuelle Arbeitsplatz-/Safari-Smoke und die Hosted-Abnahme
+  bleiben offen.
 - Hosted-HTTPS-/HSTS-Nachweis und eine CSP-Report-Only-Phase stehen noch aus.
 - Kein Secret-Scanning-Workflow und keine aktivierte Branch-Protection.
 - Keine abgenommenen Lösch-, Aufbewahrungs-, Incident- oder Backup-/Restore-Prozesse.

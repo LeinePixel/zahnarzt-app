@@ -18,8 +18,10 @@ type ClaimsResult = {
 function authFactory(
   result: ClaimsResult,
   onClaims?: (cookies: ProxyCookieMethods) => void,
+  sessionValid = true,
 ): ProxyAuthClientFactory {
   return (cookies) => ({
+    rpc: async () => ({ data: sessionValid ? 300_000 : 0, error: null }),
     auth: {
       getClaims: async () => {
         onClaims?.(cookies)
@@ -70,6 +72,18 @@ describe('updateSession', () => {
 
     expect(response.status).toBe(307)
     expect(response.headers.get('location')).toBe('https://app.example/status')
+  })
+
+  it('keeps the login page reachable when AAL2 claims outlive the database session', async () => {
+    const request = new NextRequest('https://app.example/login')
+    const stale = authFactory({
+      data: { claims: { sub: 'synthetic-user-id', aal: 'aal2' } },
+      error: null,
+    }, undefined, false)
+
+    const response = await updateSession(request, stale)
+    expect(response.status).toBe(200)
+    expect(response.headers.get('location')).toBeNull()
   })
 
   it('routes an AAL1 identity only to the MFA bootstrap', async () => {
