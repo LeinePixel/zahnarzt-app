@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
-import { loginWithSyntheticMfa } from './helpers/mfa-login'
+import { captureMfaEnrollment, loginWithSyntheticMfa, resetSyntheticMfa } from './helpers/mfa-login'
 
 if (existsSync('.env.seed.local')) {
   process.loadEnvFile('.env.seed.local')
@@ -90,6 +90,47 @@ test('speichert die Supabase-Sitzung nicht in Local Storage', async ({ page }) =
 
   const localStorageKeys = await page.evaluate(() => Object.keys(localStorage))
   expect(localStorageKeys.filter((key) => key.includes('supabase') || key.startsWith('sb-'))).toEqual([])
+})
+
+test('weist einen falschen MFA-Code neutral zurück und lässt erst den gültigen Code weiter', async ({ page }) => {
+  await resetSyntheticMfa(account.email)
+  const completeMfa = captureMfaEnrollment(page)
+  await page.goto('/login')
+  await page.getByLabel('E-Mail-Adresse').fill(account.email)
+  await page.getByLabel('Passwort').fill(required(account.passwordVariable))
+  await page.getByRole('button', { name: 'Sicher anmelden' }).click()
+  await expect(page).toHaveURL(/\/auth\/mfa$/)
+  await page.getByLabel('Sicherheitscode').fill(await completeMfa.invalidCode())
+  const confirmCode = page.getByRole('button', { name: 'Code bestätigen' })
+  await expect(confirmCode).toBeEnabled()
+  await confirmCode.click()
+  await expect(page.getByText('Der Sicherheitscode konnte nicht bestätigt werden. Bitte versuchen Sie es erneut.')).toBeVisible()
+  await expect(page).toHaveURL(/\/auth\/mfa$/)
+  await expect(page.getByText('DentPilot Testpraxis', { exact: true })).toHaveCount(0)
+
+  await completeMfa()
+  await expect(page.getByText('DentPilot Testpraxis', { exact: true })).toBeVisible()
+})
+
+test('erzeugt produktive Auth-Cookies mit Secure und SameSite=Lax', async ({ page, context }) => {
+  await login(page)
+
+  const authCookies = (await context.cookies()).filter(cookie => cookie.name.startsWith('sb-'))
+  expect(authCookies.length).toBeGreaterThan(0)
+  for (const cookie of authCookies) {
+    expect(cookie.secure).toBe(true)
+    expect(cookie.sameSite).toBe('Lax')
+  }
+
+  const response = await page.reload()
+  const headers = response?.headers() ?? {}
+  expect(headers['content-security-policy']).toMatch(/script-src [^;]*'nonce-[A-Za-z0-9+/=]+'/)
+  expect(headers['content-security-policy']).not.toContain("'unsafe-inline'")
+  expect(headers['x-frame-options']).toBe('DENY')
+  expect(headers['x-content-type-options']).toBe('nosniff')
+  expect(headers['referrer-policy']).toBe('same-origin')
+  expect(headers['cache-control']).toContain('private')
+  expect(headers['cache-control']).toContain('no-store')
 })
 
 test('entzieht einem zweiten Tab nach Logout beim nächsten Request den Zugriff', async ({ context, page }) => {

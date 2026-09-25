@@ -67,9 +67,12 @@ export function captureMfaEnrollment(page: Page) {
     const payload = await response.json().catch(() => null) as { totp?: { secret?: unknown } } | null
     if (typeof payload?.totp?.secret === 'string') secret = payload.totp.secret
   })
-  return async () => {
+  const waitForEnrollment = async () => {
     await expect(page).toHaveURL(/\/auth\/mfa$/)
     await expect.poll(() => secret).toBeTruthy()
+  }
+  const completeMfa = async () => {
+    await waitForEnrollment()
     await page.getByLabel('Sicherheitscode').fill(totp(secret!))
     await page.getByRole('button', { name: 'Code bestätigen' }).click()
     try {
@@ -78,6 +81,11 @@ export function captureMfaEnrollment(page: Page) {
       throw new Error(`Synthetische MFA-Anmeldung endete auf ${new URL(page.url()).pathname}; Sitzungs-RPCs: ${sessionResults.join(', ') || 'keine'}`, { cause: error })
     }
   }
+  const invalidCode = async () => {
+    await waitForEnrollment()
+    return totp(secret!) === '000000' ? '000001' : '000000'
+  }
+  return Object.assign(completeMfa, { waitForEnrollment, invalidCode })
 }
 
 export async function loginWithSyntheticMfa(page: Page, email: string, password: string) {

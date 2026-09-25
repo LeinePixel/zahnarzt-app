@@ -56,4 +56,23 @@ describe('verifyTotp', () => {
     await expect(verifyTotp({ challenge, verify: vi.fn() }, 'factor-1', '12ab')).resolves.toBe(false)
     expect(challenge).not.toHaveBeenCalled()
   })
+
+  it.each(['wrong', 'expired'])('rejects a %s provider code without exposing provider details', async () => {
+    const providerDetail = 'synthetic secret and token must remain private'
+    const verify = vi.fn(async () => ({ data: null, error: new Error(providerDetail) }))
+    await expect(verifyTotp({
+      challenge: async () => ({ data: { id: 'challenge-1' }, error: null }),
+      verify,
+    }, 'factor-1', '123456')).resolves.toBe(false)
+    expect(verify).toHaveBeenCalledOnce()
+  })
+
+  it('does not verify when challenge creation fails', async () => {
+    const verify = vi.fn()
+    await expect(verifyTotp({
+      challenge: async () => ({ data: null, error: new Error('synthetic provider detail') }),
+      verify,
+    }, 'factor-1', '123456')).resolves.toBe(false)
+    expect(verify).not.toHaveBeenCalled()
+  })
 })

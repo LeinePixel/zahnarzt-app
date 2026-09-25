@@ -65,8 +65,12 @@ function setSecurityHeaders(
   response: NextResponse,
   policy: string,
   useHsts: boolean,
+  reportOnly: boolean,
 ): void {
-  response.headers.set('Content-Security-Policy', policy)
+  response.headers.set(
+    reportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
+    policy,
+  )
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('Referrer-Policy', 'same-origin')
@@ -78,10 +82,7 @@ function setSecurityHeaders(
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
 
   if (useHsts) {
-    response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains',
-    )
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000')
   }
 }
 
@@ -183,7 +184,12 @@ export async function updateSession(
   setSecurityHeaders(
     response,
     contentSecurityPolicy,
-    process.env.NODE_ENV === 'production' && request.nextUrl.protocol === 'https:',
+    process.env.NODE_ENV === 'production'
+      && request.nextUrl.protocol === 'https:'
+      && request.nextUrl.hostname === process.env.SECURITY_HSTS_HOST,
+    process.env.NODE_ENV === 'production'
+      && request.nextUrl.protocol === 'https:'
+      && request.nextUrl.hostname === process.env.SECURITY_CSP_REPORT_ONLY_HOST,
   )
 
   return response

@@ -1,6 +1,6 @@
 import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server'
 import { NextRequest } from 'next/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { config } from '@/proxy'
 
@@ -35,6 +35,8 @@ const anonymous = authFactory({
   data: null,
   error: null,
 })
+
+afterEach(() => vi.unstubAllEnvs())
 
 describe('updateSession', () => {
   it('redirects anonymous access to a protected route without retaining query data', async () => {
@@ -188,6 +190,38 @@ describe('updateSession', () => {
     expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     expect(response.headers.get('referrer-policy')).toBe('same-origin')
     expect(response.headers.get('permissions-policy')).toContain('camera=()')
+  })
+
+  it('does not activate HSTS for an unverified host or a forwarded HTTPS claim', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const unverified = await updateSession(new NextRequest('https://unknown.example/login'), anonymous)
+    const forwarded = await updateSession(new NextRequest('http://app.example/login', {
+      headers: { 'x-forwarded-proto': 'https' },
+    }), anonymous)
+    expect(unverified.headers.get('strict-transport-security')).toBeNull()
+    expect(forwarded.headers.get('strict-transport-security')).toBeNull()
+  })
+
+  it('limits HSTS to the explicitly verified HTTPS host without subdomains or preload', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('SECURITY_HSTS_HOST', 'app.example')
+    const verified = await updateSession(new NextRequest('https://app.example/login'), anonymous)
+    const other = await updateSession(new NextRequest('https://sub.app.example/login'), anonymous)
+    expect(verified.headers.get('strict-transport-security')).toBe('max-age=31536000')
+    expect(other.headers.get('strict-transport-security')).toBeNull()
+  })
+
+  it('uses CSP report-only only on the explicitly configured synthetic HTTPS host', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('SECURITY_CSP_REPORT_ONLY_HOST', 'synthetic.example')
+    const synthetic = await updateSession(new NextRequest('https://synthetic.example/login'), anonymous)
+    const other = await updateSession(new NextRequest('https://app.example/login'), anonymous)
+    const http = await updateSession(new NextRequest('http://synthetic.example/login'), anonymous)
+    expect(synthetic.headers.get('content-security-policy')).toBeNull()
+    expect(synthetic.headers.get('content-security-policy-report-only')).toContain("frame-ancestors 'none'")
+    expect(other.headers.get('content-security-policy')).toContain("frame-ancestors 'none'")
+    expect(other.headers.get('content-security-policy-report-only')).toBeNull()
+    expect(http.headers.get('content-security-policy')).toContain("frame-ancestors 'none'")
   })
 })
 

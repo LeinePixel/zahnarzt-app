@@ -141,7 +141,7 @@ Die Fixture erstellt Praxis, Identität und Freigabe innerhalb `BEGIN`/`ROLLBACK
 
 **Eingang:** Datenbankprüfung T03. **Ausgang:** bedienbarer MFA-/Sperrablauf mit unverändert maßgeblicher Datenautorisierung.
 
-- [ ] Failing Tests für Einrichten/Bestätigen des Faktors, falschen/abgelaufenen Code, Recovery ohne Bypass und abgelaufene Re-Authentisierung schreiben; neutrale deutsche Fehler ohne Token-/QR-Secret-Ausgabe.
+- [x] Tests für Einrichten/Bestätigen des Faktors, falschen/abgelaufenen Code, Recovery ohne Bypass und abgelaufene Re-Authentisierung schreiben; neutrale deutsche Fehler ohne Token-/QR-Secret-Ausgabe.
 - [x] Bestehende UI-Bausteine verwenden; sensible Zustände nur im notwendigen Arbeitsspeicher, keine persistenten Testmedien.
 - [x] Aktivität und Sperre nach freigegebener Semantik implementieren: Hintergrundrefresh ist keine menschliche Aktivität; Mehrtabverhalten, Offlinefall und Systemuhränderung explizit prüfen. Serverzeit entscheidet Berechtigung.
 - [x] Gestohlenes synthetisches Token vor Logout erfassen, danach direkte REST-/RPC-Aufrufe innerhalb/außerhalb der zugesagten Sperrfrist testen. UI-Redirect allein ist kein Erfolgskriterium.
@@ -182,6 +182,14 @@ synthetischer Grenztest ist nach einer Forward-Migration grün. Sie begrenzt
 den gespeicherten Sitzungsbeginn konservativ auf die frühere der beiden Zeiten;
 die absolute Frist wird dadurch nicht verlängert.
 
+**Ergänzung 26.09.2026:** Die MFA-Unit-Tests prüfen Provider-Ablehnung für
+falsche/abgelaufene Codes und fehlgeschlagene Challenge ohne Rückgabe von
+Providerdetails. Der synthetische Browserfall weist einen garantiert falschen
+Code mit neutraler deutscher Meldung zurück, hält Praxisdaten gesperrt und
+lässt erst den gültigen Code weiter. Bereits vorhandene Recovery- und
+Re-Auth-Tests prüfen den fehlenden Faktor und die Fünf-Minuten-Grenze. Die
+manuelle Safari-/Praxisarbeitsplatzprobe bleibt eine separate offene Abnahme.
+
 ## T05: Browser-, Cookie- und HTTPS-Härtung
 
 **Files:** Modify `src/lib/supabase/client.ts`, `server.ts`, `proxy.ts`, `src/proxy.ts`, `next.config.ts`, zugehörige Tests, `tests/auth-security.spec.ts`, `docs/production/security-headers.md`.
@@ -193,6 +201,15 @@ die absolute Frist wird dadurch nicht verlängert.
 - [ ] Report-Only zuerst auf synthetischem HTTPS-Ziel, Reports ohne URLs mit sensiblen Parametern/Bodies/Identitäten; anschließend CSP erzwingen. Framing, MIME, Referrer und benötigte Permissions-Policy testen.
 - [ ] HSTS-Domainumfang/HTTPS-Redirects abnehmen; keine ungeprüfte Subdomain- oder Preload-Aktivierung. HttpOnly nur, wenn das abgestimmte Clientmodell funktioniert.
 - [ ] Reale Login-/Logout-/MFA-/Supportflüsse einschließlich falschem Origin, Proxy-Headern und `private, no-store` prüfen; `npm run verify:full` und Hosted-Headernachweis.
+
+**Lokaler Zwischenstand 26.09.2026:** Ein Produktionsbrowserlauf prüft die
+tatsächlich erzeugten Supabase-Cookies auf `Secure`/`SameSite=Lax` sowie
+CSP-, Frame-, MIME-, Referrer- und Cache-Header. Die CSP-Nonce folgt der
+installierten Next.js-16-Dokumentation. HSTS erfordert einen explizit
+verifizierten HTTPS-Host und umfasst keine Subdomains. Report-Only kann nur
+für einen explizit benannten synthetischen HTTPS-Host aktiviert werden.
+Der tatsächliche HTTPS-/Hosting-Nachweis und die manuelle Arbeitsplatzprobe
+sind weiterhin offen.
 
 ## T06: Begrenzte Support-/Auditoperationen
 
