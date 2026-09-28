@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Building2, CircleCheck, ShieldCheck, TriangleAlert, UserRound } from 'lucide-react'
 
@@ -33,12 +32,14 @@ export default async function StatusPage() {
 
       <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl flex-col sm:min-h-[calc(100vh-4rem)]">
         <header className="flex items-center justify-between gap-5">
-          <Image
+          {/* The local logo must not acquire next/image's inline style under CSP. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/dentpilot-logo-negativ.png"
             alt="DentPilot"
             width={1180}
             height={336}
-            priority
+            fetchPriority="high"
             className="h-auto w-[190px] sm:w-[230px]"
           />
           <LogoutButton action={logout} />

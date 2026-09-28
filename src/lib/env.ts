@@ -2,6 +2,9 @@ import { z } from 'zod'
 
 type Environment = Record<string, string | undefined>
 
+// Browser validation must not trigger Zod's Function-based JIT under the CSP.
+z.config({ jitless: true })
+
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()

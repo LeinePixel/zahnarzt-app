@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { getPublicEnv } from '@/lib/env'
 
@@ -29,5 +29,18 @@ describe('getPublicEnv', () => {
       supabaseAnonKey: 'public-anon-key',
       supabaseUrl: 'https://example.supabase.co',
     })
+  })
+
+  it('validates browser configuration without dynamic code evaluation', async () => {
+    vi.resetModules()
+    const { getPublicEnv: freshGetPublicEnv } = await import('@/lib/env')
+    const functionSpy = vi.spyOn(globalThis, 'Function')
+    try {
+      freshGetPublicEnv(validPublicEnv)
+    } finally {
+      const attemptedEvaluations = functionSpy.mock.calls.length
+      functionSpy.mockRestore()
+      expect(attemptedEvaluations).toBe(0)
+    }
   })
 })
