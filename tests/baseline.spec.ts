@@ -7,7 +7,7 @@ test('serves the application shell with a main landmark', async ({ page }) => {
   await expect(page.getByRole('main')).toBeVisible()
 })
 
-test('loads the login page without inline-style or eval CSP violations', async ({ page }) => {
+test('renders the optimized login logo without CSP violations', async ({ page }) => {
   await page.addInitScript(() => {
     const monitoredWindow = window as Window & { cspViolations?: string[] }
     monitoredWindow.cspViolations = []
@@ -20,7 +20,9 @@ test('loads the login page without inline-style or eval CSP violations', async (
 
   const response = await page.goto('/login', { waitUntil: 'networkidle' })
   expect(response?.headers()['content-security-policy']).toContain("script-src")
-  expect(await page.getByRole('img', { name: 'DentPilot' }).getAttribute('style')).toBeNull()
+  const logo = page.getByRole('img', { name: 'DentPilot' })
+  expect(await logo.getAttribute('style')).toBeNull()
+  expect(await logo.getAttribute('srcset')).toContain('/_next/image?')
   const violations = await page.evaluate(() =>
     (window as Window & { cspViolations?: string[] }).cspViolations ?? [],
   )

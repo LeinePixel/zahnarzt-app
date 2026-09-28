@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Building2, CircleCheck, ShieldCheck, TriangleAlert, UserRound } from 'lucide-react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
+import { BrandLogo } from '@/components/brand-logo'
 import { SessionLock } from '@/components/auth/session-lock'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -32,16 +33,7 @@ export default async function StatusPage() {
 
       <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl flex-col sm:min-h-[calc(100vh-4rem)]">
         <header className="flex items-center justify-between gap-5">
-          {/* The local logo must not acquire next/image's inline style under CSP. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/dentpilot-logo-negativ.png"
-            alt="DentPilot"
-            width={1180}
-            height={336}
-            fetchPriority="high"
-            className="h-auto w-[190px] sm:w-[230px]"
-          />
+          <BrandLogo className="h-auto w-[190px] sm:w-[230px]" />
           <LogoutButton action={logout} />
         </header>
 

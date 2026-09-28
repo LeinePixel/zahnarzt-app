@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Check, ShieldCheck } from 'lucide-react'
 
 import { LoginForm } from '@/components/auth/login-form'
+import { BrandLogo } from '@/components/brand-logo'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { login } from '@/features/auth/actions'
 
@@ -29,16 +30,7 @@ export default function LoginPage() {
 
       <div className="relative mx-auto grid min-h-screen w-full max-w-[1280px] lg:grid-cols-[1.05fr_0.95fr]">
         <section className="login-reveal flex flex-col justify-between px-6 pb-8 pt-7 sm:px-10 lg:px-16 lg:py-14">
-          {/* The local logo must not acquire next/image's inline style under CSP. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/dentpilot-logo-negativ.png"
-            alt="DentPilot"
-            width={1180}
-            height={336}
-            fetchPriority="high"
-            className="h-auto w-[238px] sm:w-[280px]"
-          />
+          <BrandLogo className="h-auto w-[238px] sm:w-[280px]" />
 
           <div className="hidden max-w-xl py-16 lg:block">
             <div className="mb-7 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
