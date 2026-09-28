@@ -144,7 +144,7 @@ describe('runLogin', () => {
     )
 
     await expect(action).rejects.toMatchObject({
-      digest: expect.stringContaining('/status'),
+      digest: expect.stringContaining('/auth/mfa'),
     })
     expect(receivedCredentials).toEqual({
       email: 'person@dentpilot.example',

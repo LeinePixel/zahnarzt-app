@@ -96,7 +96,7 @@ export async function runLogin(
     }
   }
 
-  redirectTo('/status')
+  redirectTo('/auth/mfa')
 }
 
 export async function login(
