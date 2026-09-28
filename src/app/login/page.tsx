@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description: 'Sicher am DentPilot-Praxisarbeitsplatz anmelden.',
 }
 
+// Nonce-based CSP requires per-request rendering for Next.js script tags.
+export const dynamic = 'force-dynamic'
+
 const trustPoints = [
   'Zugriff nur für autorisierte Praxismitarbeitende',
   'Geschützte, serverseitig geprüfte Sitzung',

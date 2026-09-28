@@ -12,7 +12,7 @@ test('renders the optimized login logo without CSP violations', async ({ page })
     const monitoredWindow = window as Window & { cspViolations?: string[] }
     monitoredWindow.cspViolations = []
     document.addEventListener('securitypolicyviolation', (event) => {
-      if (event.effectiveDirective === 'style-src' || event.effectiveDirective === 'script-src') {
+      if (event.effectiveDirective.startsWith('style-src') || event.effectiveDirective.startsWith('script-src')) {
         monitoredWindow.cspViolations?.push(`${event.effectiveDirective}:${event.blockedURI}`)
       }
     })
